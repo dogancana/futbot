@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { getPlayersToSell, tradePrice } from './trade-utils';
-import { sellPlayer } from './api';
+import { sellPlayer, getTradePile, sendToClub } from './api';
 import * as sleep from 'sleep-promise';
 import { logger } from './logger';
 
@@ -40,5 +40,22 @@ tradeBot.get('/sell', async function(req, res) {
     res.send(JSON.stringify(players));
   } catch (e) {
     res.status(500).send(e);
+  }
+});
+
+tradeBot.get('/clear-pile', async function (req, res) {
+  try {
+    let players = await getTradePile();
+    players = players.filter(p => (p.tradeId === 0 || p.tradeState === 'expired'));
+    for (let i=0; i<players.length; i++) {
+      const res = await sendToClub(players[i].itemData.id)
+      await sleep(200);
+      if (res) {
+        players[i].sentToClub = true
+      }
+    }
+    res.send(JSON.stringify(players));
+  } catch (e) {
+    res.status(500).send(e.message);
   }
 });

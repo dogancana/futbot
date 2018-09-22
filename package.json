@@ -1,8 +1,8 @@
 {
-  "name": "futjs",
+  "name": "futbot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Small size tradebot for automating simple tasks",
+  "main": "lib/app.ts",
   "scripts": {
     "start": "ts-node --inspect=5858 lib/app.ts",
     "dev": "nodemon",

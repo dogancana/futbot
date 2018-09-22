@@ -7,7 +7,7 @@ import { itemData } from './static-items';
 
 export async function getPlayersToSell (query) {
   const batchCount = Math.min(parseInt(query.batch, 10) || 10, 20); // 20 max
-  const quality = query.quality || 'silver';
+  const quality = query.quality;
   try {
     let squadPlayers = await getSquadPlayerIds();
     await sleep(200);
