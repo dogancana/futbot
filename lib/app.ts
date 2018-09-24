@@ -12,7 +12,7 @@ import { staticItemApp } from './static-items';
 const app = express();
 let apiSession: any = {};
 
-app.set('port', process.env.PORT || 3000)
+app.set('port', process.env.PORT || 9999)
 
 app.use(cors());
 app.use(bodyParser.json())
@@ -20,13 +20,13 @@ app.use(bodyParser.json())
 app.post('/auth', (req: any, res) => {
   const { auth, lastStamp } = req.body;
   logger.info(`
-  auth 
+  auth
   ${JSON.stringify(auth.sid)}
   ${JSON.stringify(lastStamp)}
   `);
   if (auth) apiSession.auth = auth;
-  if (lastStamp && 
-      (!apiSession.lastStamp || lastStamp > apiSession.lastStamp)) 
+  if (lastStamp &&
+      (!apiSession.lastStamp || lastStamp > apiSession.lastStamp))
       apiSession.lastStamp = lastStamp;
   res.send('OK');
 });

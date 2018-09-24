@@ -11,8 +11,8 @@ tradeBot.get('/sell', async function(req, res) {
     let players = await getPlayersToSell(req.query);
     players = players.map(p => ({
       ...p,
-      buyNowPrice: Math.max(p.minBuyNow, p.averageStartingBid),
-      startingBid: p.minStartingBid
+      buyNowPrice: Math.max(p.minBuyNow, p.averageStartingBid) * 1.20,
+      startingBid: Math.max(p.minBuyNow, p.averageStartingBid)
     }))
 
     for(let i=0; i<players.length; i++) {
