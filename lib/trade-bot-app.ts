@@ -9,20 +9,30 @@ export const tradeBot = express();
 tradeBot.get('/sell', async function(req, res) {
   try {
     let players = await getPlayersToSell(req.query);
-    players = players.map(p => ({
-      ...p,
-      buyNowPrice: Math.max(p.minBuyNow, p.averageStartingBid) * 1.20,
-      startingBid: Math.max(p.minBuyNow, p.averageStartingBid)
-    }))
+    players = players.map(p => {
+      const quickSellPrice = Math.max(p.minBuyNow, p.averageStartingBid);
+      let buyNowPrice = tradePrice(quickSellPrice * 1.10);
+      const startingBid = tradePrice(quickSellPrice * 0.9);
+      if (buyNowPrice === startingBid) {
+        buyNowPrice = tradePrice(quickSellPrice * 1.2);
+      }
+      
+      return {
+        ...p,
+        buyNowPrice,
+        startingBid
+      };
+    })
 
     for(let i=0; i<players.length; i++) {
       const player = players[i];
       try {
+        logger.info(`${i} of ${players.length}`);
         const res = await sellPlayer({
-          buyNowPrice: tradePrice(player.buyNowPrice),
+          buyNowPrice: player.buyNowPrice,
           duration: 3600,
           itemData: { id: player.id },
-          startingBid: tradePrice(player.startingBid)
+          startingBid: player.startingBid
         })
         if (res.id) {
           logger.info(`\t\tplayer ${player.name} (${player.rating}) put on transfer list`);
@@ -31,7 +41,7 @@ tradeBot.get('/sell', async function(req, res) {
           logger.error(`\t\tplayer ${player.name} (${player.rating}) couldnt be put on list. ${res}`);
           player.listed = false;
         }
-        await sleep(500);
+        await sleep(1000);
       } catch (e) {
         logger.error(`\t\tplayer ${player.name} (${player.rating}) couldnt be put on list. Error! ${e.description}`)
       }
