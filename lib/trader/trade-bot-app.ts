@@ -1,8 +1,8 @@
 import * as express from 'express';
 import { getPlayersToSell, tradePrice } from './trade-utils';
-import { sellPlayer, getTradePile, sendToClub } from './api';
 import * as sleep from 'sleep-promise';
-import { logger } from './logger';
+import { logger } from '../logger';
+import { fut } from '../api';
 
 export const tradeBot = express();
 
@@ -28,7 +28,7 @@ tradeBot.get('/sell', async function(req, res) {
       const player = players[i];
       try {
         logger.info(`${i} of ${players.length}`);
-        const res = await sellPlayer({
+        const res = await fut.sellPlayer({
           buyNowPrice: player.buyNowPrice,
           duration: 3600,
           itemData: { id: player.id },
@@ -55,10 +55,10 @@ tradeBot.get('/sell', async function(req, res) {
 
 tradeBot.get('/clear-pile', async function (req, res) {
   try {
-    let players = await getTradePile();
+    let players = await fut.getTradePile();
     players = players.filter(p => (p.tradeId === 0 || p.tradeState === 'expired'));
     for (let i=0; i<players.length; i++) {
-      const res = await sendToClub(players[i].itemData.id)
+      const res = await fut.sendToClub(players[i].itemData.id)
       await sleep(200);
       if (res) {
         players[i].sentToClub = true

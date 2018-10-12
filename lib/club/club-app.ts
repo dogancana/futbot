@@ -1,9 +1,9 @@
 import * as express from 'express';
-import { getClubPlayers } from './api';
+import { fut } from '../api';
 
 export const club = express();
 
 club.get('/players', async function(req, res) {
-  const players = await getClubPlayers();
+  const players = await fut.getClubPlayers(req.query.page);
   res.send(players);
 });

@@ -1,17 +1,17 @@
-import { filterPlayers } from './player-utils';
-import { logger } from './logger';
-import { getPlayerPriceInfo } from './player';
+import { filterPlayers } from '../player/player-utils';
+import { logger } from '../logger';
 import * as sleep from 'sleep-promise';
-import { getClubPlayers, getSquadPlayerIds } from './api';
-import { itemData } from './static-items';
+import { fut } from '../api';
+import { itemData } from '../static';
+import { playerService } from '../player';
 
 export async function getPlayersToSell (query) {
   const batchCount = Math.min(parseInt(query.batch, 10) || 10, 20); // 20 max
   const quality = query.quality;
   try {
-    let squadPlayers = await getSquadPlayerIds();
+    let squadPlayers = await fut.getSquadPlayerIds();
     await sleep(200);
-    let players = await getClubPlayers();
+    let players = await fut.getClubPlayers();
     let result = [];
 
     if (!players) {
@@ -33,7 +33,7 @@ export async function getPlayersToSell (query) {
         assetId: player.assetId,
         name: itemData[player.assetId] || 'error',
         rating: player.rating,
-        ...(await getPlayerPriceInfo(player.assetId)),
+        ...(await playerService.getPriceInfo(player.assetId, player.resourceId)),
       });
       logger.info(`\t\t complete: ${player.id}`);
       await sleep(500);
