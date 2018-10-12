@@ -19,12 +19,12 @@ export function eaConfig (config) {
 
 export function setUpInterceptors () {
   Axios.interceptors.request.use(config => {
-    // Do something before request is sent
-    if (!SessionInjector.auth) {
-      throw new Error('Session not copied!. First load Fut Web App with extension');
-    }
   
     if (config.url.indexOf('ea.com') > -1) {
+      // Do something before request is sent
+      if (!SessionInjector.auth) {
+        throw new Error('Session not copied!. First load Fut Web App with extension');
+      }
       return eaConfig(config);
     } else {
       return config;

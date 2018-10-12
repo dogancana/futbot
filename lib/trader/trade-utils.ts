@@ -2,8 +2,8 @@ import { filterPlayers } from '../player/player-utils';
 import { logger } from '../logger';
 import * as sleep from 'sleep-promise';
 import { fut } from '../api';
-import { itemData } from '../static';
 import { playerService } from '../player';
+import { StaticItems } from '../static';
 
 export async function getPlayersToSell (query) {
   const batchCount = Math.min(parseInt(query.batch, 10) || 10, 20); // 20 max
@@ -31,9 +31,9 @@ export async function getPlayersToSell (query) {
       result.push({
         id: player.id,
         assetId: player.assetId,
-        name: itemData[player.assetId] || 'error',
+        name: StaticItems.itemData[player.assetId] || 'error',
         rating: player.rating,
-        ...(await playerService.getPriceInfo(player.assetId, player.resourceId)),
+        ...(await playerService.getPrice(player.assetId, player.resourceId)),
       });
       logger.info(`\t\t complete: ${player.id}`);
       await sleep(500);

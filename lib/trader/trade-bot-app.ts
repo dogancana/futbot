@@ -4,9 +4,9 @@ import * as sleep from 'sleep-promise';
 import { logger } from '../logger';
 import { fut } from '../api';
 
-export const tradeBot = express();
+export const tradeBotApp = express();
 
-tradeBot.get('/sell', async function(req, res) {
+tradeBotApp.get('/sell', async function(req, res) {
   try {
     let players = await getPlayersToSell(req.query);
     players = players.map(p => {
@@ -53,16 +53,13 @@ tradeBot.get('/sell', async function(req, res) {
   }
 });
 
-tradeBot.get('/clear-pile', async function (req, res) {
+tradeBotApp.get('/clear-pile', async function (req, res) {
   try {
     let players = await fut.getTradePile();
     players = players.filter(p => (p.tradeId === 0 || p.tradeState === 'expired'));
     for (let i=0; i<players.length; i++) {
       const res = await fut.sendToClub(players[i].itemData.id)
       await sleep(200);
-      if (res) {
-        players[i].sentToClub = true
-      }
     }
     res.send(JSON.stringify(players));
   } catch (e) {

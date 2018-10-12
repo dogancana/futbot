@@ -7,7 +7,8 @@
     "start": "ts-node --inspect=5858 lib/app.ts",
     "dev": "nodemon",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "docs": "typedoc --out ./doc lib"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +30,7 @@
     "jest": "^23.6.0",
     "nodemon": "^1.18.4",
     "ts-node": "^7.0.1",
+    "tsoa": "^2.2.5",
     "typescript": "^3.0.3"
   }
 }

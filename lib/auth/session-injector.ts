@@ -1,4 +1,4 @@
-interface Auth {
+export interface Auth {
   ipPort: string
   lastOnlineTime: Date
   phishingToken: string
@@ -7,7 +7,7 @@ interface Auth {
   sid: string
 }
 
-interface Session {
+export interface Session {
   auth?: Auth
   lastStamp?: number
 }

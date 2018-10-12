@@ -17,6 +17,8 @@ Load the extension in chrome://extensions with developer mode.
 
 Login to fut web app. This will get your token to node server.
 
+Since this server is not intented to be deployed somewhere, there is no session. Instead, your Fut web app session will be shared for any task in the server.
+
 # Existing features:
 http://localhost:3000/club/players
 This just returns your players in club, not in tradepile
@@ -40,4 +42,12 @@ I'm pretty sure this would violate some terms and conditions. Use on your own ri
 
 Whenever you make a call to the server, it'd make around 5 requests per second. If you use it more frequently, most probably your session will be reset.
 
-If you get auth errors, just  refresh fut web app so extension can send new auth information to server
+If you get auth errors, just  refresh fut web app or click to some features to update sid, so extension can send new auth information to server
+
+# Sync issues
+FUT Web app is making requests with an incremental timestamp/id. If you execute actions in this bot, your FUT Web app and this serve will be out of sync and you'd see weird transfer lists, player lists etc. To sync it again just refresh FUT Web App.
+
+It's better to not use FUT Web App if you are planning to auto sell/buy for a long time from this bot.
+
+# Auth errors
+On the first auth error this bot gets from EA servers, it'll invalidate the auth tokens and stop working till you send new sid from FUT Web App (via extension)

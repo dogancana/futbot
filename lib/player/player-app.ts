@@ -1,12 +1,10 @@
+import { logger } from '../logger';
 import * as express from 'express';
-import { pick } from 'lodash';
-import { futbin } from '../api';
-import { itemData } from '../static';
 import { playerService } from './player-service';
 
 export const playerApp = express();
 
-playerApp.get('/price', async function(req, res) {
+playerApp.get('', async function(req, res) {
   const { assetId, resourceId, platform } = req.query;
 
   if (!resourceId || !assetId) {
@@ -14,16 +12,12 @@ playerApp.get('/price', async function(req, res) {
     return
   }
 
-  let futbinPrice, price = {};
-
-  const platforms = platform ? [ platform ] : ['pc', 'xbox', 'ps'];
-  futbinPrice = await futbin.getPrice(resourceId);
-
-  if (futbinPrice && futbinPrice[platforms[0]].LCPrice2 === 0) {
-    // dont trust futbin without 2 prices
-    price = await playerService.getPriceInfo(assetId, resourceId);
+  try {
+    const details = await playerService.getPlayerDetails(assetId, resourceId);
+    res.send(details);
+  } catch (e) {
+    logger.error(`Error retrieving player details\n\t${e.message}`)
+    console.error('\t', e, '\n')
+    res.status(500).send(e.message)
   }
-
-  const extra = itemData[assetId] || {};
-  res.send({ ...extra, ...price, futbinPrice: pick(futbinPrice, platforms) })
 });

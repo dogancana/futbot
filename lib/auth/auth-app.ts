@@ -2,9 +2,9 @@ import { logger } from './../logger';
 import * as express from 'express';
 import { SessionInjector } from './session-injector';
 
-export const auth = express();
+export const authApp = express();
 
-auth.post('', (req: any, res) => {
+async function setAuthSession (req: express.Request, res: express.Response): Promise<void> {
   const { auth, lastStamp } = req.body;
   logger.info(`
   auth
@@ -17,11 +17,14 @@ auth.post('', (req: any, res) => {
       (!SessionInjector.lastStamp || lastStamp > SessionInjector.lastStamp))
       SessionInjector.lastStamp = lastStamp;
   res.send('OK');
-});
+}
 
-auth.get('', (req, res) => {
+async function getAuthSession (req: express.Request, res: express.Response): Promise<void> {
   res.send(JSON.stringify({
     auth: SessionInjector.auth,
     lastStamp: SessionInjector.lastStamp
   }));
-});
+}
+
+authApp.post('', setAuthSession);
+authApp.get('', getAuthSession);
