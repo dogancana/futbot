@@ -1,7 +1,9 @@
+import { StatsService } from './../stats/stats-app';
 import Axios from 'axios';
 import { URL } from 'url';
 import { logger } from '../logger';
 import { SessionInjector } from '../auth';
+import * as sleep from 'sleep-promise';
 
 export function eaConfig (config) {
   config.headers.Origin = 'https://www.easports.com';
@@ -18,15 +20,17 @@ export function eaConfig (config) {
 }
 
 export function setUpInterceptors () {
-  Axios.interceptors.request.use(config => {
-  
+  Axios.interceptors.request.use(async (config) => {
     if (config.url.indexOf('ea.com') > -1) {
       // Do something before request is sent
       if (!SessionInjector.auth) {
         throw new Error('Session not copied!. First load Fut Web App with extension');
       }
+      await sleep(250);
+      StatsService.requestMade();
       return eaConfig(config);
     } else {
+      await sleep(50);
       return config;
     }
   }, function (error) {

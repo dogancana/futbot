@@ -1,49 +1,5 @@
-import { filterPlayers } from '../player/player-utils';
-import { logger } from '../logger';
-import * as sleep from 'sleep-promise';
-import { fut } from '../api';
-import { playerService } from '../player';
-import { StaticItems } from '../static';
-
-export async function getPlayersToSell (query) {
-  const batchCount = Math.min(parseInt(query.batch, 10) || 10, 20); // 20 max
-  const quality = query.quality;
-  try {
-    let squadPlayers = await fut.getSquadPlayerIds();
-    await sleep(200);
-    let players = await fut.getClubPlayers();
-    let result = [];
-
-    if (!players) {
-      return null;
-    }
-
-    players = players.filter(p => squadPlayers.indexOf(p.id) === -1);
-    players = players.filter(p => p.itemState === 'free');
-    players = filterPlayers(players, { 
-      tradeableOnly: true,
-      quality
-    });
-
-    for (let i=0; i<batchCount && i<players.length; i++) {
-      const player = players[i];
-      logger.info(`getting data for ${player.id}`);
-      result.push({
-        id: player.id,
-        assetId: player.assetId,
-        name: StaticItems.itemData[player.assetId] || 'error',
-        rating: player.rating,
-        ...(await playerService.getPrice(player.assetId, player.resourceId)),
-      });
-      logger.info(`\t\t complete: ${player.id}`);
-      await sleep(500);
-    }
-
-    return result;
-  } catch (e) {
-    return null;
-  }
-};
+import { playerService } from "../player"
+import { fut } from '../api'
 
 export function tradePrice (price: number): number {
   // 0-1000 50
@@ -61,5 +17,33 @@ export function tradePrice (price: number): number {
     return Math.floor(price / 500) * 500
   } else {
     return Math.floor(price / 1000) * 1000
+  }
+}
+
+
+interface SellPrice {
+  buyNowPrice: number
+  startingBid: number
+  itemData: { id: number }
+  duration: number
+}
+export async function getFutbinPrice (player: playerService.Details): Promise<SellPrice> {
+  const platform = await fut.getPlatform()
+  const prices = player.futbinPrices[platform].prices
+
+  if (prices.length < 2) {
+    return null
+  }
+
+  const firstPriceDiffPerct = 100 * Math.abs(prices[0] - prices[1]) / prices[0]
+  if (firstPriceDiffPerct > 5) {
+    return null
+  }
+
+  return {
+    buyNowPrice: tradePrice(prices[0] * 1.05),
+    startingBid: tradePrice(prices[0] * 0.95),
+    itemData: { id: player.id },
+    duration: 3600
   }
 }

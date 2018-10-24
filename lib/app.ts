@@ -9,6 +9,7 @@ import { playerApp } from './player/player-app';
 import { authApp } from './auth';
 import { staticItemsApp } from './static';
 import { setUpInterceptors } from './api';
+import { statsApp } from './stats';
 
 const app = express();
 setUpInterceptors();
@@ -23,6 +24,7 @@ app.use('/trade-bot', tradeBotApp);
 app.use('/static', staticItemsApp);
 app.use('/player', playerApp);
 app.use('/auth', authApp);
+app.use('/stats', statsApp);
 
 const server = http.createServer(app)
 server.listen(app.get('port'), function () {

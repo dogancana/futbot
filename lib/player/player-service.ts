@@ -1,20 +1,15 @@
-import * as sleep from 'sleep-promise';
 import { fut, futbin } from '../api';
 import { StaticPlayerData, StaticItems } from '../static';
 
 export namespace playerService {
   export interface Details extends StaticPlayerData {
-    marketPrice: MarketPrice
+    marketPrice?: MarketPrice
     futbinPrices: futbin.Prices
   }
-  export async function getPlayerDetails (assetId, resourceId): Promise<Details> {
-    console.log('asdasd', Object.keys(StaticItems.itemData));
-    console.log('id', assetId);
-    console.log('data', StaticItems.itemData[assetId.toString()])
-    console.log('contains', Object.keys(StaticItems.itemData).indexOf(assetId))
+  export async function getPlayerDetails (assetId, resourceId, disableMarketPrice: boolean = false): Promise<Details> {
     return {
       ...(StaticItems.itemData[assetId.toString()]),
-      marketPrice: await getMarketPrice(assetId, resourceId),
+      marketPrice: !disableMarketPrice ? await getMarketPrice(assetId, resourceId) : null,
       futbinPrices: await futbin.getPrice(resourceId)
     }
   }
@@ -76,7 +71,6 @@ export namespace playerService {
     for (let i=0; i<3; i++) {
       try {
         auctions = auctions.concat(await fut.getPlayerTransferData(id, i));
-        await sleep(500);
       } catch (e) {
         break;
       }

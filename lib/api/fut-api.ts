@@ -1,6 +1,5 @@
 import Axios from "axios";
 import { logger } from "../logger";
-import * as sleep from 'sleep-promise';
 
 const API_URL = 'https://utas.external.s2.fut.ea.com/ut/game/fifa19';
 
@@ -25,6 +24,7 @@ export namespace fut {
   }
   
   export type Platform = 'pc' | 'ps' | 'xbox'
+  export type Quality = 'bronze' | 'silver' | 'gold' | 'special'
 
   export async function getClubPlayers(page = 0): Promise<ItemData[]> {
     const response = await Axios.get(`${API_URL}/club?sort=desc&type=player&start=${page * 100}&count=100`);
@@ -65,7 +65,6 @@ export namespace fut {
       itemData: [ { id: req.itemData.id, pile: 'trade'} ] 
     });
     if (pileResponse) {
-      await sleep(300);
       logger.info(`\t\titem pushed to trade pile ${pileResponse}`);
       const response = await Axios.post(`${API_URL}/auctionhouse`, req);
       return response.data;
@@ -84,5 +83,23 @@ export namespace fut {
   export async function getTradePile(): Promise<AuctionInfo[]> {
     const resp = await Axios.get(`${API_URL}/tradepile`);
     return resp.data.auctionInfo
+  }
+
+  export interface ClubItemMeta {
+    type: 'kits' | 'balls' | 'players' | 'stadia' | 'staff' | 'trophies'
+    contextId: number
+    contextValue: number
+    typeValue: number
+  }
+  export async function getClubItemMeta (): Promise<ClubItemMeta[]> {
+    const resp = await Axios.get(`${API_URL}/club/stats/club`);
+    return resp.data.stat;
+  }
+
+  export async function getPlatform (): Promise<Platform> {
+    const resp = await Axios.get(`${API_URL}/user/accountinfo?filterConsoleLogin=true&sku=FUT19WEB`)
+    return resp.data.userAccountInfo.personas[0].userClubList.filter(
+      c => c.year === '2019'
+    )[0].platform
   }
 }

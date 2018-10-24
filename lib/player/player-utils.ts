@@ -1,5 +1,7 @@
+import { fut } from "../api";
+
 interface IPlyaerFilter {
-  quality?: 'bronze' | 'silver' | 'gold' | 'special';
+  quality?: fut.Quality;
   rare?: boolean;
   tradeableOnly?: boolean;
 }
