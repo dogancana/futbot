@@ -14,35 +14,36 @@ $ yarn dev
 ```
 
 Load the extension in chrome://extensions with developer mode.  
-Login to fut web app. This will get your token to node server.  
-Since this server is not intented to be deployed somewhere, there is no session. Instead, your Fut web app session will be shared for any task in the server.
+Login to fut web app so that the extension can stole your session and inject it into node server.
+Since this server is not intented to be deployed somewhere, there is no session in node server. Instead, your Fut web app session will be shared for any task in the server.
 
 # Existing features:
 
 http://localhost:3000/club/players
 This just returns your players in club, not in tradepile
 
-http://localhost:3000/trade-bot/sell?batch=10http://localhost:3000/trade-bot/sell?batch=10&quality=gold
-This finds players to sell in your club (not in your active squad, tradable).  
-Filters will come in future  
-After finding players, it checks the prices in market (max 100 different auctions) and sells players  
-batch and quality is optional
+http://localhost:3000/trade-bot/start-selling
+This will start 2 jobs: Clearing transfer pile and selling players who are not in your active squad. 
+Once in a while it gets your players from club, figures a good price according to futbin/fut market data. And sells them if prices are trustable enough.  
+`Mindstet:` Probably you have 100s of unwanted players with a price range of 0-5000. Quickselling them actually means loosing money. You can start this selling feature and get rid of them for lowest futbin prices/lowest market buyNow prices.
 
 http://localhost:3000/trade-bot/clear-pile
-This will send evvery inactive player in your transfer list to your club.  
+This will clear transfer list from sold/expired items
 It's best to use prior to sell  
-TODO: Rest to be auto generated
+
+
+There are many more endpoints to use. But I don't think they are worth to mention in this point. You can read them in files named ```*.*-app.ts``` 
 
 # Disclaimer and Notes
 
 I'm pretty sure this would violate some terms and conditions. Use on your own risk  
-Whenever you make a call to the server, it'd make around 5 requests per second. If you use it more frequently, most probably your session will be reset.  
+The requests against fut api and futbin api are limited per minute. The values should be good enough to execute the bot for couple of ours. You can check request stats from http://localhost:9999/stats  
 If you get auth errors, just refresh fut web app or click to some features to update sid, so extension can send new auth information to server  
 I'm trying all the features from my profile. I generally try it with all quality (including specials). But still there might be weird edge cases which can cause bugs. 
 
 # Sync issues
 
-FUT Web app is making requests with an incremental timestamp/id. If you execute actions in this bot, your FUT Web app and this serve will be out of sync and you'd see weird transfer lists, player lists etc. To sync it again just refresh FUT Web App.  
+FUT Web app is making requests with an incremental timestamp/id. If you execute actions in this bot, your FUT Web app and this server might be out of sync after some time and you'd see weird transfer lists, player lists etc. To sync it again just refresh FUT Web App.  
 It's better to not use FUT Web App if you are planning to auto sell/buy for a long time from this bot.
 
 # Auth errors
