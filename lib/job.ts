@@ -25,7 +25,7 @@ export class Job {
   private id: string
 
   constructor(
-    private name: string,
+    protected name: string,
     private timesPerMin: number,
     private task: () => void
   ) {

@@ -1,7 +1,10 @@
 import * as cheerio from 'cheerio'
 import { futbin } from '../api';
+import { LowPlayerInvestor } from './invest-jobs';
 
 export namespace investService {
+  let lowPlayerInvestJob: LowPlayerInvestor
+
   export async function getTargets (query: futbin.PlayersQuery): Promise<number[]> {
     const defaultQuery = {
       page: 1,
@@ -24,5 +27,14 @@ export namespace investService {
       })
 
     return players.get() as any
+  }
+
+  export function startLowPlayerInvvest (budget: number) {
+    if (!lowPlayerInvestJob) lowPlayerInvestJob = new LowPlayerInvestor(budget)
+
+    return {
+      timesTargetBought: lowPlayerInvestJob.execTime,
+      report: lowPlayerInvestJob.report()
+    }
   }
 }

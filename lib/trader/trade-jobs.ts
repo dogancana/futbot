@@ -10,7 +10,7 @@ export class ClearPile extends Job {
   constructor () {
     super(
       'Trade:ClearPile',
-      1/5,    // every 5 mins
+      1,    // every min
       tradeService.clearPile
     )
   }
@@ -27,7 +27,7 @@ export class SellXPlayers extends Job {
     const sellPlayers = async () => {
       const players = (await club.getPlayersToSell()).slice(0, amount)
       for (const player of players) {
-        const price: SellPrice = await getOptimalSellPrice(player)
+        const price: SellPrice = await getOptimalSellPrice(player.assetId)
         try {
           const resp = await fut.sellPlayer({
             ...price,
@@ -42,6 +42,7 @@ export class SellXPlayers extends Job {
           }
         } catch (e) {
           logger.error(`${jobName}; couldnt sell ${playerService.readable(player)} because of error:${e.message}}`)
+          tradeService.clearPile()
           break
         }
       }

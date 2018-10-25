@@ -1,6 +1,7 @@
 import { logger } from "../logger";
 import { api } from "./api";
 import { playerService } from "../player";
+import * as querystring from 'querystring';
 
 const API_URL = 'https://utas.external.s2.fut.ea.com/ut/game/fifa19';
 
@@ -39,12 +40,22 @@ export namespace fut {
     currentBit: number
     expires: number
     itemData: ItemData
-    startingBid: 5400
+    startingBid: number
     tradeState: 'active' | 'closed' | 'expired' | string
     watched: boolean
+    tradeOwner: boolean
   }
-  export async function getPlayerTransferData(assetId, batch): Promise<AuctionInfo[]> {
-    const response = await api.get(`${API_URL}/transfermarket?start=${batch * 20}&num=21&type=player&definitionId=${assetId}`);
+  export async function getPlayerTransferData(assetId, batch, query?): Promise<AuctionInfo[]> {
+    const defaultQuery = {
+      start: batch * 20,
+      num: 21,
+      type: 'player',
+      definitionId: assetId,
+    }
+    const response = await api.get(`${API_URL}/transfermarket?${querystring.stringify({
+      ...defaultQuery,
+      ...query
+    })}`);
     return response.data.auctionInfo;
   }
   
@@ -110,5 +121,19 @@ export namespace fut {
     return resp.data.userAccountInfo.personas[0].userClubList.filter(
       c => c.year === '2019'
     )[0].platform
+  }
+
+  export async function bid (tradeId: number, bid: number): Promise<void> {
+    const resp = await api.put(`${API_URL}/trade/${tradeId}/bid`, {
+      data: {
+        bid
+      }
+    })
+    return resp.data
+  }
+
+  export async function getPurchasedItems (): Promise<ItemData[]> {
+    const resp = await api.get(`${API_URL}/purchased/items`)
+    return resp.data.itemData
   }
 }
