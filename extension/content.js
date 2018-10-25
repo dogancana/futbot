@@ -56,7 +56,7 @@ function pushDataToServer () {
       const batch = 150;
       for(let i=0; i<data.length; i+=batch) {
         const obj = {};
-        data.slice(i, i + batch).forEach(p => obj[p.id] = p.name);
+        data.slice(i, i + batch).forEach(p => obj[p.id] = p);
         console.log('sending', Object.keys(obj).length);
         setTimeout(() => {
           fetch(`${SERVER_HREF}/static/push-data`, {
