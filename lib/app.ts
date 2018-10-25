@@ -10,6 +10,7 @@ import { authApp } from './auth';
 import { staticItemsApp } from './static';
 import { setUpInterceptors } from './api';
 import { statsApp } from './stats';
+import { investApp } from './invest/invest-app';
 
 const app = express();
 setUpInterceptors();
@@ -19,12 +20,13 @@ app.set('port', process.env.PORT || 9999)
 app.use(cors());
 app.use(bodyParser.json())
 
-app.use('/club', clubApp);
-app.use('/trade-bot', tradeBotApp);
-app.use('/static', staticItemsApp);
-app.use('/player', playerApp);
-app.use('/auth', authApp);
-app.use('/stats', statsApp);
+app.use('/club', clubApp)
+app.use('/trade-bot', tradeBotApp)
+app.use('/static', staticItemsApp)
+app.use('/player', playerApp)
+app.use('/auth', authApp)
+app.use('/stats', statsApp)
+app.use('/invest', investApp)
 
 const server = http.createServer(app)
 server.listen(app.get('port'), function () {
