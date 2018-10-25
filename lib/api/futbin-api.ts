@@ -1,4 +1,4 @@
-import Axios from 'axios';
+import { api } from "./api";
 
 export namespace futbin {
   export interface Prices {
@@ -14,7 +14,7 @@ export namespace futbin {
     prp?: number
   }
   export async function getPrice (resourceId): Promise<Prices> {
-    const response = await Axios.get(`https://www.futbin.com/19/playerPrices?player=${resourceId}`);
+    const response = await api.get(`https://www.futbin.com/19/playerPrices?player=${resourceId}`);
     const apiPrices = response.data[resourceId].prices;
     const result: Prices = {
       pc: { prices: [] },

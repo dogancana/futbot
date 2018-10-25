@@ -1,37 +1,9 @@
 import { fut, futbin } from '../api';
-import { StaticPlayerData, StaticItems } from '../static';
+import { StaticItems } from '../static';
 
 export namespace playerService {
-  export interface Details extends StaticPlayerData {
-    marketPrice?: MarketPrice
-    futbinPrices: futbin.Prices
-  }
-  export async function getPlayerDetails (assetId, resourceId, disableMarketPrice: boolean = false): Promise<Details> {
-    return {
-      ...(StaticItems.itemData[assetId.toString()]),
-      marketPrice: !disableMarketPrice ? await getMarketPrice(assetId, resourceId) : null,
-      futbinPrices: await futbin.getPrice(resourceId)
-    }
-  }
-
-  export interface PriceSummary {
-    marketPrice?: MarketPrice,
-    futbinPrices: futbin.Prices
-  }
-  export async function getPrice (assetId: number, resourceId: number, platform: fut.Platform = 'pc'): Promise<PriceSummary> {
-    let marketPrice: MarketPrice;
-
-    const futbinPrices = await futbin.getPrice(resourceId);
-  
-    if (futbinPrices && futbinPrices[platform].prices.length < 2) {
-      // dont trust futbin without 2 prices
-      marketPrice = await getMarketPrice(assetId, resourceId);
-    }
-  
-    return { 
-      marketPrice,
-      futbinPrices
-    };
+  export async function getFutbinPrice (assetId: number, resourceId: number, platform: fut.Platform = 'pc') {
+    return await futbin.getPrice(resourceId);
   }
 
   export interface MarketPrice {
@@ -78,5 +50,13 @@ export namespace playerService {
     return auctions;
   }
   
+  export function readable (player: { id?: number, assetId?: number }): string {
+    const id = player.assetId || player.id || -1
+    const data = StaticItems.itemData[id] || {
+      name: '?????',
+      rating: 0
+    }
+    return `${data.name}, (${data.rating})`
+  }
 }
 

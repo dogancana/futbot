@@ -1,5 +1,9 @@
 import { playerService } from "../player"
-import { fut } from '../api'
+import { fut, futbin } from '../api'
+
+const HIGHER_PRICE_BOUNDRY = 1.05
+const LOWER_PRIVE_BOUNDRY = 0.95
+const FUTBIN_PRICE_DIFF_MARGIN_PERCT = 10
 
 export function tradePrice (price: number): number {
   // 0-1000 50
@@ -21,29 +25,50 @@ export function tradePrice (price: number): number {
 }
 
 
-interface SellPrice {
+export interface SellPrice {
   buyNowPrice: number
   startingBid: number
-  itemData: { id: number }
-  duration: number
 }
-export async function getFutbinPrice (player: playerService.Details): Promise<SellPrice> {
+export async function getFutbinSellPrice (price: futbin.Prices): Promise<SellPrice> {
   const platform = await fut.getPlatform()
-  const prices = player.futbinPrices[platform].prices
+  const prices = price[platform].prices
 
-  if (prices.length < 2) {
+  if (prices.length < 2 || prices[0] === 0) {
     return null
   }
 
   const firstPriceDiffPerct = 100 * Math.abs(prices[0] - prices[1]) / prices[0]
-  if (firstPriceDiffPerct > 5) {
+  let referencePrice = prices[0]
+  if (firstPriceDiffPerct > FUTBIN_PRICE_DIFF_MARGIN_PERCT) {
+    referencePrice = prices[1]
+  }
+
+  return {
+    buyNowPrice: tradePrice(referencePrice * HIGHER_PRICE_BOUNDRY),
+    startingBid: tradePrice(referencePrice * LOWER_PRIVE_BOUNDRY),
+  }
+}
+
+export function getMarketSellPrice (price: playerService.MarketPrice): SellPrice {
+  if (!price) {
+    return null
+  }
+
+  if (price.samplecount <= 3) {
     return null
   }
 
   return {
-    buyNowPrice: tradePrice(prices[0] * 1.05),
-    startingBid: tradePrice(prices[0] * 0.95),
-    itemData: { id: player.id },
-    duration: 3600
+    buyNowPrice: tradePrice(price.minBuyNow * HIGHER_PRICE_BOUNDRY),
+    startingBid: tradePrice(price.minBuyNow * LOWER_PRIVE_BOUNDRY),
   }
+}
+
+export async function getOptimalSellPrice (player: fut.ItemData): Promise<SellPrice> {
+  const futbinPrice: futbin.Prices = await playerService.getFutbinPrice(player.assetId, player.resourceId)
+  const futbinSellPrice: SellPrice = await getFutbinSellPrice(futbinPrice)
+  const marketPrice: playerService.MarketPrice = futbinSellPrice ? null : await playerService.getMarketPrice(player.assetId, player.resourceId)
+  const marketSellPrice: SellPrice = getMarketSellPrice(marketPrice)
+
+  return futbinSellPrice || marketSellPrice
 }

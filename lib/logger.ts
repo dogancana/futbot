@@ -7,6 +7,7 @@ const myFormat = printf(info => {
  
 export const logger = createLogger({
   format: combine(
+    format.colorize(),
     label({ label: 'FUTBOT' }),
     timestamp(),
     myFormat

@@ -1,29 +1,36 @@
 import * as express from 'express';
-import { BehaviorSubject } from 'rxjs';
 
-interface Stats {
-  started: Date,
-  futRequests: number
+interface RequestStats {
+  futRequests: number,
+  cachedFutResponse: number,
+  futbinRequests: number,
+  cachedFutbinResponse: number,
 }
 
-const stats: BehaviorSubject<Stats> = new BehaviorSubject({
+interface Stats extends RequestStats {
+  started: Date,
+}
+
+type IncOne = keyof RequestStats
+
+let stats: Stats = {
   started: new Date(),
-  futRequests: 0
-});
+  futRequests: 0,
+  cachedFutResponse: 0,
+  futbinRequests: 0,
+  cachedFutbinResponse: 0,
+};
 
 export class StatsService {
-  static requestMade () {
-    stats.next({
-      ...(stats.value),
-      futRequests: stats.value.futRequests + 1
-    })
+  static increment (key: IncOne) {
+    stats[key]++
   }
 }
 
 export const statsApp = express();
 
 statsApp.get('', (req, res) => {
-  const currentStats = stats.value
+  const currentStats = stats
   const now = new Date();
   const timeSpent = Math.floor((now.getTime() - currentStats.started.getTime()) / 1000 / 60) + 1
   const desc = `${currentStats.futRequests} requests made in ${timeSpent} minutes`

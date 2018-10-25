@@ -6,6 +6,7 @@ export interface StaticPlayerData {
   firstName: string
   id: number
   lastName: string
+  name: string
   nationId: number
   rating: number
 }
