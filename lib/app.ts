@@ -28,6 +28,8 @@ app.use('/auth', authApp)
 app.use('/stats', statsApp)
 app.use('/invest', investApp)
 
+app.get('/ping', (req, res) => res.send('pong'))
+
 const server = http.createServer(app)
 server.listen(app.get('port'), function () {
   logger.info('Express server listening on port ' + app.get('port'))

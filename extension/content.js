@@ -6,7 +6,7 @@ function addScript (s) {
   document.head.appendChild(elt);
 }
 
-function intercept(urlmatch, callback) {
+ function intercept(urlmatch, callback) {
   let send = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.send = function() {
     this.addEventListener('readystatechange', function() {
@@ -86,5 +86,5 @@ addScript(`
 
 window.addEventListener('load', loadEvent => {
   let window = loadEvent.currentTarget;
-  window.document.title='(FutHelper) FUT Web App!';
+  window.document.title='(Futbot) FUT Web App!';
 });

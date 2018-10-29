@@ -6,7 +6,7 @@ import { fut } from "../api";
 import { getOptimalSellPrice, tradePrice } from "../trader/trade-utils";
 import { logger } from "../logger";
 
-const BUY_REFERENCE_PERCT = .8
+const BUY_REFERENCE_PERCT = .75
 const MAX_AUCTION_TRY = 10
 let targets = []
 
@@ -65,7 +65,7 @@ export class LowPlayerInvestor extends Job {
                 await fut.sellPlayer({
                   ...(await getOptimalSellPrice(target)),
                   duration: 3600,
-                  itemData: { id: sellTarget.id }
+                  itemData: { id: sellTarget.id, assetId: sellTarget.assetId }
                 })
               } else {
                 logger.info(`${playerStr} was not found in purchased list`)
