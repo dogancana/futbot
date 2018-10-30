@@ -33,8 +33,8 @@ It's best to use prior to sell
   
 http://localhost:9999/invest/low-players?budget=10000
 When you start investing with a budget, a job will start to buy cheap players for cheaper (<80%) futbin prices. Since players are already cheap, it will try to use buyNow feature all the time. 
-The job figures investment targets from most popular futbin players in 1000 - 5000 range.
-Once the job finds a player with a safe price to buy, it'll buy and resell it.
+The job figures investment targets from most popular futbin players in 1000 - 2500 range (can be overwritten with min max query params).
+Once the job finds a player with a safe price to buy, it'll buy and resell it. Sometimes you get errors on reselling because processing player time takes more than expected (5s). If you also have trade-bot/sell job running, it'll catch these players and sell for same price.
 The job will continue to spend all the budget for buying players. 
 Sell prices won't be added back to actual budget.
 
@@ -59,9 +59,9 @@ On the first auth error this bot gets from EA servers, it'll invalidate the auth
 
 # Roadmap
 
-- Invest  
-  A feature to enable investing X amount of coins for players in [Y-Z] price range.  
-  It would read player prices with given range from futbin, and start bidding them in game.
-
+- FUT Web App UI
+  The aim is to add action buttons and quick look futbin prices on top of actual fut web app  
+  So you can start sell/invest features directly over fut web app without hitting server urls and add some players to auto buy targets, get futbin prices fast etc.
+  
 - Buy SBC players  
   Purpose of this feature will be to read completed SBC challanges from futbin and autobuy related players under futbin prices

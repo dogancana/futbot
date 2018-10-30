@@ -1,10 +1,12 @@
 import { fut } from "../api";
 import { filterPlayers } from "../player/player-utils";
+import { playerService } from "../player";
 
 export namespace club {
   export async function getPlayersToSell () {
     const batch = 100;
     const squadPlayers = await fut.getSquadPlayerIds();
+    const squadPlayerIDs = squadPlayers.map(p => p.id)
     const playerCount = (await fut.getClubItemMeta()).filter(d => d.type === 'players')[0].typeValue;
     let players: fut.ItemData[] = [];
     for (let i=0; i<(playerCount / batch); i++) {
@@ -15,7 +17,7 @@ export namespace club {
       return null;
     }
 
-    players = players.filter(p => squadPlayers.indexOf(p.id) === -1);
+    players = players.filter(p => squadPlayerIDs.indexOf(p.id) === -1);
     players = players.filter(p => p.itemState === 'free');
     players = filterPlayers(players, { 
       tradeableOnly: true,

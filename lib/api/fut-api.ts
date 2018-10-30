@@ -59,10 +59,10 @@ export namespace fut {
     return response.data.auctionInfo;
   }
   
-  export async function getSquadPlayerIds(): Promise<number[]> {
+  export async function getSquadPlayerIds(): Promise<fut.ItemData[]> {
     const response = await api.get(`${API_URL}/squad/active`, {}, { cachable: true });
-    const players: ItemData[] = response.data.players;
-    return players.map(p => p.id);
+    const players: any[] = response.data.players;
+    return players.map(p => p.itemData);
   }
   
   interface AuctionRequest {

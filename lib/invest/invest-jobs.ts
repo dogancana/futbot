@@ -8,18 +8,25 @@ import { logger } from "../logger";
 
 const BUY_REFERENCE_PERCT = .75
 const MAX_AUCTION_TRY = 10
+const WAIT_TRANSFER_PROCESSING_TIME = 5 * 1000
 let targets = []
 
+export interface LowPlayerInvestorProps {
+  budget: number
+  min?: number
+  max?: number
+}
 export class LowPlayerInvestor extends Job {
   private spent: number
   private budget: number
   private boughtPlayers: ({ price: number, assetId: number })[]
 
-  constructor (budget: number) {
+  constructor ({ budget, min, max }: LowPlayerInvestorProps) {
     const name = 'Invest:LowPlayerInvestor'
 
     const buyTargets = async () => {
-      if (!targets || targets.length === 0) setupTargets()
+      const pcPrice = `${min || 1000}-${max || 2500}`
+      if (!targets || targets.length === 0) setupTargets(pcPrice)
 
       if (this.budget < 1000) this.stop()
 
@@ -70,7 +77,7 @@ export class LowPlayerInvestor extends Job {
               } else {
                 logger.info(`${playerStr} was not found in purchased list`)
               }
-            }, 1000)
+            }, WAIT_TRANSFER_PROCESSING_TIME)
           }
           break
         }
@@ -102,12 +109,15 @@ export class LowPlayerInvestor extends Job {
   }
 }
 
-async function setupTargets () {
+async function setupTargets (price?: string) {
   const clubPlayers = await fut.getClubPlayers()
   const isInClubPlayers = ((id: number) => clubPlayers.filter(p => p.assetId === id).length > 0)
-
+  
   for (let i=0; i<10; i++) {
-    targets = targets.concat(await investService.getTargets({ page: i }))
+    targets = targets.concat(await investService.getTargets({ 
+      page: i,
+      pc_price: price
+    }))
   }
 
   targets = uniq(targets)

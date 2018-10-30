@@ -8,7 +8,9 @@ investApp.get('/players', async (req, res) => {
 })
 
 investApp.get('/low-players', async (req, res) => {
-  const { budget, min, max } = req.query
+  let { budget, min, max } = req.query
+  min = min && parseInt(min, 10)
+  max = max && parseInt(max, 10)
 
   if (!budget) {
     res.status(500).send('Send budget in query')
@@ -24,5 +26,5 @@ investApp.get('/low-players', async (req, res) => {
     res.status(500).send(`Min is greater than max. ${min} > ${max}`)
   }
 
-  res.send(investService.startLowPlayerInvvest(budget))
+  res.send(investService.startLowPlayerInvvest({ budget, min, max }))
 })

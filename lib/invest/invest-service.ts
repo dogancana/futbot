@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio'
 import { futbin } from '../api';
-import { LowPlayerInvestor } from './invest-jobs';
+import { LowPlayerInvestor, LowPlayerInvestorProps } from './invest-jobs';
 
 export namespace investService {
   let lowPlayerInvestJob: LowPlayerInvestor
@@ -29,8 +29,8 @@ export namespace investService {
     return players.get() as any
   }
 
-  export function startLowPlayerInvvest (budget: number) {
-    if (!lowPlayerInvestJob) lowPlayerInvestJob = new LowPlayerInvestor(budget)
+  export function startLowPlayerInvvest (props: LowPlayerInvestorProps) {
+    if (!lowPlayerInvestJob) lowPlayerInvestJob = new LowPlayerInvestor(props)
 
     return {
       timesTargetBought: lowPlayerInvestJob.execTime,
