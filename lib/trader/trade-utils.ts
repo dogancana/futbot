@@ -36,6 +36,10 @@ export async function getFutbinSellPrice (price: futbin.Prices): Promise<SellPri
     return null
   }
 
+  if (price[platform].updatedMinsAgo > 60) {
+    return null
+  }
+
   let referencePrice = prices[0] * 1.05
 
   return {
