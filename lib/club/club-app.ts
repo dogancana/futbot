@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { fut } from '../api';
 import { club } from './club-service';
+import { playerService } from '../player';
 
 export const clubApp = express();
 
@@ -10,5 +11,11 @@ clubApp.get('/players', async function(req, res) {
 });
 
 clubApp.get('/players-to-sell', async function(req, res) {
-  res.send(await club.getPlayersToSell())
+  try {
+    let players: any = await club.getPlayersToSell();
+    players = players.map(p => playerService.readable(p))
+    res.send(players)
+  } catch (e) {
+    res.status(500).send(e.message)
+  }
 })

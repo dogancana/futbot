@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
  
-  "name": "Fut Helper",
+  "name": "Futbot",
   "version": "0.1.0",
-  "description": "Lateral blog post demo extension",
+  "description": "An extension to automate some trade actions",
  
   "content_scripts": [{
     "js": ["content.js"],

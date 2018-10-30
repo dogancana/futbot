@@ -19,17 +19,24 @@ Since this server is not intented to be deployed somewhere, there is no session 
 
 # Existing features:
 
-http://localhost:3000/club/players
+http://localhost:9999/club/players
 This just returns your players in club, not in tradepile
 
-http://localhost:3000/trade-bot/start-selling
+http://localhost:9999/trade-bot/start-selling
 This will start 2 jobs: Clearing transfer pile and selling players who are not in your active squad. 
 Once in a while it gets your players from club, figures a good price according to futbin/fut market data. And sells them if prices are trustable enough.  
 `Mindstet:` Probably you have 100s of unwanted players with a price range of 0-5000. Quickselling them actually means loosing money. You can start this selling feature and get rid of them for lowest futbin prices/lowest market buyNow prices.
 
-http://localhost:3000/trade-bot/clear-pile
+http://localhost:9999/trade-bot/clear-pile
 This will clear transfer list from sold/expired items
 It's best to use prior to sell  
+  
+http://localhost:9999/invest/low-players?budget=10000
+When you start investing with a budget, a job will start to buy cheap players for cheaper (<80%) futbin prices. Since players are already cheap, it will try to use buyNow feature all the time. 
+The job figures investment targets from most popular futbin players in 1000 - 2500 range (can be overwritten with min max query params).
+Once the job finds a player with a safe price to buy, it'll buy and resell it. Sometimes you get errors on reselling because processing player time takes more than expected (5s). If you also have trade-bot/sell job running, it'll catch these players and sell for same price.
+The job will continue to spend all the budget for buying players. 
+Sell prices won't be added back to actual budget.
 
 
 There are many more endpoints to use. But I don't think they are worth to mention in this point. You can read them in files named ```*.*-app.ts``` 
@@ -52,9 +59,9 @@ On the first auth error this bot gets from EA servers, it'll invalidate the auth
 
 # Roadmap
 
-- Invest  
-  A feature to enable investing X amount of coins for players in [Y-Z] price range.  
-  It would read player prices with given range from futbin, and start bidding them in game.
-
+- FUT Web App UI
+  The aim is to add action buttons and quick look futbin prices on top of actual fut web app  
+  So you can start sell/invest features directly over fut web app without hitting server urls and add some players to auto buy targets, get futbin prices fast etc.
+  
 - Buy SBC players  
   Purpose of this feature will be to read completed SBC challanges from futbin and autobuy related players under futbin prices

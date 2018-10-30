@@ -13,10 +13,24 @@ export namespace tradeService {
     if (!clearPileJob) clearPileJob = new ClearPile()
     if (!sellXPlayersJob) sellXPlayersJob = new SellXPlayers(5)
 
+    return sellReport()
+  }
+
+  export function stopSelling() {
+    clearPileJob && clearPileJob.stop()
+    clearPileJob = null
+
+    sellXPlayersJob && sellXPlayersJob.stop()
+    sellXPlayersJob = null
+
+    return sellReport()
+  }
+
+  function sellReport() {
     return {
-      timesClearedPile: clearPileJob.execTime,
-      timesSellBatch: sellXPlayersJob.execTime,
-      soldPlayers: sellXPlayersJob.soldPlayers.map(p => ({
+      timesClearedPile: clearPileJob && clearPileJob.execTime,
+      timesSellBatch: sellXPlayersJob && sellXPlayersJob.execTime,
+      soldPlayers: sellXPlayersJob && sellXPlayersJob.soldPlayers.map(p => ({
         player: playerService.readable({ assetId: p.assetId }),
         ...(p.price)
       }))

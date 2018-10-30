@@ -13,8 +13,13 @@ playerApp.get('', async function(req, res) {
   }
 
   try {
-    const details = await playerService.getPlayerDetails(assetId, resourceId);
-    res.send(details);
+    const futbinPrice = await playerService.getFutbinPrice(assetId);
+    const marketPrice = await playerService.getMarketPrice(assetId, resourceId);
+    res.send({
+      name: playerService.readable({ assetId }),
+      futbinPrice,
+      marketPrice
+    });
   } catch (e) {
     logger.error(`Error retrieving player details\n\t${e.message}`)
     console.error('\t', e, '\n')

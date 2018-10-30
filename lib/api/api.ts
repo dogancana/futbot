@@ -47,24 +47,30 @@ export namespace api {
   }
 
   export async function request(axiosConfig: AxiosRequestConfig, apiConfig) {
-    const conf = { ...deafultConf, ...apiConfig }
-    const key = objectHash(axiosConfig)
-    const cached = memCache[key]
+    const conf: ApiConfig = { ...deafultConf, ...apiConfig }
     const url = axiosConfig.url || ''
+    let response
 
-    if (url.indexOf('futbin') > -1) {
-      StatsService.increment('cachedFutbinResponse')
-    } else if (url.indexOf('fut.ea')) {
-      StatsService.increment('cachedFutResponse')
-    }
+    if (conf.cachable) {
+      const key = objectHash(axiosConfig)
+      const cached = memCache[key]
 
-    if (conf.cachable && cached) {
-      return cached
+      if (cached) {
+        if (url.indexOf('futbin') > -1) {
+          StatsService.increment('cachedFutbinResponse')
+        } else if (url.indexOf('fut.ea')) {
+          StatsService.increment('cachedFutResponse')
+        }
+        response = cached
+      } else {
+        logger.info(url)
+        response = await Axios(axiosConfig)
+        memCache[key] = response
+      }
+      return response
     } else {
       logger.info(url)
-      const response = await Axios(axiosConfig)
-      memCache[key] = response
-      return response
+      return await Axios(axiosConfig)
     }
   }
 

@@ -25,24 +25,30 @@ export class Job {
   private id: string
 
   constructor(
-    private name: string,
+    protected name: string,
     private timesPerMin: number,
     private task: () => void
   ) {
+    this.start = this.start.bind(this)
+    this.stop = this.stop.bind(this)
 
     this.id = `${name}_${new Date().getTime()}`
-    this.source = interval(min / timesPerMin).pipe(startWith(null))
-    this.sub = this.source.subscribe(() => {
-      this.execTime++
-      logger.info(`Executing JOB[${this.id}]`)
-      task()
-      logger.info(`JOB[${this.id}] execution finished`)
-    })
+    this.start()
 
     jobs[this.id] = this
   }
 
   public stop (): void {
     this.sub.unsubscribe()
+  }
+
+  public start (): void {
+    this.source = interval(min / this.timesPerMin).pipe(startWith(null))
+    this.sub = this.source.subscribe(() => {
+      this.execTime++
+      logger.info(`Executing JOB[${this.id}]`)
+      this.task()
+      logger.info(`JOB[${this.id}] execution finished`)
+    })
   }
 }

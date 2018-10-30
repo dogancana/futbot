@@ -8,6 +8,10 @@ tradeBotApp.get('/start-selling', async function (req, res) {
   res.send(tradeService.startSelling())
 })
 
+tradeBotApp.get('/stop-selling', async function (req, res) {
+  res.send(tradeService.stopSelling())
+})
+
 tradeBotApp.get('/clear-pile', async function (req, res) {
   try {
     const resp = await tradeService.clearPile()

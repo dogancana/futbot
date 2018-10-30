@@ -2,8 +2,8 @@ import { fut, futbin } from '../api';
 import { StaticItems } from '../static';
 
 export namespace playerService {
-  export async function getFutbinPrice (assetId: number, resourceId: number, platform: fut.Platform = 'pc') {
-    return await futbin.getPrice(resourceId);
+  export async function getFutbinPrice (assetId: number) {
+    return await futbin.getPrice(assetId);
   }
 
   export interface MarketPrice {
