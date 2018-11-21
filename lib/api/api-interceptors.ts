@@ -23,11 +23,10 @@ interval(1000 / FUTBIN_REQUESTS_PER_SEC).subscribe(() => {
 })
 
 Axios.interceptors.response.use(
-  (response: AxiosResponse<any>) => response,
-  (error: AxiosResponse<any> | api.ApiError) => {
-    if (error.toString) {
-      logger.error(error.toString())
-    }
+  (response: any) => response,
+  (error: any | api.ApiError) => {
+    const response = error.response || { config: {} }
+    logger.error(`[${response.status}] ${response.config.url} : ${JSON.stringify(response.data)}`)
     throw error;
   },
 )
@@ -38,7 +37,9 @@ export function eaConfig (config) {
   config.headers['X-UT-SID'] = SessionInjector.auth.sid;
 
   const url = new URL(config.url);
-  const next = SessionInjector.lastStamp + 1;
+  let next = SessionInjector.lastStamp + 1;
+  if (!next || next === NaN) next = new Date().getTime()
+
   url.searchParams.set('_', `${next}`);
   SessionInjector.lastStamp = next;
   config.url = url.href;

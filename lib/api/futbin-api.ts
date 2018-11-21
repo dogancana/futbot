@@ -1,5 +1,6 @@
 import { api } from "./api";
 import * as querystring from 'querystring';
+import * as cheerio from 'cheerio'
 
 export namespace futbin {
   export interface Prices {
@@ -15,6 +16,8 @@ export namespace futbin {
     prp?: number
   }
   export async function getPrice (resourceId): Promise<Prices> {
+    if (!resourceId) return null
+    
     const response = await api.get(`https://www.futbin.com/19/playerPrices?player=${resourceId}`);
     const apiPrices = response.data[resourceId].prices;
     const result: Prices = {
@@ -42,12 +45,38 @@ export namespace futbin {
   export interface PlayersQuery {
     page: number
     pc_price?: string
+    xbox_price?: string
+    ps_price?: string
     sort?: 'likes' | string
     order?: 'desc' | string
   }
-  export async function getPlayers (query: PlayersQuery): Promise<any> {
+  export async function getPlayerIDs (query: PlayersQuery): Promise<number[]> {
     const resp = await api.get(`https://www.futbin.com/19/players?${querystring.stringify(query)}`)
-    return resp.data;
+    const html = resp.data
+    const $ = cheerio.load(html)
+    const players: number[] = $('#repTb tbody tr')
+      .map((i, elm) => {
+        const player = $(elm)
+        const execResult =  /player\/([0-9]+)/.exec(player.data('url'))
+        return execResult && execResult[1]    // futbinId
+      })
+      .get()
+      .map(id => parseInt(id, 10))
+      .filter(id => !!id && id !== NaN)
+
+    return players
+  }
+
+  export async function getPlayer (futbinId: number) {
+    const resp = await api.get(`https://www.futbin.com/19/player/${futbinId}`, null, { cachable: true })
+    const html = resp.data
+    const $ = cheerio.load(html)
+    const info = $('#page-info')
+    return {
+      resourceId: parseInt(info.data('player-resource'), 10),
+      futbinId: parseInt(info.data('id'), 10),
+      assetId: parseInt(info.data('baseid'), 10)
+    }
   }
 }
 

@@ -13,9 +13,7 @@ async function setAuthSession (req: express.Request, res: express.Response): Pro
   `);
 
   if (auth) SessionInjector.auth = auth;
-  if (SessionInjector.lastStamp &&
-      (!SessionInjector.lastStamp || lastStamp > SessionInjector.lastStamp))
-      SessionInjector.lastStamp = lastStamp;
+  SessionInjector.lastStamp = parseInt(lastStamp, 10);
   res.send('OK');
 }
 

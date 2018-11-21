@@ -2,8 +2,10 @@ import { fut, futbin } from '../api';
 import { StaticItems } from '../static';
 
 export namespace playerService {
-  export async function getFutbinPrice (assetId: number) {
-    return await futbin.getPrice(assetId);
+  export async function getFutbinPrice (resourceId: number) {
+    const prices =  await futbin.getPrice(resourceId);
+    const platform = await fut.getPlatform();
+    return prices[platform]
   }
 
   export interface MarketPrice {
@@ -13,8 +15,8 @@ export namespace playerService {
     averageStartingBid: number;
     samplecount: number;
   }
-  export async function getMarketPrice (assetId, resourceId): Promise<MarketPrice> {
-    const auctions = await getAuctions(assetId);
+  export async function getMarketPrice (resourceId): Promise<MarketPrice> {
+    const auctions = await getAuctions(resourceId);
   
     const price: MarketPrice = {
       minBuyNow: Number.MAX_VALUE,

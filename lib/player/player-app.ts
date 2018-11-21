@@ -13,8 +13,8 @@ playerApp.get('', async function(req, res) {
   }
 
   try {
-    const futbinPrice = await playerService.getFutbinPrice(assetId);
-    const marketPrice = await playerService.getMarketPrice(assetId, resourceId);
+    const futbinPrice = await playerService.getFutbinPrice(resourceId);
+    const marketPrice = await playerService.getMarketPrice(resourceId);
     res.send({
       name: playerService.readable({ assetId }),
       futbinPrice,

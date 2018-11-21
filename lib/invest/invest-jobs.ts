@@ -6,41 +6,57 @@ import { fut } from "../api";
 import { getOptimalSellPrice, tradePrice } from "../trader/trade-utils";
 import { logger } from "../logger";
 
-const BUY_REFERENCE_PERCT = .75
-const MAX_AUCTION_TRY = 10
+const BUY_REFERENCE_PERCT = .7
+const MAX_AUCTION_TRY = 3
 const WAIT_TRANSFER_PROCESSING_TIME = 5 * 1000
-let targets = []
+const MIN_TARGET_PRICE = 1000
+const MAX_TARGET_PRICE = 4000
+const MAX_TARGET_POOL = 30
+let targets: investService.TargetInfo[] = []
+let setingUp = false
 
 export interface LowPlayerInvestorProps {
   budget: number
   min?: number
   max?: number
+  maxTargetPool?: number
 }
 export class LowPlayerInvestor extends Job {
   private spent: number
   private budget: number
   private boughtPlayers: ({ price: number, assetId: number })[]
 
-  constructor ({ budget, min, max }: LowPlayerInvestorProps) {
+  constructor ({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
     const name = 'Invest:LowPlayerInvestor'
 
     const buyTargets = async () => {
-      const pcPrice = `${min || 1000}-${max || 2500}`
-      if (!targets || targets.length === 0) setupTargets(pcPrice)
+      const minPrice = min || MIN_TARGET_PRICE
+      const maxPrice = max || MAX_TARGET_PRICE
+      const pcPrice = `${minPrice}-${maxPrice}`
 
-      if (this.budget < 1000) this.stop()
+      if (!targets || targets.length === 0) {
+        setupTargets(pcPrice, maxTargetPool || MAX_TARGET_POOL)
+        return
+      }
+
+      if (this.budget < minPrice) {
+        investService.clearLowPlayerInvest()
+        return
+      }
 
       const target = targets.shift()
-      const playerStr = playerService.readable({ assetId: target })
-      const value = await getOptimalSellPrice(target)
+      const playerStr = playerService.readable({ assetId: target.assetId })
+      const value = await getOptimalSellPrice(target.resourceId)
+      if (!value) return
+
       const safeBuyValue = value.startingBid * BUY_REFERENCE_PERCT
       const price = p => p.currentBid != 0 ? p.currentBid : p.startingBid
       let batch = 0
       while (true) {
-        let auctions = (await fut.getPlayerTransferData(target, batch++, { maxb: tradePrice(safeBuyValue) }))
+
+        let auctions = (await fut.getPlayerTransferData(target.resourceId, batch++, { maxb: tradePrice(safeBuyValue) }))
           .filter(a => !a.watched)
           .filter(a => !a.tradeOwner)
-          .filter(a => a.itemData.resourceId === target)
           .map(a => pick(a, 'tradeId', 'buyNowPrice', 'currentBid', 'startingBid', 'expires'))
         auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice)
 
@@ -59,18 +75,18 @@ export class LowPlayerInvestor extends Job {
             logger.info(`${name} bid ${playerStr} with ${lowest.buyNowPrice}`)
             this.boughtPlayers.push({
               price: lowest.buyNowPrice,
-              assetId: target
+              assetId: target.assetId
             })
             this.spent += lowest.buyNowPrice
             this.budget -= lowest.buyNowPrice
 
             setTimeout(async () => {
               const purchased = await fut.getPurchasedItems()
-              const sellTarget = purchased.filter(p => p.assetId === target)[0]
+              const sellTarget = purchased.filter(p => p.resourceId === target.resourceId)[0]
   
               if (sellTarget) {
                 await fut.sellPlayer({
-                  ...(await getOptimalSellPrice(target)),
+                  ...(await getOptimalSellPrice(target.resourceId)),
                   duration: 3600,
                   itemData: { id: sellTarget.id, assetId: sellTarget.assetId }
                 })
@@ -88,7 +104,7 @@ export class LowPlayerInvestor extends Job {
 
     super(
       name,
-      10,
+      5,
       buyTargets
     )
 
@@ -109,17 +125,24 @@ export class LowPlayerInvestor extends Job {
   }
 }
 
-async function setupTargets (price?: string) {
+async function setupTargets (price: string, maxTargets: number) {
+  if (setingUp) return
+
+  setingUp = true
+  const pageLimit = Math.ceil(maxTargets/30)
+  const platform = await fut.getPlatform()
+  const priceKey = `${platform.toLowerCase()}_price`
   const clubPlayers = await fut.getClubPlayers()
-  const isInClubPlayers = ((id: number) => clubPlayers.filter(p => p.assetId === id).length > 0)
+  const isInClubPlayers = ((resourceId: number) => clubPlayers.filter(p => p.resourceId === resourceId).length > 0)
   
-  for (let i=0; i<10; i++) {
+  for (let i=0; i<pageLimit; i++) {
     targets = targets.concat(await investService.getTargets({ 
       page: i,
-      pc_price: price
+      [priceKey]: price
     }))
   }
 
   targets = uniq(targets)
-  targets = targets.filter(t => !isInClubPlayers(t))
+  targets = targets.filter(t => !isInClubPlayers(t.resourceId))
+  setingUp = false
 }

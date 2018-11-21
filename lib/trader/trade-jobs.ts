@@ -2,9 +2,10 @@ import { logger } from './../logger';
 import { Job } from './../job';
 import { tradeService } from './trade-service';
 import { club } from '../club/club-service';
-import { getOptimalSellPrice, SellPrice } from './trade-utils';
+import { SellPrice } from './trade-utils';
 import { fut } from '../api';
 import { playerService } from '../player';
+import { StaticItems } from '../static';
 
 const TRADE_PILE_FULL_ERROR_CODES = [ 461, 403 ]
 const PASS_THROUGH_SELL_ERROR_CODES = []
@@ -30,23 +31,11 @@ export class SellXPlayers extends Job {
     const sellPlayers = async () => {
       const players = (await club.getPlayersToSell()).slice(0, amount)
       for (const player of players) {
-        let price: SellPrice = await getOptimalSellPrice(player.assetId)
-        if (!price) {
-          continue
-        }
-        price.buyNowPrice = Math.min(price.buyNowPrice, player.marketDataMaxPrice)
         try {
-          const resp = await fut.sellPlayer({
-            ...price,
-            duration: 3600,
-            itemData: { id: player.id, assetId: player.assetId }
-          })
-          if (resp) {
-            this.soldPlayers.push({
-              ...player,
-              price
-            })
-          }
+          const data = StaticItems.itemData[player.assetId] || { rating: 999 }
+          if (data.rating > 84) continue
+          const sellResult = await tradeService.sellPlayerCheap(player)
+          if (sellResult) this.soldPlayers.push(sellResult)
         } catch (e) {
           logger.error(`${jobName}; couldnt sell ${playerService.readable(player)} because of error:${e.message}}`)
           if (TRADE_PILE_FULL_ERROR_CODES.indexOf(e.response.status) > -1) {

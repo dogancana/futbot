@@ -45,7 +45,7 @@ export namespace fut {
     watched: boolean
     tradeOwner: boolean
   }
-  export async function getPlayerTransferData(assetId, batch, query?): Promise<AuctionInfo[]> {
+  export async function getPlayerTransferData(assetId: number, batch: number, query?: any): Promise<AuctionInfo[]> {
     const defaultQuery = {
       start: batch * 20,
       num: 21,
@@ -87,13 +87,23 @@ export namespace fut {
     }
   }
   
-  export async function sendToClub(id: number): Promise<boolean> {
+  interface PutItemData {
+    id: number,
+    reason?: string,
+    pile: 'club' |  string,
+    success: boolean,
+    errorCode?: number
+  }
+  export interface PutItemResult {
+    itemData: PutItemData[]
+  }
+  export async function sendToClub(id: number): Promise<PutItemResult> {
     const pileResponse = await api.put(`${API_URL}/item`, { 
       data: {
         itemData: [ { id, pile: 'club'} ] 
       }
     });
-    return !!pileResponse
+    return pileResponse.data
   }
   
   export async function clearSold() {

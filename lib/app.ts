@@ -11,9 +11,11 @@ import { staticItemsApp } from './static';
 import { setUpInterceptors } from './api';
 import { statsApp } from './stats';
 import { investApp } from './invest/invest-app';
+import { startCorsProxy } from './cors-proxy';
 
 const app = express();
 setUpInterceptors();
+startCorsProxy();
 
 app.set('port', process.env.PORT || 9999)
 
