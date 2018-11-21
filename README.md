@@ -1,6 +1,7 @@
 # FutBot
 
 This is a very simple data source/trade bot for fifa fut api written in Typescript/Javascript for node.js.  
+The main purpose is automate simple activities. There is no intention to create a complete api as futapi.  
 To inject your session into node server, there is a chrome extension in the project.  
 It's tested with FIFA 19
 
@@ -12,8 +13,12 @@ Start the server
 $ yarn
 $ yarn dev
 ```
-
-Load the extension in chrome://extensions with developer mode.  
+Go to ui folder and build extension first (use node version 8-9)  
+```sh
+$ yarn
+$ yarn build
+```
+Load the extension in developer mode to chrome. Build output should be under /ui/build  
 Login to fut web app so that the extension can stole your session and inject it into node server.
 Since this server is not intented to be deployed somewhere, there is no session in node server. Instead, your Fut web app session will be shared for any task in the server.
 
@@ -31,15 +36,21 @@ http://localhost:9999/trade-bot/clear-pile
 This will clear transfer list from sold/expired items
 It's best to use prior to sell  
   
-http://localhost:9999/invest/low-players?budget=10000
+http://localhost:9999/invest/low-players?budget=50000&min=1000&max=5000&maxTargetPool=150
 When you start investing with a budget, a job will start to buy cheap players for cheaper (<80%) futbin prices. Since players are already cheap, it will try to use buyNow feature all the time. 
 The job figures investment targets from most popular futbin players in 1000 - 2500 range (can be overwritten with min max query params).
 Once the job finds a player with a safe price to buy, it'll buy and resell it. Sometimes you get errors on reselling because processing player time takes more than expected (5s). If you also have trade-bot/sell job running, it'll catch these players and sell for same price.
 The job will continue to spend all the budget for buying players. 
-Sell prices won't be added back to actual budget.
+Sell prices won't be added back to actual budget.  
+If you start this job in the night with parameters I provided, you might have ~10-20k profit in the morning.
 
 
 There are many more endpoints to use. But I don't think they are worth to mention in this point. You can read them in files named ```*.*-app.ts``` 
+
+# Existing UI Features
+
+```Player prices:``` The extension will add small visual components to players. Example below:
+![](doc/gifs/player-price.gif)
 
 # Disclaimer and Notes
 
@@ -59,9 +70,9 @@ On the first auth error this bot gets from EA servers, it'll invalidate the auth
 
 # Roadmap
 
-- FUT Web App UI
-  The aim is to add action buttons and quick look futbin prices on top of actual fut web app  
-  So you can start sell/invest features directly over fut web app without hitting server urls and add some players to auto buy targets, get futbin prices fast etc.
+- FUT Web App UI Features  
+  Add auto buying option into actual fut web app  
+  Add most used features to somewhere in main/home page, so we don't have to type urls with localhost:9999 blah blah. 
   
 - Buy SBC players  
   Purpose of this feature will be to read completed SBC challanges from futbin and autobuy related players under futbin prices
