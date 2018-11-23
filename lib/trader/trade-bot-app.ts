@@ -1,4 +1,3 @@
-import { logger } from './../logger';
 import * as express from 'express';
 import { tradeService } from './trade-service';
 
