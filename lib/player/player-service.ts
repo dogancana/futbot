@@ -8,6 +8,11 @@ export namespace playerService {
     return prices[platform]
   }
 
+  export async function getFutbinPrices (resourceId: number) {
+    const prices =  await futbin.getPrice(resourceId);
+    return prices
+  }
+
   export interface MarketPrice {
     minBuyNow: number;
     minStartingBid: number;

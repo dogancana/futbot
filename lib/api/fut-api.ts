@@ -3,7 +3,7 @@ import { api } from "./api";
 import { playerService } from "../player";
 import * as querystring from 'querystring';
 
-const API_URL = 'https://utas.external.s2.fut.ea.com/ut/game/fifa19';
+const API_URL = 'https://utas.external.s3.fut.ea.com/ut/game/fifa19';
 
 export namespace fut {
   export interface ItemData {

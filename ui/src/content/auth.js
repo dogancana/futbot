@@ -5,8 +5,8 @@ const authData = {}
 main()
 
 function main () {
-  intercept('https://utas.external.s2.fut.ea.com/ut/auth', scrapAuthData)
-  intercept('https://utas.external.s2.fut.ea.com/ut/game', getLastStamp)
+  intercept('https://utas.external.s3.fut.ea.com/ut/auth', scrapAuthData)
+  intercept('https://utas.external.s3.fut.ea.com/ut/game', getLastStamp)
 
   window.addEventListener('load', loadEvent => {
     let window = loadEvent.currentTarget

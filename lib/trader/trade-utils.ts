@@ -64,7 +64,7 @@ export function getMarketSellPrice (price: playerService.MarketPrice): SellPrice
 }
 
 export async function getOptimalSellPrice (resourceId: number): Promise<SellPrice> {
-  const futbinPrice: futbin.Prices = await playerService.getFutbinPrice(resourceId)
+  const futbinPrice: futbin.Prices = await playerService.getFutbinPrices(resourceId)
   const futbinSellPrice: SellPrice = await getFutbinSellPrice(futbinPrice)
   const marketPrice: playerService.MarketPrice = futbinSellPrice ? null : await playerService.getMarketPrice(resourceId)
   const marketSellPrice: SellPrice = getMarketSellPrice(marketPrice)

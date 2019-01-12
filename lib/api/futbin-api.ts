@@ -9,7 +9,7 @@ export namespace futbin {
     ps: Price
   }
   export interface Price {
-    prices: []
+    prices: number[]
     updatedMinsAgo?: number
     minPrice?: number
     maxPrice?: number
