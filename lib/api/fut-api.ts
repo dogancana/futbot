@@ -127,10 +127,16 @@ export namespace fut {
   }
 
   export async function getPlatform (): Promise<Platform> {
-    const resp = await api.get(`${API_URL}/user/accountinfo?filterConsoleLogin=true&sku=FUT19WEB`, {}, { cachable: true })
-    return resp.data.userAccountInfo.personas[0].userClubList.filter(
+    const resp = await api.get(`${API_URL}/user/accountinfo?filterConsoleLogin=true&sku=FUT19WEB`, {}, { cachable: true });
+    var platform = resp.data.userAccountInfo.personas[0].userClubList.filter(
       c => c.year === '2019'
-    )[0].platform
+    )[0].platform;
+
+    if (platform === '360') {
+     platform = 'xbox';
+    }
+
+    return platform;
   }
 
   export async function bid (tradeId: number, bid: number): Promise<void> {

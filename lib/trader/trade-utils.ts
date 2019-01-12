@@ -30,6 +30,7 @@ export interface SellPrice {
 }
 export async function getFutbinSellPrice (price: futbin.Prices): Promise<SellPrice> {
   const platform = await fut.getPlatform()
+
   const prices = price[platform].prices
 
   if (prices.length < 5 || prices[0] === 0) {
