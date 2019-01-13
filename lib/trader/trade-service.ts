@@ -3,6 +3,7 @@ import { fut } from "../api";
 import { playerService } from '../player';
 import { logger } from '../logger';
 import { SellPrice, getOptimalSellPrice } from './trade-utils';
+import { StaticItems } from '../static';
 
 export namespace tradeService {
   let clearPileJob: ClearPile
@@ -11,9 +12,9 @@ export namespace tradeService {
   export interface SellingReport {
     cleared: number
   }
-  export function startSelling() {
+  export function startSelling(amount, maxRating) {
     if (!clearPileJob) clearPileJob = new ClearPile()
-    if (!sellXPlayersJob) sellXPlayersJob = new SellXPlayers(5)
+    if (!sellXPlayersJob) sellXPlayersJob = new SellXPlayers(amount, maxRating)
 
     return sellReport()
   }
