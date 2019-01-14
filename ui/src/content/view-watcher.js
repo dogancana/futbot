@@ -1,7 +1,11 @@
 import { debounce } from '../utils/debounce'
 import { addVueApp } from '.'
-import playerComp from './player.vue'
+import Player from './player.vue'
+import FutbotView from './futbot-view.vue'
 import { uid } from '../utils/uid'
+import { request } from '../utils/request'
+
+let isServerAvailable = false
 
 function watchViewChanges (handler) {
   const targetNode = document.getElementsByClassName('view-root')[0]
@@ -16,9 +20,19 @@ function addPlayerDetails () {
     if (isElementPlayer(player)) {
       if (player.getElementsByClassName('vue-marker').length === 0) {
         const playerInfo = player.self ? player.self.data : {}
-        addVueChildToElm(player, playerComp, { item: playerInfo })
+        addVueChildToElm(player, Player, { item: playerInfo })
       }
     }
+  }
+}
+
+function addFutbotView () {
+  const container = document.getElementsByClassName('FUINavigationContent')[0]
+  if (container) {
+    const tabMenu = container.getElementsByClassName('tab-menu')[0]
+    const root = container.firstElementChild
+    const addBefore = tabMenu ? tabMenu.nextElementSibling : root.firstElementChild
+    addVueChildToElm(container.firstElementChild, FutbotView, {}, addBefore)
   }
 }
 
@@ -26,7 +40,7 @@ function isElementPlayer (elm) {
   return elm.getElementsByClassName('player').length > 0
 }
 
-function addVueChildToElm (elm, comp, data) {
+function addVueChildToElm (elm, comp, data, insertBefore) {
   if (elm.getElementsByClassName('vue-marker').length === 0) {
     const marker = document.createElement('div')
     marker.classList = 'vue-marker'
@@ -34,7 +48,12 @@ function addVueChildToElm (elm, comp, data) {
     const appRoot = document.createElement('div')
     const appClassName = `app-root${uid()}`
     appRoot.className = appClassName
-    elm.appendChild(appRoot)
+
+    if (insertBefore) {
+      elm.insertBefore(appRoot, insertBefore)
+    } else {
+      elm.appendChild(appRoot)
+    }
 
     setTimeout(() => {
       addVueApp(`.${appClassName}`, comp, data)
@@ -43,9 +62,17 @@ function addVueChildToElm (elm, comp, data) {
 }
 
 function handleViewChange () {
+  if (!isServerAvailable) return
+
+  addFutbotView()
   addPlayerDetails()
 }
 
 window.addEventListener('load', loadEvent => {
+  setInterval(async () => {
+    const resp = await request('http://localhost:9999/auth')
+    isServerAvailable = !!resp.auth
+  }, 1000 * 30)
+
   watchViewChanges(debounce(handleViewChange, 500))
 })

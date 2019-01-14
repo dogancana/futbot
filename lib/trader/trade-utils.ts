@@ -28,16 +28,15 @@ export interface SellPrice {
   buyNowPrice: number
   startingBid: number
 }
-export async function getFutbinSellPrice (price: futbin.Prices): Promise<SellPrice> {
-  const platform = await fut.getPlatform()
 
-  const prices = price[platform].prices
+export function getFutbinSellPrice (price: futbin.Price): SellPrice {
+  const prices = price.prices
 
   if (prices.length < 5 || prices[0] === 0) {
     return null
   }
 
-  if (price[platform].updatedMinsAgo > 60) {
+  if (price.updatedMinsAgo > 60) {
     return null
   }
 
@@ -65,8 +64,8 @@ export function getMarketSellPrice (price: playerService.MarketPrice): SellPrice
 }
 
 export async function getOptimalSellPrice (resourceId: number): Promise<SellPrice> {
-  const futbinPrice: futbin.Prices = await playerService.getFutbinPrices(resourceId)
-  const futbinSellPrice: SellPrice = await getFutbinSellPrice(futbinPrice)
+  const futbinPrice: futbin.Price = await playerService.getFutbinPrice(resourceId)
+  const futbinSellPrice: SellPrice = getFutbinSellPrice(futbinPrice)
   const marketPrice: playerService.MarketPrice = futbinSellPrice ? null : await playerService.getMarketPrice(resourceId)
   const marketSellPrice: SellPrice = getMarketSellPrice(marketPrice)
 

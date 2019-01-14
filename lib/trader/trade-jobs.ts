@@ -56,7 +56,7 @@ export interface PlayerSellReport extends fut.ItemData {
 export class SellXPlayers extends Job {
   public soldPlayers: ({ price: SellPrice } & fut.ItemData)[]
 
-  constructor (amount: number = 10, maxRating: number = 70) {
+  constructor (amount: number = 10, maxRating: number = 84) {
     const jobName = `Trade:SellAPlayer`;
     const sellPlayers = async () => {
       const players = (await club.getPlayersToSell()).slice(0, amount)

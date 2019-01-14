@@ -12,6 +12,7 @@ export namespace tradeService {
   export interface SellingReport {
     cleared: number
   }
+  
   export function startSelling(amount, maxRating) {
     if (!clearPileJob) clearPileJob = new ClearPile()
     if (!sellXPlayersJob) sellXPlayersJob = new SellXPlayers(amount, maxRating)

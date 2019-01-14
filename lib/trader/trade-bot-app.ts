@@ -1,4 +1,3 @@
-import { logger } from './../logger';
 import * as express from 'express';
 import { tradeService } from './trade-service';
 
@@ -7,7 +6,7 @@ export const tradeBotApp = express();
 tradeBotApp.get('/start-selling', async function (req, res) {
   let { maxRating, amount } = req.query
   maxRating = maxRating && parseInt(maxRating, 10)
-  amount = amount && parseInt(amount, 10)
+  amount = (amount && parseInt(amount, 10)) || 1
   res.send(tradeService.startSelling(amount, maxRating))
 })
 

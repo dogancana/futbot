@@ -1,3 +1,4 @@
+import { autoBuyerApp } from './auto-buyer/auto-buyer-app';
 import { logger } from './logger';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
@@ -29,6 +30,7 @@ app.use('/player', playerApp)
 app.use('/auth', authApp)
 app.use('/stats', statsApp)
 app.use('/invest', investApp)
+app.use('/auto-buyer', autoBuyerApp)
 
 app.get('/ping', (req, res) => res.send('pong'))
 
