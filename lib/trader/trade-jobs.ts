@@ -26,14 +26,14 @@ export interface PlayerSellReport extends fut.ItemData {
 export class SellXPlayers extends Job {
   public soldPlayers: ({ price: SellPrice } & fut.ItemData)[]
 
-  constructor (amount: number = 10) {
+  constructor (amount: number = 10, maxRating: number = 84) {
     const jobName = `Trade:SellAPlayer`;
     const sellPlayers = async () => {
       const players = (await club.getPlayersToSell()).slice(0, amount)
       for (const player of players) {
         try {
           const data = StaticItems.itemData[player.assetId] || { rating: 999 }
-          if (data.rating > 84) continue
+          if (data.rating > maxRating) continue
           const sellResult = await tradeService.sellPlayerCheap(player)
           if (sellResult) this.soldPlayers.push(sellResult)
         } catch (e) {

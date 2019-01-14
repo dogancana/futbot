@@ -1,9 +1,12 @@
 <template>
-  <v-collapsible>
-    <div class="root">
-      <p>Server status: {{ serverAuth }}</p>
-    </div>
-  </v-collapsible>
+  <div class="wrapper">
+    <v-collapsible>
+      <div class="view">
+        <p>Server status: {{ serverAuth }}</p>
+        <p><v-auto-buy-list /></p>
+      </div>
+    </v-collapsible>
+  </div>
 </template>
 
 <script>
@@ -32,12 +35,21 @@ export default {
 </script>
 
 <style lang='scss' scoped>
-  .root {
+  .wrapper {
+    width: 100%;
+  }
+
+  .view {
+    width: 100%;
     padding: 10px;
     flex: 1;
     background-color: #f2f6ff;
   }
 </style>
 
+
 <style>
+  .FUINavigationContent > *:first-child {
+    flex-direction: column;
+  }
 </style>

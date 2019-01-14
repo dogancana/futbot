@@ -15,14 +15,12 @@
 <script>
 import Vue from 'vue'
 const Collapsible = {
-  data: function () {
-    return {
-      toggled: false
-    }
-  },
+  props: [ 'onToggle' ],
+  data: function () { return { toggled: false } },
   methods: {
     toggle (event) {
       this.toggled = !this.toggled
+      if (this.onToggle) this.onToggle(this.toggled)
     }
   }
 }

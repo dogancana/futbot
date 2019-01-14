@@ -4,7 +4,8 @@ import { tradeService } from './trade-service';
 export const tradeBotApp = express();
 
 tradeBotApp.get('/start-selling', async function (req, res) {
-  res.send(tradeService.startSelling())
+  const { maxRating } = req.query;
+  res.send(tradeService.startSelling(maxRating))
 })
 
 tradeBotApp.get('/stop-selling', async function (req, res) {

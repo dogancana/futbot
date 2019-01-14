@@ -1,22 +1,14 @@
 <template>
-  <div class='root'>
-    <v-collapse-wrapper>
-      <div 
-        @click="toggle" 
-        v-bind:class="{ 'toggled': toggled }"
-        v-collapse-toggle 
-        class="toggle" 
-      ></div>
-      <div class="content-wrapper" v-collapse-content>
-        <p v-if="priceLoading">Loading...</p>
-        <p v-if="priceError">{{ priceError }}</p>
-        <div class="price" v-if="price">
-          <p><span>Futbin: </span><span>{{ price.futbinPrice.prices.slice(0,2).join() }}</span></p>
-          <p><span>Min market buy now: </span><span>{{ price.marketPrice.minBuyNow }}</span></p>
-          <p><span>Market samples: </span><span>{{ price.marketPrice.samplecount }}</span></p>
-        </div>
+  <div class="root">
+    <v-collapsible :onToggle="onToggle">
+      <p v-if="priceLoading">Loading...</p>
+      <p v-if="priceError">{{ priceError }}</p>
+      <div class="price" v-if="price">
+        <p><span>Futbin: </span><span>{{ price.futbinPrice.prices.slice(0,2).join() }}</span></p>
+        <p><span>Min market buy now: </span><span>{{ price.marketPrice.minBuyNow }}</span></p>
+        <p><span>Market samples: </span><span>{{ price.marketPrice.samplecount }}</span></p>
       </div>
-    </v-collapse-wrapper>
+    </v-collapsible>
   </div>
 </template>
 
@@ -29,14 +21,12 @@ export default {
     return {
       price: null,
       priceLoading: false,
-      priceError: null,
-      toggled: false
+      priceError: null
     }
   },
   methods: {
-    toggle (event) {
-      this.toggled = !this.toggled
-      this.handlePriceLoad()
+    onToggle (toggled) {
+      if (toggled) this.handlePriceLoad()
     },
     handlePriceLoad () {
       if (!this.price && !this.priceLoading) {
@@ -50,7 +40,7 @@ export default {
           .catch(e => {
             this.price = null
             this.priceLoading = false
-            this.priceError = 'Something went wrong'
+            this.priceError = e.message
             console.log('Player price error', e)
           })
       }
@@ -60,35 +50,9 @@ export default {
 </script>
 
 <style lang='scss' scoped>
-  $color: midnightblue;
-
   .root {
     width: 100%;
     z-index: 1;
-  }
-
-  .toggle {
-    $size: 20px;
-
-    position: absolute;
-    top: 0;
-    right: 5%;
-    z-index: 2;
-    cursor: pointer;
-
-    width: 0; 
-    height: 0;
-    border-color: $color;
-    border-left: $size solid transparent;
-    border-right: $size solid transparent;
-    border-top: $size solid;
-    margin-bottom: -$size;
-    transition: ease-in .3s;
-    
-    &.toggled {
-      transform: rotate(180deg);
-    }
-
   }
 
   .price {

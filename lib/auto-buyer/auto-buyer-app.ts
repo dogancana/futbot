@@ -22,6 +22,10 @@ autoBuyerApp.get('/start-jobs', function (req, res) {
   res.send(AutoBuyerService.startJobs())
 })
 
+autoBuyerApp.get('/jobs', function (req, res) {
+  res.send(AutoBuyerService.report())
+})
+
 autoBuyerApp.get('/stop-jobs', function (req, res) {
   res.send(AutoBuyerService.stopJobs())
 })

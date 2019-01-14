@@ -3,6 +3,9 @@ import { addVueApp } from '.'
 import Player from './player.vue'
 import FutbotView from './futbot-view.vue'
 import { uid } from '../utils/uid'
+import { request } from '../utils/request'
+
+let isServerAvailable = false
 
 function watchViewChanges (handler) {
   const targetNode = document.getElementsByClassName('view-root')[0]
@@ -26,7 +29,10 @@ function addPlayerDetails () {
 function addFutbotView () {
   const container = document.getElementsByClassName('FUINavigationContent')[0]
   if (container) {
-    addVueChildToElm(container.firstElementChild, FutbotView, {}, true)
+    const tabMenu = container.getElementsByClassName('tab-menu')[0]
+    const root = container.firstElementChild
+    const addBefore = tabMenu ? tabMenu.nextElementSibling : root.firstElementChild
+    addVueChildToElm(container.firstElementChild, FutbotView, {}, addBefore)
   }
 }
 
@@ -34,7 +40,7 @@ function isElementPlayer (elm) {
   return elm.getElementsByClassName('player').length > 0
 }
 
-function addVueChildToElm (elm, comp, data, isBefore = false) {
+function addVueChildToElm (elm, comp, data, insertBefore) {
   if (elm.getElementsByClassName('vue-marker').length === 0) {
     const marker = document.createElement('div')
     marker.classList = 'vue-marker'
@@ -43,8 +49,8 @@ function addVueChildToElm (elm, comp, data, isBefore = false) {
     const appClassName = `app-root${uid()}`
     appRoot.className = appClassName
 
-    if (isBefore) {
-      elm.insertBefore(appRoot, elm.firstElementChild)
+    if (insertBefore) {
+      elm.insertBefore(appRoot, insertBefore)
     } else {
       elm.appendChild(appRoot)
     }
@@ -56,10 +62,17 @@ function addVueChildToElm (elm, comp, data, isBefore = false) {
 }
 
 function handleViewChange () {
+  if (!isServerAvailable) return
+
   addFutbotView()
   addPlayerDetails()
 }
 
 window.addEventListener('load', loadEvent => {
+  setInterval(async () => {
+    const resp = await request('http://localhost:9999/auth')
+    isServerAvailable = !!resp.auth
+  }, 1000 * 30)
+
   watchViewChanges(debounce(handleViewChange, 500))
 })

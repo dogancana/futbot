@@ -60,9 +60,13 @@ export namespace AutoBuyerService {
     return report()
   }
 
-  function report () {
+  export function report () {
     return {
-      targets
+      targets,
+      jobs: {
+        autoBuyBidder: autoBuyBidderJob ? autoBuyBidderJob.execTime : null,
+        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.execTime : null,
+      }
     }
   }
 }
