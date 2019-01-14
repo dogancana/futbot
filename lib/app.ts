@@ -1,3 +1,6 @@
+// Leave this at top
+require('dotenv').config({ path: `${__dirname}/../.env` });
+
 import { autoBuyerApp } from './auto-buyer/auto-buyer-app';
 import { logger } from './logger';
 import * as express from 'express';

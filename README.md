@@ -30,6 +30,7 @@ This just returns your players in club, not in tradepile
 http://localhost:9999/trade-bot/start-selling
 This will start 2 jobs: Clearing transfer pile and selling players who are not in your active squad. 
 Once in a while it gets your players from club, figures a good price according to futbin/fut market data. And sells them if prices are trustable enough.  
+```Query Paramters: ``` maxRating  
 `Mindstet:` Probably you have 100s of unwanted players with a price range of 0-5000. Quickselling them actually means loosing money. You can start this selling feature and get rid of them for lowest futbin prices/lowest market buyNow prices.
 
 http://localhost:9999/trade-bot/clear-pile
@@ -58,6 +59,10 @@ I'm pretty sure this would violate some terms and conditions. Use on your own ri
 The requests against fut api and futbin api are limited per minute. The values should be good enough to execute the bot for couple of ours. You can check request stats from http://localhost:9999/stats  
 If you get auth errors, just refresh fut web app or click to some features to update sid, so extension can send new auth information to server  
 I'm trying all the features from my profile. I generally try it with all quality (including specials). But still there might be weird edge cases which can cause bugs. 
+
+# Known Bugs
+
+- Currently, the server gets wrong rating value for special cards. So, parameters such as maxRating is effected. (Nothing wrong with prices.) 
 
 # Sync issues
 

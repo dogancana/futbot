@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import { getPlayerPrice } from '../futbot/player.js'
+import { getPlayerPrice } from './futbot/player.js'
 
 export default {
   props: [ 'item' ],
@@ -68,3 +68,4 @@ export default {
     z-index: 0;
   }
 </style>
+ƒ

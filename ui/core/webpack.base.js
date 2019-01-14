@@ -7,13 +7,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 let resolve = dir => path.join(__dirname, '..', 'src', dir)
 module.exports = {
   entry: {
-    tab: resolve('./tab'),
-    popup: resolve('./popup'),
-    options: resolve('./options'),
     content: resolve('./content'), 
     devtools: resolve('./devtools'),
-    background: resolve('./backend'),
-    panel: resolve('./devtools/panel'),
     inject: resolve('./content/inject'),
   },
   output: {
@@ -32,15 +27,6 @@ module.exports = {
   },
   module: {
     rules: [
-      {
-        test: /\.(js|vue)$/,
-        loader: 'eslint-loader',
-        enforce: 'pre',
-        include: [path.join(__dirname, '..', 'src'), path.join(__dirname, '..', 'test')],
-        options: {
-          formatter: require('eslint-friendly-formatter')
-        }
-      },
       {
         test: /\.vue$/,
         loader: 'vue-loader',
@@ -90,12 +76,7 @@ module.exports = {
     ]
   },
   plugins: [
-    htmlPage('home', 'app', ['tab']),
-    htmlPage('popup', 'popup', ['popup']),
-    htmlPage('panel', 'panel', ['panel']),
     htmlPage('devtools', 'devtools', ['devtools']),
-    htmlPage('options', 'options', ['options']),
-    htmlPage('background', 'background', ['background']),
     new CopyWebpackPlugin([{ from: path.join(__dirname, '..', 'static') }]),
     new ChromeReloadPlugin({
       port: 9090,

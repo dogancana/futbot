@@ -1,12 +1,12 @@
 import { StatsService } from './../stats/stats-app';
-import Axios, { AxiosResponse } from 'axios';
+import Axios from 'axios';
 import { URL } from 'url';
 import { logger } from '../logger';
 import { SessionInjector } from '../auth';
 import { api } from './api';
 import { interval } from 'rxjs'
 
-const FUT_REQUESTS_PER_SEC = 1
+const FUT_REQUESTS_PER_SEC = parseInt(process.env.FUTBOT_FUT_REQUESTS_PER_SEC, 10) || 2
 const futConfigQueue = []
 interval(1000 / FUT_REQUESTS_PER_SEC).subscribe(() => {
   if (futConfigQueue.length > 0) {
@@ -14,7 +14,7 @@ interval(1000 / FUT_REQUESTS_PER_SEC).subscribe(() => {
   }
 })
 
-const FUTBIN_REQUESTS_PER_SEC = 20
+const FUTBIN_REQUESTS_PER_SEC = parseInt(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC, 10) || 20
 const futbinConfigQueue = []
 interval(1000 / FUTBIN_REQUESTS_PER_SEC).subscribe(() => {
   if (futbinConfigQueue.length > 0) {

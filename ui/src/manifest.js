@@ -20,16 +20,7 @@ module.exports = {
     'identity',
     'identity.email'
   ],
-  browser_action: {
-    default_title: 'Futbot',
-    default_popup: 'pages/popup.html'
-  },
-  background: {
-    persistent: false,
-    page: 'pages/background.html'
-  },
   devtools_page: 'pages/devtools.html',
-  options_page: 'pages/options.html',
   content_scripts: [{
     js: [ 'js/inject.js' ],
     run_at: 'document_end',
@@ -37,5 +28,5 @@ module.exports = {
     all_frames: true
   }],
   content_security_policy: "script-src 'self' 'unsafe-eval'; object-src 'self'",
-  web_accessible_resources: [ 'panel.html', 'js/content.js' ]
+  web_accessible_resources: [ 'js/content.js' ]
 }

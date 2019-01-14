@@ -1,2 +1,4 @@
 node_modules
 .nvm
+.env
+.log
