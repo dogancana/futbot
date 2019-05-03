@@ -1,9 +1,18 @@
 # FutBot
 
+`NOTE`: I'm not maintaining this project anymore. But I'd gladly accept pull requests or new maintainers.
+
 This is a very simple data source/trade bot for fifa fut api written in Typescript/Javascript for node.js.  
 The main purpose is automate simple activities. There is no intention to create a complete api as futapi.  
 To inject your session into node server, there is a chrome extension in the project.  
 It's tested with FIFA 19
+
+# Prepare
+
+```Config```  
+The project needs a configuration file (.env) in order to get some user preferences and region based api endpoint (I was lazy to figure it out automatically). You can copy .env.local file as .env file if you are in europe.  
+Without the file, server won't work.
+
 
 # Start
 
@@ -72,12 +81,3 @@ It's better to not use FUT Web App if you are planning to auto sell/buy for a lo
 # Auth errors
 
 On the first auth error this bot gets from EA servers, it'll invalidate the auth tokens and stop working till you send new sid from FUT Web App (via extension)
-
-# Roadmap
-
-- FUT Web App UI Features  
-  Add auto buying option into actual fut web app  
-  Add most used features to somewhere in main/home page, so we don't have to type urls with localhost:9999 blah blah. 
-  
-- Buy SBC players  
-  Purpose of this feature will be to read completed SBC challanges from futbin and autobuy related players under futbin prices
