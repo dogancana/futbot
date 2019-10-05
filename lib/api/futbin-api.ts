@@ -18,7 +18,7 @@ export namespace futbin {
   export async function getPrice (resourceId): Promise<Prices> {
     if (!resourceId) return null
     
-    const response = await api.get(`https://www.futbin.com/19/playerPrices?player=${resourceId}`);
+    const response = await api.get(`https://www.futbin.com/20/playerPrices?player=${resourceId}`);
     const apiPrices = response.data[resourceId].prices;
     const result: Prices = {
       pc: { prices: [] },
@@ -51,7 +51,7 @@ export namespace futbin {
     order?: 'desc' | string
   }
   export async function getPlayerIDs (query: PlayersQuery): Promise<number[]> {
-    const resp = await api.get(`https://www.futbin.com/19/players?${querystring.stringify(query)}`)
+    const resp = await api.get(`https://www.futbin.com/20/players?${querystring.stringify(query)}`)
     const html = resp.data
     const $ = cheerio.load(html)
     const players: number[] = $('#repTb tbody tr')
@@ -68,7 +68,7 @@ export namespace futbin {
   }
 
   export async function getPlayer (futbinId: number) {
-    const resp = await api.get(`https://www.futbin.com/19/player/${futbinId}`, null, { cachable: true })
+    const resp = await api.get(`https://www.futbin.com/20/player/${futbinId}`, null, { cachable: true })
     const html = resp.data
     const $ = cheerio.load(html)
     const info = $('#page-info')
@@ -81,6 +81,7 @@ export namespace futbin {
 }
 
 function parseUpdateTime (str: string): number {
+  if (!str) return null
   if (str.includes('week') || str.includes('month') || str.includes('year')) {
     return Number.MAX_VALUE
   } else if (str.includes('hour')) {

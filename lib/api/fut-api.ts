@@ -3,7 +3,7 @@ import { api } from "./api";
 import { playerService } from "../player";
 import * as querystring from 'querystring';
 
-const API_URL = process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE || 'https://utas.external.s2.fut.ea.com/ut/game/fifa19';
+const API_URL = process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE || 'https://utas.external.s2.fut.ea.com/ut/game/fifa20';
 
 export namespace fut {
   export interface ItemData {
@@ -50,7 +50,7 @@ export namespace fut {
       start: batch * 20,
       num: 21,
       type: 'player',
-      definitionId: assetId,
+      maskedDefId: assetId,
     }
     const response = await api.get(`${API_URL}/transfermarket?${querystring.stringify({
       ...defaultQuery,
@@ -127,9 +127,9 @@ export namespace fut {
   }
 
   export async function getPlatform (): Promise<Platform> {
-    const resp = await api.get(`${API_URL}/user/accountinfo?filterConsoleLogin=true&sku=FUT19WEB`, {}, { cachable: true })
+    const resp = await api.get(`${API_URL}/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`, {}, { cachable: true })
     return resp.data.userAccountInfo.personas[0].userClubList.filter(
-      c => c.year === '2019'
+      c => c.year === '2020'
     )[0].platform
   }
 

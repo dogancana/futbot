@@ -3,7 +3,7 @@ const repositories = window.repositories;
 const authData = {};
 const FUT_API_URL =
   process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
-  "https://utas.external.s2.fut.ea.com/ut/game/fifa19";
+  "https://utas.external.s2.fut.ea.com/ut/game/fifa12";
 
 main();
 
@@ -37,7 +37,9 @@ function intercept(urlmatch, callback) {
 function scrapAuthData(req) {
   const data = JSON.parse(req.responseText);
   authData.auth = data;
-  feedServer();
+  setTimeout(() => {
+    feedServer();
+  }, 5000)
 }
 
 function getLastStamp(req) {

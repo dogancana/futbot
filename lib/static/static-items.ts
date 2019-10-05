@@ -32,6 +32,7 @@ staticItemsApp.get('/need-data', (req, res) => {
 
 staticItemsApp.post('/push-data', (req, res) => {
   logger.info(`extension sent ${Object.keys(req.body).length} data`);
+  
   itemData = {
     ...itemData,
     ...req.body
