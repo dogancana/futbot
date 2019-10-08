@@ -1,8 +1,6 @@
 # FutBot
 
-`NOTE`: I'm not maintaining this project anymore. But I'd gladly accept pull requests or new maintainers.
-
-This is a very simple data source/trade bot for fifa fut api written in Typescript/Javascript for node.js.  
+This is a very simple data source/trade bot for FIFA 20 fut api written in Typescript/Javascript for node.js.  
 The main purpose is automate simple activities. There is no intention to create a complete api as futapi.  
 To inject your session into node server, there is a chrome extension in the project.  
 It's tested with FIFA 20
