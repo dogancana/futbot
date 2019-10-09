@@ -21,7 +21,7 @@ export interface ItemData {
 const fileName = resolve(__dirname, "../..", "local/static-data.json");
 const write = (s: ItemData) => writeFileSyncSafe<ItemData>(fileName, s);
 let itemData: ItemData = {};
-readFileIfRecent<ItemData>(fileName).then(i => (itemData = i));
+readFileIfRecent<ItemData>(fileName).then(i => (itemData = i || {}));
 let fileWriterTimeout: ReturnType<typeof setTimeout>;
 
 export const staticItemsApp = express();

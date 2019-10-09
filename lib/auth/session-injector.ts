@@ -19,7 +19,7 @@ const fileName = resolve(__dirname, "../..", "local/fut-session.json");
 const write = (s: Session) => writeFileSyncSafe<Session>(fileName, s);
 
 let apiSession: Session = {};
-readFileIfRecent<Session>(fileName).then(s => (apiSession = s));
+readFileIfRecent<Session>(fileName).then(s => (apiSession = s || {}));
 
 export class SessionInjector {
   static get auth(): Auth {

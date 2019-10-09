@@ -39,13 +39,13 @@ export namespace fut {
 
   export interface AuctionInfo {
     tradeId: number;
-    bidState: string;
+    bidState: "none" | "highest" | "outbid";
     buyNowPrice: number;
-    currentBit: number;
+    currentBid: number;
     expires: number;
     itemData: ItemData;
     startingBid: number;
-    tradeState: "active" | "closed" | "expired" | string;
+    tradeState: "active" | "closed" | "expired";
     watched: boolean;
     tradeOwner: boolean;
   }
@@ -80,7 +80,7 @@ export namespace fut {
       start: batch * 20,
       num: 21,
       type: "player",
-      level: "gold",
+      lev: "gold",
       micr: minBid,
       macr: maxBid,
       minb: minBnow,
@@ -91,6 +91,19 @@ export namespace fut {
     });
     const response = await api.get(
       `${API_URL}/transfermarket?${querystring.stringify({ ...q })}`
+    );
+    return response.data.auctionInfo;
+  }
+
+  export async function checkAuctionStatus(
+    transferIds: ReadonlyArray<number>
+  ): Promise<ReadonlyArray<AuctionInfo>> {
+    if (!transferIds || transferIds.length === 0) {
+      throw new Error("Please provide transferIds");
+    }
+
+    const response = await api.get(
+      `${API_URL}/trade/status/lite?tradeIds=${transferIds.join(",")}`
     );
     return response.data.auctionInfo;
   }

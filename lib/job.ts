@@ -19,6 +19,30 @@ export class Job {
     return stopped;
   }
 
+  private static slowed: boolean = false;
+  public static slowDownAllJobsForNextMins(mins: number) {
+    if (Job.slowed) return;
+
+    Job.slowed = true;
+
+    for (const key of Object.keys(jobs)) {
+      const job = jobs[key];
+      job.stop();
+      job.timesPerMin = job.timesPerMin / 3;
+      job.start();
+    }
+
+    setTimeout(() => {
+      for (const key of Object.keys(jobs)) {
+        const job = jobs[key];
+        job.stop();
+        job.timesPerMin = job.timesPerMin * 3;
+        job.start();
+      }
+      Job.slowed = false;
+    }, mins * 60 * 1000);
+  }
+
   private source: Observable<any>;
   private sub: Subscription;
   public execTime = 0;
@@ -38,8 +62,13 @@ export class Job {
     this.sub.unsubscribe();
   }
 
-  public start(task: () => void): void {
-    this.task = task;
+  public start(task?: () => void): void {
+    this.task = task || this.task;
+    if (!this.task) {
+      logger.error(`JOB[${this.id}] couldn't be started. No task found`);
+      return;
+    }
+
     this.source = interval(min / this.timesPerMin).pipe(startWith(null));
     this.sub = this.source.subscribe(() => {
       this.execTime++;

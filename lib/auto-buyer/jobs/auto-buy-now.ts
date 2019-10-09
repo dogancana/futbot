@@ -1,9 +1,9 @@
 import { pick } from "lodash";
-import { Job } from "./../job";
-import { AutoBuyerService } from "./auto-buyer.service";
-import { playerService } from "../player";
-import { fut } from "../api";
-import { logger } from "../logger";
+import { Job } from "../../job";
+import { AutoBuyerService } from "../auto-buyer.service";
+import { playerService } from "../../player";
+import { fut } from "../../api";
+import { logger } from "../../logger";
 
 const WAIT_TRANSFER_PROCESSING_TIME = 5000;
 
@@ -53,14 +53,5 @@ export class AutoBuyBuyNow extends Job {
         }
       }
     }
-  }
-}
-
-export class AutoBuyBidder extends Job {
-  constructor() {
-    const jobName = "AutoBuyer::Bidder";
-
-    super(jobName, 3);
-    this.start(() => {});
   }
 }

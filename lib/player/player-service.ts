@@ -15,7 +15,9 @@ export namespace playerService {
     averageStartingBid: number;
     samplecount: number;
   }
-  export async function getMarketPrice(resourceId): Promise<MarketPrice> {
+  export async function getMarketPrice(
+    resourceId: number
+  ): Promise<MarketPrice> {
     const auctions = await getAuctions(resourceId);
 
     const price: MarketPrice = {
@@ -38,6 +40,10 @@ export namespace playerService {
     });
     price.averageBuyNow /= price.samplecount;
     price.averageStartingBid /= price.samplecount;
+
+    price.minBuyNow =
+      price.minBuyNow === Number.MAX_VALUE ? 0 : price.minBuyNow;
+
     return price;
   }
 
@@ -53,7 +59,11 @@ export namespace playerService {
     return auctions;
   }
 
-  export function readable(player: { id?: number; assetId?: number }): string {
+  export function readable(player: {
+    id?: number;
+    assetId?: number;
+    resourceId?: number;
+  }): string {
     const id = player.assetId || player.id || -1;
     const data = StaticItems.itemData[id] || {
       name: "?????",
