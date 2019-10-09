@@ -70,6 +70,11 @@ export class GoodAuctionInvestor extends Job {
             });
             const bidPrice = tradePrice(askingPrice + 1);
             if (bidPrice <= this.budget) {
+              logger.info(
+                `[Invest:GoodAuction]: ${playerService.readable(
+                  a.itemData
+                )} bidding for ${bidPrice}`
+              );
               await fut.bid(a.tradeId, tradePrice(askingPrice + 1));
               this.budget -= bidPrice;
             }
