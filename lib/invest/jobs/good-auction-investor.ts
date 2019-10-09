@@ -75,8 +75,10 @@ export class GoodAuctionInvestor extends Job {
                   a.itemData
                 )} bidding for ${bidPrice}`
               );
-              await fut.bid(a.tradeId, tradePrice(askingPrice + 1));
-              this.budget -= bidPrice;
+              try {
+                await fut.bid(a.tradeId, tradePrice(askingPrice + 1));
+                this.budget -= bidPrice;
+              } catch {}
             }
           }
         }
