@@ -43,6 +43,8 @@ export class AutoBuyBuyNow extends Job {
           await fut.bid(lowest.tradeId, lowest.buyNowPrice);
           setTimeout(async () => {
             const purchased = await fut.getPurchasedItems();
+            this.futRequests++;
+
             const justBoughtTarget = purchased.filter(
               p => p.resourceId === target.resourceId
             )[0];

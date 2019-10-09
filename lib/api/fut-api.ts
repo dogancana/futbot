@@ -193,12 +193,11 @@ export namespace fut {
   }
 
   export async function bid(tradeId: number, bid: number): Promise<void> {
-    const resp = await api.put(`${API_URL}/trade/${tradeId}/bid`, {
+    await api.put(`${API_URL}/trade/${tradeId}/bid`, {
       data: {
         bid
       }
     });
-    return resp.data;
   }
 
   export async function getPurchasedItems(): Promise<ItemData[]> {

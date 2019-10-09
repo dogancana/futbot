@@ -3,8 +3,9 @@ import { fut } from "../../api";
 import { logger } from "../../logger";
 import { playerService } from "../../player";
 import { tradePrice } from "../../trader/trade-utils";
+import { AxiosResponse } from "axios";
 
-const BATCH_START_PAGE = 1; // Better for checking transfer with >1 min remaining
+const BATCH_START_PAGE = 10; // Better for checking transfer with >1 min remaining
 const BATCH_PAGES_TO_SEE = 5;
 const PROFIT_MARGIN_PERCT = 15;
 
@@ -61,24 +62,34 @@ export class GoodAuctionInvestor extends Job {
           logger.info(
             `[Invest:GoodAuction]: ${playerService.readable(
               a.itemData
-            )} can be bought for ${askingPrice}, which is less than optimal price ${sellPrice}. Profit margin ${profitMargin}`
+            )} can be bought for ${askingPrice}, which is less than optimal price ${sellPrice}. Profit margin ${profitMargin}. Budget: ${
+              this.budget
+            }`
           );
-          if (!auctionsToWatch.find(v => v.tradeId === a.tradeId)) {
+          if (!auctionsToWatch.find(v => v.tradeId == a.tradeId)) {
             auctionsToWatch.push({
               ...a,
               maxBuyPrice
             });
-            const bidPrice = tradePrice(askingPrice + 1);
-            if (bidPrice <= this.budget) {
+            const bidPrice = tradePrice(maxBuyPrice - 1);
+            if (bidPrice < this.budget) {
               logger.info(
                 `[Invest:GoodAuction]: ${playerService.readable(
                   a.itemData
                 )} bidding for ${bidPrice}`
               );
               try {
-                await fut.bid(a.tradeId, tradePrice(askingPrice + 1));
+                await fut.bid(a.tradeId, bidPrice);
                 this.budget -= bidPrice;
-              } catch {}
+              } catch (e) {
+                logger.error(
+                  `[Invevst:GoodAuction]: bid failed for ${playerService.readable(
+                    a.itemData
+                  )} with bid amount ${bidPrice}. Reason: ${
+                    (e as AxiosResponse).data
+                  }`
+                );
+              }
             }
           }
         }

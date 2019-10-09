@@ -8,7 +8,7 @@ import { interval } from "rxjs";
 import { Job } from "../job";
 
 const FUT_REQUESTS_PER_SEC =
-  parseInt(process.env.FUTBOT_FUT_REQUESTS_PER_SEC, 10) || 1;
+  parseInt(process.env.FUTBOT_FUT_REQUESTS_PER_SEC, 10) || .7;
 const futConfigQueue = [];
 interval(Math.ceil(1000 / FUT_REQUESTS_PER_SEC)).subscribe(() => {
   if (futConfigQueue.length > 0) {
@@ -17,7 +17,7 @@ interval(Math.ceil(1000 / FUT_REQUESTS_PER_SEC)).subscribe(() => {
 });
 
 const FUTBIN_REQUESTS_PER_SEC =
-  parseInt(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC, 10) || 10;
+  parseInt(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC, 10) || 5;
 const futbinConfigQueue = [];
 interval(Math.ceil(1000 / FUTBIN_REQUESTS_PER_SEC)).subscribe(() => {
   if (futbinConfigQueue.length > 0) {
@@ -39,16 +39,17 @@ export function eaConfig(config) {
   config.headers["X-UT-SID"] = SessionInjector.auth.sid;
 
   const url = new URL(config.url);
-  let next = SessionInjector.lastStamp + 1;
-  if (!next || next === NaN) next = new Date().getTime();
+  // let next = SessionInjector.lastStamp + 1;
+  // if (!next || next === NaN) next = new Date().getTime();
 
-  url.searchParams.set("_", `${next}`);
-  SessionInjector.lastStamp = next;
+  // url.searchParams.set("_", `${next}`);
+  // SessionInjector.lastStamp = next;
   config.url = url.href;
 
   return config;
 }
 
+const eaStopCodes = [401, 403, 458]
 export function setUpInterceptors() {
   Axios.interceptors.response.use(
     res => res,
@@ -65,7 +66,7 @@ export function setUpInterceptors() {
         `[${res.status}] ${config.url} : ${JSON.stringify(res.data)}`
       );
       if (config.url.indexOf("ea.com") > -1) {
-        if (res.status === 401) {
+        if (eaStopCodes.indexOf(res.status) > -1) {
           logger.error(
             "AxiosInterceptor stopped all jobs for critical auth error"
           );

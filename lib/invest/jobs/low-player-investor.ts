@@ -5,6 +5,7 @@ import { uniq, pick } from "lodash";
 import { fut } from "../../api";
 import { getOptimalSellPrice, tradePrice } from "../../trader/trade-utils";
 import { logger } from "../../logger";
+import { AxiosError } from "axios";
 
 const BUY_REFERENCE_PERCT = 0.7;
 const MAX_AUCTION_TRY = 3;
@@ -74,17 +75,7 @@ export class LowPlayerInvestor extends Job {
         { maxb: tradePrice(safeBuyValue) }
       ))
         .filter(a => !a.watched)
-        .filter(a => !a.tradeOwner)
-        .map(a =>
-          pick(
-            a,
-            "tradeId",
-            "buyNowPrice",
-            "currentBid",
-            "startingBid",
-            "expires"
-          )
-        );
+        .filter(a => !a.tradeOwner);
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
 
       if (auctions.length === 0) {
@@ -97,8 +88,8 @@ export class LowPlayerInvestor extends Job {
         if (this.budget <= lowest.buyNowPrice) {
           break;
         }
-        const resp = fut.bid(lowest.tradeId, lowest.buyNowPrice);
-        if (resp) {
+        try {
+          await fut.bid(lowest.tradeId, lowest.buyNowPrice);
           logger.info(
             `${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`
           );
@@ -125,6 +116,15 @@ export class LowPlayerInvestor extends Job {
               logger.info(`${playerStr} was not found in purchased list`);
             }
           }, WAIT_TRANSFER_PROCESSING_TIME);
+        } catch (e) {
+          const err: AxiosError = e;
+          logger.error(
+            `[Invest:LowPlayer]: bid error for ${playerService.readable(
+              lowest.itemData
+            )} with bid ${lowest.buyNowPrice}. Reason: ${
+              err.response.status
+            }, ${err.response.data}`
+          );
         }
         break;
       }

@@ -48,12 +48,16 @@ export class Job {
   public execTime = 0;
   private id: string;
   private task: () => void;
+  protected futbinRequests: number
+  protected futRequests: number
 
   constructor(protected name: string, private timesPerMin: number) {
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
 
     this.id = `${name}_${new Date().getTime()}`;
+    this.futRequests = 0;
+    this.futbinRequests = 0;
 
     jobs[this.id] = this;
   }
