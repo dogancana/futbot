@@ -1,11 +1,8 @@
-import { logger } from "../logger";
-import { api } from "./api";
-import { playerService } from "../player";
+import { logger } from "../../logger";
+import { playerService } from "../../player";
 import * as querystring from "querystring";
-
-const API_URL =
-  process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
-  "https://utas.external.s2.fut.ea.com/ut/game/fifa20";
+import { futApi } from "./api";
+import { simpleCacheAdapter } from "../cache-adapter";
 
 export namespace fut {
   export interface ItemData {
@@ -31,8 +28,8 @@ export namespace fut {
   export type Quality = "bronze" | "silver" | "gold" | "special";
 
   export async function getClubPlayers(page = 0): Promise<ItemData[]> {
-    const response = await api.get(
-      `${API_URL}/club?sort=desc&type=player&start=${page * 100}&count=100`
+    const response = await futApi.get(
+      `/club?sort=desc&type=player&start=${page * 100}&count=100`
     );
     return response.data.itemData;
   }
@@ -60,8 +57,8 @@ export namespace fut {
       type: "player",
       maskedDefId: assetId
     };
-    const response = await api.get(
-      `${API_URL}/transfermarket?${querystring.stringify({
+    const response = await futApi.get(
+      `/transfermarket?${querystring.stringify({
         ...defaultQuery,
         ...query
       })}`
@@ -89,8 +86,8 @@ export namespace fut {
     Object.keys(q).forEach(key => {
       if (!q[key]) delete q[key];
     });
-    const response = await api.get(
-      `${API_URL}/transfermarket?${querystring.stringify({ ...q })}`
+    const response = await futApi.get(
+      `/transfermarket?${querystring.stringify({ ...q })}`
     );
     return response.data.auctionInfo;
   }
@@ -102,18 +99,16 @@ export namespace fut {
       throw new Error("Please provide transferIds");
     }
 
-    const response = await api.get(
-      `${API_URL}/trade/status/lite?tradeIds=${transferIds.join(",")}`
+    const response = await futApi.get(
+      `/trade/status/lite?tradeIds=${transferIds.join(",")}`
     );
     return response.data.auctionInfo;
   }
 
   export async function getSquadPlayerIds(): Promise<fut.ItemData[]> {
-    const response = await api.get(
-      `${API_URL}/squad/active`,
-      {},
-      { cachable: true }
-    );
+    const response = await futApi.get(`/squad/active`, {
+      adapter: simpleCacheAdapter
+    });
     const players: any[] = response.data.players;
     return players.map(p => p.itemData);
   }
@@ -129,13 +124,11 @@ export namespace fut {
     logger.info(
       `${playerStr} will be sold for ${req.startingBid}/${req.buyNowPrice}`
     );
-    const pileResponse = await api.put(`${API_URL}/item`, {
-      data: {
-        itemData: [{ id: req.itemData.id, pile: "trade" }]
-      }
+    const pileResponse = await futApi.put(`/item`, {
+      itemData: [{ id: req.itemData.id, pile: "trade" }]
     });
     if (pileResponse) {
-      const response = await api.post(`${API_URL}/auctionhouse`, { data: req });
+      const response = await futApi.post(`/auctionhouse`, req);
       return response.data;
     } else {
       throw new Error("couldnt move to trade pile");
@@ -153,20 +146,18 @@ export namespace fut {
     itemData: PutItemData[];
   }
   export async function sendToClub(id: number): Promise<PutItemResult> {
-    const pileResponse = await api.put(`${API_URL}/item`, {
-      data: {
-        itemData: [{ id, pile: "club" }]
-      }
+    const pileResponse = await futApi.put(`/item`, {
+      itemData: [{ id, pile: "club" }]
     });
     return pileResponse.data;
   }
 
   export async function clearSold() {
-    return await api.del(`${API_URL}/trade/sold`);
+    return await futApi.request({ url: "/trade/sold", method: "DELETE" });
   }
 
   export async function getTradePile(): Promise<AuctionInfo[]> {
-    const resp = await api.get(`${API_URL}/tradepile`);
+    const resp = await futApi.get(`/tradepile`);
     return resp.data && resp.data.auctionInfo;
   }
 
@@ -177,31 +168,32 @@ export namespace fut {
     typeValue: number;
   }
   export async function getClubItemMeta(): Promise<ClubItemMeta[]> {
-    const resp = await api.get(`${API_URL}/club/stats/club`);
+    const resp = await futApi.get(`/club/stats/club`);
     return resp.data.stat;
   }
 
+  let platform: Platform = null;
   export async function getPlatform(): Promise<Platform> {
-    const resp = await api.get(
-      `${API_URL}/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
-      {},
-      { cachable: true }
+    if (platform) return platform;
+
+    const resp = await futApi.get(
+      `/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
+      { adapter: simpleCacheAdapter }
     );
-    return resp.data.userAccountInfo.personas[0].userClubList.filter(
+    platform = resp.data.userAccountInfo.personas[0].userClubList.filter(
       c => c.year === "2020"
     )[0].platform;
+    return platform;
   }
 
   export async function bid(tradeId: number, bid: number): Promise<void> {
-    await api.put(`${API_URL}/trade/${tradeId}/bid`, {
-      data: {
-        bid
-      }
+    await futApi.put(`/trade/${tradeId}/bid`, {
+      bid
     });
   }
 
   export async function getPurchasedItems(): Promise<ItemData[]> {
-    const resp = await api.get(`${API_URL}/purchased/items`);
+    const resp = await futApi.get(`/purchased/items`);
     return resp.data.itemData;
   }
 }

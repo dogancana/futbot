@@ -1,6 +1,6 @@
-import { api } from "./api";
 import * as querystring from "querystring";
 import * as cheerio from "cheerio";
+import { futbinApi, futbinCache } from "./api";
 
 export namespace futbin {
   export interface Prices {
@@ -19,9 +19,9 @@ export namespace futbin {
   export async function getPrice(resourceId): Promise<Prices> {
     if (!resourceId) return null;
 
-    const response = await api.get(
-      `https://www.futbin.com/20/playerPrices?player=${resourceId}`
-    );
+    const response = await futbinApi.get(`/playerPrices?player=${resourceId}`, {
+      adapter: futbinCache.adapter
+    });
     const apiPrices = response.data[resourceId].prices;
     const result: Prices = {
       pc: { prices: [] },
@@ -63,8 +63,9 @@ export namespace futbin {
     order?: "desc" | string;
   }
   export async function getPlayerIDs(query: PlayersQuery): Promise<number[]> {
-    const resp = await api.get(
-      `https://www.futbin.com/20/players?${querystring.stringify(query)}`
+    const resp = await futbinApi.get(
+      `/players?${querystring.stringify(query)}`,
+      { adapter: futbinCache.adapter }
     );
     const html = resp.data;
     const $ = cheerio.load(html);
@@ -82,11 +83,9 @@ export namespace futbin {
   }
 
   export async function getPlayer(futbinId: number) {
-    const resp = await api.get(
-      `https://www.futbin.com/20/player/${futbinId}`,
-      null,
-      { cachable: true }
-    );
+    const resp = await futbinApi.get(`/player/${futbinId}`, {
+      adapter: futbinCache.adapter
+    });
     const html = resp.data;
     const $ = cheerio.load(html);
     const info = $("#page-info");

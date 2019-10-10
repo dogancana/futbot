@@ -1,22 +1,14 @@
 {
-    "compilerOptions": {
-        "lib": [
-            "es2015"
-        ],
-        "typeRoots" : ["./node_modules/@types"],
-        "module": "commonjs",
-        "target": "es5",
-        "noImplicitAny": false,
-        "sourceMap": true,
-        "outDir": "build",
-        "experimentalDecorators": true
-    },
-    "exclude": [
-        "node_modules",
-        "**/*.spec.ts",
-        "**/*.test.ts"
-    ],
-    "include": [
-        "lib/**/*.ts"
-    ]
+  "compilerOptions": {
+    "lib": ["es2015"],
+    "typeRoots": ["./node_modules/@types"],
+    "module": "commonjs",
+    "target": "es5",
+    "noImplicitAny": false,
+    "sourceMap": true,
+    "outDir": "build",
+    "experimentalDecorators": true
+  },
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"],
+  "include": ["lib/**/*.ts"]
 }

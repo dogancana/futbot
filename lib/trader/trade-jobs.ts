@@ -56,7 +56,10 @@ export class SellXPlayers extends Job {
             player
           )} because of error:${e.message}}`
         );
-        if (TRADE_PILE_FULL_ERROR_CODES.indexOf(e.response.status) > -1) {
+        if (
+          e.response &&
+          TRADE_PILE_FULL_ERROR_CODES.indexOf(e.response.status) > -1
+        ) {
           logger.info(
             `${SellXPlayers.jobName} will restart after 15mins. Waiting to sell some players`
           );
