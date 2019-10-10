@@ -196,4 +196,22 @@ export namespace fut {
     const resp = await futApi.get(`/purchased/items`);
     return resp.data.itemData;
   }
+
+  export async function waitAndGetPurchasedItem(
+    resourceId: number
+  ): Promise<ItemData> {
+    return new Promise<ItemData>((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          const purchased = await getPurchasedItems();
+          const sellTarget = purchased.filter(
+            p => p.resourceId === resourceId
+          )[0];
+          resolve(sellTarget);
+        } catch (e) {
+          reject(e);
+        }
+      }, 5000);
+    });
+  }
 }

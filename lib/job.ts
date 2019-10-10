@@ -8,6 +8,26 @@ const jobs: {
 } = {};
 
 export class Job {
+  private static slowed: boolean = false;
+  private source: Observable<any>;
+  private sub: Subscription;
+  public execTime = 0;
+  private id: string;
+  private task: () => Promise<void>;
+  protected futbinRequests: number;
+  protected futRequests: number;
+
+  constructor(protected name: string, private timesPerMin: number) {
+    this.start = this.start.bind(this);
+    this.stop = this.stop.bind(this);
+
+    this.id = `${name}_${new Date().getTime()}`;
+    this.futRequests = 0;
+    this.futbinRequests = 0;
+
+    jobs[this.id] = this;
+  }
+
   public static stopAllJobs(): number {
     let stopped = 0;
     const keys = Object.keys(jobs);
@@ -19,7 +39,6 @@ export class Job {
     return stopped;
   }
 
-  private static slowed: boolean = false;
   public static slowDownAllJobsForNextMins(mins: number) {
     if (Job.slowed) return;
 
@@ -43,30 +62,11 @@ export class Job {
     }, mins * 60 * 1000);
   }
 
-  private source: Observable<any>;
-  private sub: Subscription;
-  public execTime = 0;
-  private id: string;
-  private task: () => void;
-  protected futbinRequests: number
-  protected futRequests: number
-
-  constructor(protected name: string, private timesPerMin: number) {
-    this.start = this.start.bind(this);
-    this.stop = this.stop.bind(this);
-
-    this.id = `${name}_${new Date().getTime()}`;
-    this.futRequests = 0;
-    this.futbinRequests = 0;
-
-    jobs[this.id] = this;
-  }
-
   public stop(): void {
     this.sub.unsubscribe();
   }
 
-  public start(task?: () => void): void {
+  public start(task?: () => Promise<void>): void {
     this.task = task || this.task;
     if (!this.task) {
       logger.error(`JOB[${this.id}] couldn't be started. No task found`);
@@ -74,10 +74,10 @@ export class Job {
     }
 
     this.source = interval(min / this.timesPerMin).pipe(startWith(null));
-    this.sub = this.source.subscribe(() => {
+    this.sub = this.source.subscribe(async () => {
       this.execTime++;
       logger.info(`Executing JOB[${this.id}]`);
-      this.task();
+      await this.task();
       logger.info(`JOB[${this.id}] execution finished`);
     });
   }

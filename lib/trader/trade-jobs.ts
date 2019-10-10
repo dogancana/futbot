@@ -17,7 +17,9 @@ export class ClearPile extends Job {
       1 / 5 // every 5 mins
     );
 
-    this.start(tradeService.clearPile);
+    this.start(async () => {
+      await tradeService.clearPile();
+    });
   }
 }
 
@@ -63,8 +65,6 @@ export class SellXPlayers extends Job {
           logger.info(
             `${SellXPlayers.jobName} will restart after 15mins. Waiting to sell some players`
           );
-          this.stop();
-          setTimeout(this.start, 15 * 60 * 1000);
         } else if (
           PASS_THROUGH_SELL_ERROR_CODES.indexOf(e.response.status) > -1
         ) {

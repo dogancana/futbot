@@ -7,7 +7,7 @@ import { AxiosResponse } from "axios";
 
 const BATCH_START_PAGE = 10; // Better for checking transfer with >1 min remaining
 const BATCH_PAGES_TO_SEE = 5;
-const PROFIT_MARGIN_PERCT = 15;
+const PROFIT_MARGIN_PERCT = 20;
 
 export interface GoodAuctionInvestorProps {
   budget: number;
@@ -31,11 +31,7 @@ export class GoodAuctionInvestor extends Job {
   constructor(p: GoodAuctionInvestorProps) {
     super("Invest:GoodAuction", 1);
     Object.assign(this, p);
-    this.start(this.tick);
-  }
-
-  private async tick() {
-    this.loopMarket();
+    this.start(this.loopMarket);
   }
 
   private async loopMarket() {

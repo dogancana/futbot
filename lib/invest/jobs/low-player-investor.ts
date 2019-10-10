@@ -9,7 +9,6 @@ import { AxiosError } from "axios";
 
 const BUY_REFERENCE_PERCT = 0.7;
 const MAX_AUCTION_TRY = 3;
-const WAIT_TRANSFER_PROCESSING_TIME = 5 * 1000;
 const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 4000;
 const MAX_TARGET_POOL = 30;
@@ -100,22 +99,18 @@ export class LowPlayerInvestor extends Job {
           this.spent += lowest.buyNowPrice;
           this.budget -= lowest.buyNowPrice;
 
-          setTimeout(async () => {
-            const purchased = await fut.getPurchasedItems();
-            const sellTarget = purchased.filter(
-              p => p.resourceId === target.resourceId
-            )[0];
-
-            if (sellTarget) {
-              await fut.sellPlayer({
-                ...(await getOptimalSellPrice(target.resourceId)),
-                duration: 3600,
-                itemData: { id: sellTarget.id, assetId: sellTarget.assetId }
-              });
-            } else {
-              logger.info(`${playerStr} was not found in purchased list`);
-            }
-          }, WAIT_TRANSFER_PROCESSING_TIME);
+          const sellTarget = await fut.waitAndGetPurchasedItem(
+            target.resourceId
+          );
+          if (sellTarget) {
+            await fut.sellPlayer({
+              ...(await getOptimalSellPrice(target.resourceId)),
+              duration: 3600,
+              itemData: { id: sellTarget.id, assetId: sellTarget.assetId }
+            });
+          } else {
+            logger.info(`${playerStr} was not found in purchased list`);
+          }
         } catch (e) {
           const err: AxiosError = e;
           logger.error(

@@ -5,6 +5,5 @@ export class AutoBuyBidder extends Job {
     const jobName = "AutoBuyer::Bidder";
 
     super(jobName, 3);
-    this.start(() => {});
   }
 }
