@@ -8,7 +8,7 @@ import { request } from "./utils/request";
 let isServerAvailable = false;
 
 function watchViewChanges(handler) {
-  const targetNode = document.getElementsByClassName("view-root")[0];
+  const targetNode = document.getElementsByClassName("ut-root-view")[0];
   const config = { attributes: false, childList: true, subtree: true };
   const observer = new MutationObserver(handler);
   observer.observe(targetNode, config);
@@ -27,9 +27,13 @@ function addPlayerDetails() {
 }
 
 function addFutbotView() {
-  const container = document.getElementsByClassName("FUINavigationContent")[0];
+  const container = document.getElementsByClassName(
+    "ut-navigation-container-view"
+  )[0];
   if (container) {
-    const tabMenu = container.getElementsByClassName("tab-menu")[0];
+    const tabMenu = container.getElementsByClassName(
+      "ut-navigation-container-view--content"
+    )[0];
     const root = container.firstElementChild;
     const addBefore = tabMenu
       ? tabMenu.nextElementSibling

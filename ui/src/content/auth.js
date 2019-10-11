@@ -3,7 +3,7 @@ const repositories = window.repositories;
 const authData = {};
 const FUT_API_URL =
   process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
-  "https://utas.external.s2.fut.ea.com/ut/game/fifa12";
+  "https://utas.external.s2.fut.ea.com/ut/game/fifa20";
 
 main();
 
@@ -24,7 +24,6 @@ function intercept(urlmatch, callback) {
       "readystatechange",
       function() {
         if (this.responseURL.includes(urlmatch) && this.readyState === 4) {
-          // eslint-disable-next-line
           callback(this);
         }
       },
@@ -39,7 +38,7 @@ function scrapAuthData(req) {
   authData.auth = data;
   setTimeout(() => {
     feedServer();
-  }, 5000)
+  }, 5000);   // wait for webapp to get data
 }
 
 function getLastStamp(req) {

@@ -4,7 +4,7 @@
       <div class="view">
         <p>Auth read: {{ authRead }}</p>
         <p>
-          <v-auto-buy-list/>
+          <v-auto-buy-list />
         </p>
       </div>
     </v-collapsible>
@@ -40,6 +40,7 @@ export default {
 <style lang='scss' scoped>
 .wrapper {
   width: 100%;
+  color: slategray;
 }
 
 .view {

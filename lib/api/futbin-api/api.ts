@@ -15,7 +15,7 @@ const queue = new ApiQueue(requestsPerSec, "futbin");
 let futbinStopped = false;
 
 futbinApi.interceptors.request.use(async config => {
-  if (futbinStopped) return null;
+  if (futbinStopped) return Promise.reject(config);
   return await queue.addRequestToQueue(config);
 });
 
@@ -25,7 +25,7 @@ futbinApi.interceptors.response.use(
     return value;
   },
   value => {
-    const { config, data, response } = value;
+    const { config, data, response = {}, message } = value;
     const { status } = response;
     logErrorResponse("FUTBIN", value);
     if (status === 403) {
@@ -35,6 +35,6 @@ futbinApi.interceptors.response.use(
       );
       setTimeout(() => (futbinStopped = false), 30 * 60 * 60 * 1000);
     }
-    return Promise.reject(new ApiError(status, config, JSON.stringify(data)));
+    return Promise.reject(new ApiError(status, config, message));
   }
 );

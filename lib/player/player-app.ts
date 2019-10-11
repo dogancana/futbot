@@ -1,28 +1,27 @@
-import { logger } from '../logger';
-import * as express from 'express';
-import { playerService } from './player-service';
+import * as express from "express";
+import { playerService } from "./player-service";
+import { futbin } from "../api";
 
 export const playerApp = express();
 
-playerApp.get('', async function(req, res) {
+playerApp.get("", async function(req, res) {
   const { assetId, resourceId } = req.query;
 
   if (!resourceId || !assetId) {
-    res.status(500).send('Provide assetId and resourceId in query params');
-    return
+    res.status(500).send("Provide assetId and resourceId in query params");
+    return;
   }
 
+  let futbinPrice: futbin.Price, marketPrice: playerService.MarketPrice;
   try {
-    const futbinPrice = await playerService.getFutbinPrice(resourceId);
-    const marketPrice = await playerService.getMarketPrice(resourceId);
-    res.send({
-      name: playerService.readable({ assetId }),
-      futbinPrice,
-      marketPrice
-    });
-  } catch (e) {
-    logger.error(`Error retrieving player details\n\t${e.message}`)
-    console.error('\t', e, '\n')
-    res.status(500).send(e.message)
-  }
+    futbinPrice = await playerService.getFutbinPrice(resourceId);
+  } catch {}
+  try {
+    marketPrice = await playerService.getMarketPrice(resourceId);
+  } catch {}
+  res.send({
+    name: playerService.readable({ assetId }),
+    futbinPrice,
+    marketPrice
+  });
 });
