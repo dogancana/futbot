@@ -4,7 +4,6 @@ import Axios, { AxiosRequestConfig } from "axios";
 import { ApiQueue } from "../api-queue";
 import { SessionInjector } from "../../auth";
 import { ApiError, logResponse, logErrorResponse } from "../api";
-import { setupCache } from "axios-cache-adapter";
 
 export const futApi = Axios.create({
   baseURL:
@@ -16,7 +15,6 @@ export const futApi = Axios.create({
 const requestsPerSec =
   parseInt(process.env.FUTBOT_FUT_REQUESTS_PER_SEC, 10) || 0.7;
 
-export const futCache = setupCache({});
 const queue = new ApiQueue(requestsPerSec, "fut", eaConfigResolver);
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {

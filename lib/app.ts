@@ -1,6 +1,6 @@
 // Leave this at top
 require("dotenv").config();
-import "./custom-types";
+import "./custom-types/index";
 
 import { autoBuyerApp } from "./auto-buyer/auto-buyer-app";
 import { logger } from "./logger";
