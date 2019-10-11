@@ -13,7 +13,7 @@ export const futApi = Axios.create({
   headers: []
 });
 const requestsPerSec =
-  parseInt(process.env.FUTBOT_FUT_REQUESTS_PER_SEC, 10) || 0.7;
+  parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.7;
 
 const queue = new ApiQueue(requestsPerSec, "fut", eaConfigResolver);
 
