@@ -1,11 +1,11 @@
-import { Job } from "../../job";
-import { investService } from "../invest-service";
-import { playerService } from "../../player";
-import { uniq, pick } from "lodash";
-import { fut } from "../../api";
-import { getOptimalSellPrice, tradePrice } from "../../trader/trade-utils";
-import { logger } from "../../logger";
-import { AxiosError } from "axios";
+import {Job} from "../../job";
+import {investService} from "../invest-service";
+import {playerService} from "../../player";
+import {uniq, pick} from "lodash";
+import {fut} from "../../api";
+import {getOptimalSellPrice, tradePrice} from "../../trader/trade-utils";
+import {logger} from "../../logger";
+import {AxiosError} from "axios";
 
 const BUY_REFERENCE_PERCT = 0.7;
 const MAX_AUCTION_TRY = 3;
@@ -21,6 +21,7 @@ export interface LowPlayerInvestorProps {
   max?: number;
   maxTargetPool?: number;
 }
+
 export class LowPlayerInvestor extends Job {
   private static jobName = "Invest:LowPlayerInvestor";
   private spent: number = 0;
@@ -30,7 +31,7 @@ export class LowPlayerInvestor extends Job {
   private max: number = 5000;
   private maxTargetPool: number = 150;
 
-  constructor({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
+  constructor({budget, min, max, maxTargetPool}: LowPlayerInvestorProps) {
     super(LowPlayerInvestor.jobName, 5);
 
     Object.assign(this, {
@@ -60,7 +61,7 @@ export class LowPlayerInvestor extends Job {
     }
 
     const target = targets.shift();
-    const playerStr = playerService.readable({ assetId: target.assetId });
+    const playerStr = playerService.readable({assetId: target.assetId});
     const value = await getOptimalSellPrice(target.resourceId);
     if (!value) return;
 
@@ -71,7 +72,7 @@ export class LowPlayerInvestor extends Job {
       let auctions = (await fut.getPlayerTransferData(
         target.resourceId,
         batch++,
-        { maxb: tradePrice(safeBuyValue) }
+        {maxb: tradePrice(safeBuyValue)}
       ))
         .filter(a => !a.watched)
         .filter(a => !a.tradeOwner);
@@ -106,7 +107,7 @@ export class LowPlayerInvestor extends Job {
             await fut.sellPlayer({
               ...(await getOptimalSellPrice(target.resourceId)),
               duration: 3600,
-              itemData: { id: sellTarget.id, assetId: sellTarget.assetId }
+              itemData: {id: sellTarget.id, assetId: sellTarget.assetId}
             });
           } else {
             logger.info(`${playerStr} was not found in purchased list`);
@@ -134,9 +135,15 @@ export class LowPlayerInvestor extends Job {
       spent: this.spent,
       boughtPlayers: this.boughtPlayers.map(p => ({
         price: p.price,
-        name: playerService.readable({ assetId: p.assetId })
+        name: playerService.readable({assetId: p.assetId})
       }))
     };
+  }
+
+  public targetCount() {
+    return {
+      count: targets.length
+    }
   }
 }
 

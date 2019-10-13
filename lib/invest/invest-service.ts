@@ -1,5 +1,5 @@
-import { GoodAuctionInvestorProps } from "./jobs/good-auction-investor";
-import { futbin, fut } from "../api";
+import {GoodAuctionInvestorProps} from "./jobs/good-auction-investor";
+import {futbin, fut} from "../api";
 import {
   LowPlayerInvestor,
   LowPlayerInvestorProps,
@@ -15,6 +15,7 @@ export namespace investService {
     futbinId: number;
     assetId: number;
   }
+
   export async function getTargets(
     query: futbin.PlayersQuery
   ): Promise<TargetInfo[]> {
@@ -45,7 +46,8 @@ export namespace investService {
 
     return {
       timesTargetBought: lowPlayerInvestJob.execTime,
-      report: lowPlayerInvestJob.report()
+      report: lowPlayerInvestJob.report(),
+      target: lowPlayerInvestJob.targetCount()
     };
   }
 
