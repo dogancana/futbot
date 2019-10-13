@@ -1,8 +1,9 @@
-import { ItemData } from "./static-items";
-import { logger } from "./../logger";
+import {ItemData} from "./static-items";
+import {logger} from "./../logger";
 import * as express from "express";
-import { resolve } from "path";
-import { writeFileSyncSafe, readFileIfRecent } from "../utils";
+import {resolve} from "path";
+import {tmpdir} from 'os';
+import {writeFileSyncSafe, readFileIfRecent} from "../utils";
 
 export interface StaticPlayerData {
   commonName: string;
@@ -18,7 +19,7 @@ export interface ItemData {
   [key: number]: StaticPlayerData;
 }
 
-const fileName = resolve(__dirname, "../..", "local/static-data.json");
+const fileName = resolve(tmpdir(), "futbot-static-data.json");
 const write = (s: ItemData) => writeFileSyncSafe<ItemData>(fileName, s);
 let itemData: ItemData = {};
 readFileIfRecent<ItemData>(fileName).then(i => (itemData = i || {}));

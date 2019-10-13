@@ -1,5 +1,6 @@
-import { resolve } from "path";
-import { writeFileSyncSafe, readFileIfRecent } from "../utils";
+import {resolve} from "path";
+import {tmpdir} from 'os';
+import {writeFileSyncSafe, readFileIfRecent} from "../utils";
 
 export interface Auth {
   ipPort: string;
@@ -15,7 +16,7 @@ export interface Session {
   lastStamp?: number;
 }
 
-const fileName = resolve(__dirname, "../..", "local/fut-session.json");
+const fileName = resolve(tmpdir(), "futbot-session.json");
 const write = (s: Session) => writeFileSyncSafe<Session>(fileName, s);
 
 let apiSession: Session = {};
