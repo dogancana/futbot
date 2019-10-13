@@ -1,26 +1,26 @@
-import { logger } from "../../logger";
-import { Job } from "../../job";
-import Axios, { AxiosRequestConfig } from "axios";
-import { ApiQueue } from "../api-queue";
-import { SessionInjector } from "../../auth";
-import { ApiError, logResponse, logErrorResponse } from "../api";
+import {logger} from "../../logger";
+import {Job} from "../../job";
+import Axios, {AxiosRequestConfig} from "axios";
+import {ApiQueue} from "../api-queue";
+import {SessionInjector} from "../../auth";
+import {ApiError, logResponse, logErrorResponse} from "../api";
 
 export const futApi = Axios.create({
   baseURL:
     process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
     "https://utas.external.s2.fut.ea.com/ut/game/fifa20",
   timeout: 30000,
-  headers: []
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931'
+  }
 });
-const requestsPerSec =
-  parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.7;
+const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.7;
 
 const queue = new ApiQueue(requestsPerSec, "fut", eaConfigResolver);
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
   config.headers.Origin = "https://www.easports.com";
-  config.headers.Referer =
-    "https://www.easports.com/fifa/ultimate-team/web-app/";
+  config.headers.Referer = "https://www.easports.com/fifa/ultimate-team/web-app/";
   config.headers["X-UT-SID"] = SessionInjector.auth.sid;
 
   // const url = new URL(config.url);
@@ -53,8 +53,8 @@ futApi.interceptors.response.use(
   },
   // error
   value => {
-    const { config, response = {}, message } = value;
-    const { status = 500 } = response;
+    const {config, response = {}, message} = value;
+    const {status = 500} = response;
 
     logErrorResponse("FUT", value);
 

@@ -1,7 +1,7 @@
 import * as querystring from "querystring";
 import * as cheerio from "cheerio";
-import { futbinApi } from "./api";
-import { simpleCacheAdapter } from "../cache-adapter";
+import {futbinApi} from "./api";
+import {simpleCacheAdapter} from "../cache-adapter";
 
 export namespace futbin {
   export interface Prices {
@@ -9,6 +9,7 @@ export namespace futbin {
     xbox: Price;
     ps: Price;
   }
+
   export interface Price {
     LCPrice: number;
     prices: [];
@@ -17,6 +18,7 @@ export namespace futbin {
     maxPrice: number;
     prp: number;
   }
+
   export async function getPrice(resourceId): Promise<Prices> {
     if (!resourceId) return null;
 
@@ -25,9 +27,9 @@ export namespace futbin {
     });
     const apiPrices = response.data[resourceId].prices;
     const result: Prices = {
-      pc: { prices: [] },
-      xbox: { prices: [] },
-      ps: { prices: [] }
+      pc: {prices: []},
+      xbox: {prices: []},
+      ps: {prices: []}
     } as any;
     const platforms = ["pc", "xbox", "ps"];
 
@@ -39,6 +41,7 @@ export namespace futbin {
         result[platform].prices.push(price);
         result[platform].prices = result[platform].prices.filter(p => p !== 0);
       }
+
       result[platform].minPrice = parseFutbinPrice(
         apiPrices[platform].MinPrice
       );
@@ -63,10 +66,11 @@ export namespace futbin {
     sort?: "likes" | string;
     order?: "desc" | string;
   }
+
   export async function getPlayerIDs(query: PlayersQuery): Promise<number[]> {
     const resp = await futbinApi.get(
       `/players?${querystring.stringify(query)}`,
-      { adapter: simpleCacheAdapter }
+      {adapter: simpleCacheAdapter}
     );
     const html = resp.data;
     const $ = cheerio.load(html);
