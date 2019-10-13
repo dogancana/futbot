@@ -1,12 +1,14 @@
-import { ApiError, logResponse, logErrorResponse } from "./../api";
+import {ApiError, logResponse, logErrorResponse} from "./../api";
 import Axios from "axios";
-import { ApiQueue } from "../api-queue";
-import { logger } from "../../logger";
+import {ApiQueue} from "../api-queue";
+import {logger} from "../../logger";
 
 export const futbinApi = Axios.create({
   baseURL: "https://www.futbin.com/20/",
   timeout: 30000,
-  headers: []
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931'
+  }
 });
 const requestsPerSec =
   parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 5;
@@ -25,8 +27,8 @@ futbinApi.interceptors.response.use(
     return value;
   },
   value => {
-    const { config, data, response = {}, message } = value;
-    const { status } = response;
+    const {config, data, response = {}, message} = value;
+    const {status} = response;
     logErrorResponse("FUTBIN", value);
     if (status === 403) {
       futbinStopped = true;

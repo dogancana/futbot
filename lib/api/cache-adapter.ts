@@ -1,4 +1,4 @@
-import Axios, { AxiosAdapter, AxiosRequestConfig } from "axios";
+import Axios, {AxiosAdapter, AxiosRequestConfig} from "axios";
 
 const memory = {};
 
@@ -8,8 +8,8 @@ export const simpleCacheAdapter: AxiosAdapter = async function adapter(
   const value = memory[key(req)];
   if (value) return value;
 
-  const res = await Axios.request({ ...req, adapter: null });
-  memory[key(req)] = { ...res, fromCache: true };
+  const res = await Axios.request({...req, adapter: null});
+  memory[key(req)] = {...res, fromCache: true};
   return res;
 };
 
@@ -29,6 +29,7 @@ function key(request: AxiosRequestConfig): string {
   }
   try {
     dataStr = JSON.stringify(request.data);
-  } catch {}
+  } catch {
+  }
   return `${url}${dataStr}`;
 }
