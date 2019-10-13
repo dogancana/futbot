@@ -1,8 +1,8 @@
-import { logger } from "../../logger";
-import { playerService } from "../../player";
+import {logger} from "../../logger";
+import {playerService} from "../../player";
 import * as querystring from "querystring";
-import { futApi } from "./api";
-import { simpleCacheAdapter } from "../cache-adapter";
+import {futApi} from "./api";
+import {simpleCacheAdapter} from "../cache-adapter";
 
 export namespace fut {
   export interface ItemData {
@@ -46,6 +46,7 @@ export namespace fut {
     watched: boolean;
     tradeOwner: boolean;
   }
+
   export async function getPlayerTransferData(
     assetId: number,
     batch: number,
@@ -87,7 +88,7 @@ export namespace fut {
       if (!q[key]) delete q[key];
     });
     const response = await futApi.get(
-      `/transfermarket?${querystring.stringify({ ...q })}`
+      `/transfermarket?${querystring.stringify({...q})}`
     );
     return response.data.auctionInfo;
   }
@@ -119,13 +120,14 @@ export namespace fut {
     itemData: { id: number; assetId?: number };
     startingBid: number;
   }
+
   export async function sellPlayer(req: AuctionRequest) {
-    const playerStr = playerService.readable({ assetId: req.itemData.assetId });
+    const playerStr = playerService.readable({assetId: req.itemData.assetId});
     logger.info(
       `${playerStr} will be sold for ${req.startingBid}/${req.buyNowPrice}`
     );
     const pileResponse = await futApi.put(`/item`, {
-      itemData: [{ id: req.itemData.id, pile: "trade" }]
+      itemData: [{id: req.itemData.id, pile: "trade"}]
     });
     if (pileResponse) {
       const response = await futApi.post(`/auctionhouse`, req);
@@ -142,18 +144,20 @@ export namespace fut {
     success: boolean;
     errorCode?: number;
   }
+
   export interface PutItemResult {
     itemData: PutItemData[];
   }
+
   export async function sendToClub(id: number): Promise<PutItemResult> {
     const pileResponse = await futApi.put(`/item`, {
-      itemData: [{ id, pile: "club" }]
+      itemData: [{id, pile: "club"}]
     });
     return pileResponse.data;
   }
 
   export async function clearSold() {
-    return await futApi.request({ url: "/trade/sold", method: "DELETE" });
+    return await futApi.request({url: "/trade/sold", method: "DELETE"});
   }
 
   export async function getTradePile(): Promise<AuctionInfo[]> {
@@ -167,22 +171,24 @@ export namespace fut {
     contextValue: number;
     typeValue: number;
   }
+
   export async function getClubItemMeta(): Promise<ClubItemMeta[]> {
     const resp = await futApi.get(`/club/stats/club`);
     return resp.data.stat;
   }
 
   let platform: Platform = null;
+
   export async function getPlatform(): Promise<Platform> {
     if (platform) return platform;
 
     const resp = await futApi.get(
       `/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
-      { adapter: simpleCacheAdapter }
+      {adapter: simpleCacheAdapter}
     );
     platform = resp.data.userAccountInfo.personas[0].userClubList.filter(
       c => c.year === "2020"
-    )[0].platform;
+    )[0].platform.replace(/\d/gi, '');
     return platform;
   }
 
