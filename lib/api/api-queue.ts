@@ -1,6 +1,6 @@
-import {AxiosRequestConfig} from "axios";
-import {interval, Subscription} from "rxjs";
-import {cacheEntry} from "./cache-adapter";
+import { AxiosRequestConfig } from "axios";
+import { interval, Subscription } from "rxjs";
+import { cacheEntry } from "./cache-adapter";
 
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
 
