@@ -144,7 +144,7 @@ async function setupTargets(price: string, maxTargets: number) {
   const priceKey = `${platform.toLowerCase()}_price`;
   const clubPlayers = await fut.getClubPlayers();
   const isInClubPlayers = (resourceId: number) =>
-    clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
+    clubPlayers.find(p => p.resourceId === resourceId);
 
   for (let i = 0; i < pageLimit; i++) {
     targets = targets.concat(
