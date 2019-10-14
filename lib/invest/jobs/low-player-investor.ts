@@ -87,7 +87,7 @@ export class LowPlayerInvestor extends Job {
 
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
       if (auctions.length === 0) {
-        break;
+        continue;
       }
 
       const lowest = auctions[0];
