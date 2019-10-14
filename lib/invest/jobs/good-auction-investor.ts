@@ -5,7 +5,7 @@ import { playerService } from "../../player";
 import { tradePrice } from "../../trader/trade-utils";
 import { AxiosResponse } from "axios";
 
-const BATCH_START_PAGE = 10; // Better for checking transfer with >1 min remaining
+const BATCH_START_PAGE = 30; // Better for checking transfer with >1 min remaining
 const BATCH_PAGES_TO_SEE = 5;
 const PROFIT_MARGIN_PERCT = 20;
 
@@ -29,9 +29,28 @@ export class GoodAuctionInvestor extends Job {
   private profitMargin: number = PROFIT_MARGIN_PERCT;
 
   constructor(p: GoodAuctionInvestorProps) {
-    super("Invest:GoodAuction", 1);
+    super("Invest:GoodAuction", 2);
     Object.assign(this, p);
-    this.start(this.loopMarket);
+    this.start(this.loop);
+  }
+
+  private async loop() {
+    this.bidTargets(); // don't wait to not miss auctions
+    await this.loopMarket();
+  }
+
+  private async bidTargets() {
+    if (!auctionsToWatch || auctionsToWatch.length === 0) return
+
+    const auctions = await fut.checkAuctionStatus(
+      auctionsToWatch.map(a => a.tradeId)
+    );
+    const targets = auctions
+      .filter(a => a.expires > 0)
+      .filter(a => a.bidState !== "highest");
+
+    // create new event handling point to ignore job task execution
+    targets.forEach(async t => await this.bidAuction(t));
   }
 
   private async loopMarket() {
@@ -63,32 +82,36 @@ export class GoodAuctionInvestor extends Job {
             }`
           );
           if (!auctionsToWatch.find(v => v.tradeId == a.tradeId)) {
-            auctionsToWatch.push({
+            const auction = {
               ...a,
               maxBuyPrice
-            });
-            const bidPrice = tradePrice(maxBuyPrice - 1);
-            if (bidPrice < this.budget) {
-              logger.info(
-                `[Invest:GoodAuction]: ${playerService.readable(
-                  a.itemData
-                )} bidding for ${bidPrice}`
-              );
-              try {
-                await fut.bid(a.tradeId, bidPrice);
-                this.budget -= bidPrice;
-              } catch (e) {
-                logger.error(
-                  `[Invevst:GoodAuction]: bid failed for ${playerService.readable(
-                    a.itemData
-                  )} with bid amount ${bidPrice}. Reason: ${
-                    (e as AxiosResponse).data
-                  }`
-                );
-              }
-            }
+            };
+            auctionsToWatch.push(auction);
+            this.bidAuction(auction);
           }
         }
+      }
+    }
+  }
+
+  private async bidAuction(a: fut.AuctionInfo) {
+    const { askingPrice } = await this.analyzePrice(a);
+    const bidPrice = tradePrice(askingPrice + 1);
+    if (bidPrice < this.budget) {
+      logger.info(
+        `[Invest:GoodAuction]: ${playerService.readable(
+          a.itemData
+        )} bidding for ${bidPrice}, Expires ${a.expires}, Buynow ${a.buyNowPrice}`
+      );
+      try {
+        await fut.bid(a.tradeId, bidPrice);
+        this.budget -= bidPrice;
+      } catch (e) {
+        logger.error(
+          `[Invevst:GoodAuction]: bid failed for ${playerService.readable(
+            a.itemData
+          )} with bid amount ${bidPrice}. Reason: ${(e as AxiosResponse).data}`
+        );
       }
     }
   }
