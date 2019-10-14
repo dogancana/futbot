@@ -1,7 +1,7 @@
-import {ApiError, logResponse, logErrorResponse} from "./../api";
+import { ApiError, logResponse, logErrorResponse } from "./../api";
 import Axios from "axios";
-import {ApiQueue} from "../api-queue";
-import {logger} from "../../logger";
+import { ApiQueue } from "../api-queue";
+import { logger } from "../../logger";
 
 export const futbinApi = Axios.create({
   baseURL: "https://www.futbin.com/20/",
@@ -11,7 +11,7 @@ export const futbinApi = Axios.create({
   }
 });
 const requestsPerSec =
-  parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 5;
+  parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 2;
 
 const queue = new ApiQueue(requestsPerSec, "futbin");
 let futbinStopped = false;
@@ -37,6 +37,7 @@ futbinApi.interceptors.response.use(
       );
       setTimeout(() => (futbinStopped = false), 30 * 60 * 60 * 1000);
     }
+
     return Promise.reject(new ApiError(status, config, message));
   }
 );

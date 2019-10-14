@@ -1,17 +1,18 @@
-import {Job} from "../../job";
-import {investService} from "../invest-service";
-import {playerService} from "../../player";
-import {uniq, pick} from "lodash";
-import {fut} from "../../api";
-import {getOptimalSellPrice, tradePrice} from "../../trader/trade-utils";
-import {logger} from "../../logger";
-import {AxiosError} from "axios";
+import { Job } from "../../job";
+import { investService } from "../invest-service";
+import { playerService } from "../../player";
+import { uniq } from "lodash";
+import { fut } from "../../api";
+import { getOptimalSellPrice, tradePrice } from "../../trader/trade-utils";
+import { logger } from "../../logger";
+import { AxiosError } from "axios";
 
 const BUY_REFERENCE_PERCT = 0.7;
-const MAX_AUCTION_TRY = 3;
+const MAX_AUCTION_TRY = process.env.FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER || 3;
 const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 4000;
 const MAX_TARGET_POOL = 30;
+
 let targets: investService.TargetInfo[] = [];
 let setingUp = false;
 
@@ -26,10 +27,15 @@ export class LowPlayerInvestor extends Job {
   private static jobName = "Invest:LowPlayerInvestor";
   private spent: number = 0;
   private budget: number = 20000;
-  private boughtPlayers: ({ price: number; assetId: number })[];
-  private min: number = 1000;
-  private max: number = 5000;
-  private maxTargetPool: number = 150;
+  private boughtPlayers: ({
+    price: number;
+    assetId: number;
+    buyNowPrice: number;
+    startingBid: number;
+  })[];
+  private min: number = MIN_TARGET_PRICE;
+  private max: number = MAX_TARGET_POOL;
+  private maxTargetPool: number = MAX_TARGET_POOL;
 
   constructor({budget, min, max, maxTargetPool}: LowPlayerInvestorProps) {
     super(LowPlayerInvestor.jobName, 5);
@@ -51,7 +57,7 @@ export class LowPlayerInvestor extends Job {
     const pcPrice = `${minPrice}-${maxPrice}`;
 
     if (!targets || targets.length === 0) {
-      setupTargets(pcPrice, this.maxTargetPool || MAX_TARGET_POOL);
+      await setupTargets(pcPrice, this.maxTargetPool || MAX_TARGET_POOL);
       return;
     }
 
@@ -62,10 +68,12 @@ export class LowPlayerInvestor extends Job {
 
     const target = targets.shift();
     const playerStr = playerService.readable({assetId: target.assetId});
-    const value = await getOptimalSellPrice(target.resourceId);
-    if (!value) return;
+    const sellPrice = await getOptimalSellPrice(target.resourceId);
+    if (!sellPrice.buyNowPrice || !sellPrice.startingBid) {
+      return;
+    }
 
-    const safeBuyValue = value.startingBid * BUY_REFERENCE_PERCT;
+    const safeBuyValue = sellPrice.startingBid * BUY_REFERENCE_PERCT;
     const price = p => (p.currentBid != 0 ? p.currentBid : p.startingBid);
     let batch = 0;
     while (true) {
@@ -76,8 +84,8 @@ export class LowPlayerInvestor extends Job {
       ))
         .filter(a => !a.watched)
         .filter(a => !a.tradeOwner);
-      auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
 
+      auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
       if (auctions.length === 0) {
         break;
       }
@@ -88,24 +96,27 @@ export class LowPlayerInvestor extends Job {
         if (this.budget <= lowest.buyNowPrice) {
           break;
         }
+
         try {
           await fut.bid(lowest.tradeId, lowest.buyNowPrice);
           logger.info(
             `${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`
           );
-          this.boughtPlayers.push({
-            price: lowest.buyNowPrice,
-            assetId: target.assetId
-          });
-          this.spent += lowest.buyNowPrice;
-          this.budget -= lowest.buyNowPrice;
 
           const sellTarget = await fut.waitAndGetPurchasedItem(
             target.resourceId
           );
           if (sellTarget) {
+            this.boughtPlayers.push({
+              ...sellPrice,
+              price: lowest.buyNowPrice,
+              assetId: target.assetId,
+            });
+            this.spent += lowest.buyNowPrice;
+            this.budget -= lowest.buyNowPrice;
+
             await fut.sellPlayer({
-              ...(await getOptimalSellPrice(target.resourceId)),
+              ...sellPrice,
               duration: 3600,
               itemData: {id: sellTarget.id, assetId: sellTarget.assetId}
             });
@@ -135,6 +146,7 @@ export class LowPlayerInvestor extends Job {
       spent: this.spent,
       boughtPlayers: this.boughtPlayers.map(p => ({
         price: p.price,
+        sell: `${p.startingBid}/${p.buyNowPrice}`,
         name: playerService.readable({assetId: p.assetId})
       }))
     };
@@ -155,8 +167,7 @@ async function setupTargets(price: string, maxTargets: number) {
   const platform = await fut.getPlatform();
   const priceKey = `${platform.toLowerCase()}_price`;
   const clubPlayers = await fut.getClubPlayers();
-  const isInClubPlayers = (resourceId: number) =>
-    clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
+  const isInClubPlayers = (resourceId: number) => clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
 
   for (let i = 0; i < pageLimit; i++) {
     targets = targets.concat(

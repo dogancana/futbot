@@ -1,7 +1,7 @@
 import * as querystring from "querystring";
 import * as cheerio from "cheerio";
-import {futbinApi} from "./api";
-import {simpleCacheAdapter} from "../cache-adapter";
+import { futbinApi } from "./api";
+import { simpleCacheAdapter } from "../cache-adapter";
 
 export namespace futbin {
   export interface Prices {
@@ -63,13 +63,14 @@ export namespace futbin {
     pc_price?: string;
     xbox_price?: string;
     ps_price?: string;
+    version?: "gold" | string;
     sort?: "likes" | string;
     order?: "desc" | string;
   }
 
   export async function getPlayerIDs(query: PlayersQuery): Promise<number[]> {
     const resp = await futbinApi.get(
-      `/players?${querystring.stringify(query)}`,
+      `/players?${querystring.stringify(query, null, null, { encodeURIComponent: uri => uri })}`,
       {adapter: simpleCacheAdapter}
     );
     const html = resp.data;
@@ -82,7 +83,7 @@ export namespace futbin {
       })
       .get()
       .map(id => parseInt(id, 10))
-      .filter(id => !!id && id !== NaN);
+      .filter(id => !!id && !isNaN(id));
 
     return players;
   }
@@ -94,6 +95,7 @@ export namespace futbin {
     const html = resp.data;
     const $ = cheerio.load(html);
     const info = $("#page-info");
+
     return {
       resourceId: parseInt(info.data("player-resource"), 10),
       futbinId: parseInt(info.data("id"), 10),
@@ -103,8 +105,11 @@ export namespace futbin {
 }
 
 function parseUpdateTime(str: string): number {
-  if (!str) return null;
-  if (str.includes("week") || str.includes("month") || str.includes("year")) {
+  if (!str) {
+    return null;
+  }
+
+  if (str.includes("week") || str.includes("days") || str.includes("month") || str.includes("year")) {
     return Number.MAX_VALUE;
   } else if (str.includes("hour")) {
     return parseInt(str, 10) * 60;

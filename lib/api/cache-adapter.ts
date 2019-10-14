@@ -31,5 +31,6 @@ function key(request: AxiosRequestConfig): string {
     dataStr = JSON.stringify(request.data);
   } catch {
   }
+
   return `${url}${dataStr}`;
 }

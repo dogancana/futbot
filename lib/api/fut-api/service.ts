@@ -1,8 +1,8 @@
-import {logger} from "../../logger";
-import {playerService} from "../../player";
+import { logger } from "../../logger";
+import { playerService } from "../../player";
 import * as querystring from "querystring";
-import {futApi} from "./api";
-import {simpleCacheAdapter} from "../cache-adapter";
+import { futApi } from "./api";
+import { simpleCacheAdapter } from "../cache-adapter";
 
 export namespace fut {
   export interface ItemData {
@@ -157,7 +157,7 @@ export namespace fut {
   }
 
   export async function clearSold() {
-    return await futApi.request({url: "/trade/sold", method: "DELETE"});
+    return futApi.request({url: "/trade/sold", method: "DELETE"});
   }
 
   export async function getTradePile(): Promise<AuctionInfo[]> {

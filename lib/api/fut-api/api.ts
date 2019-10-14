@@ -1,9 +1,9 @@
-import {logger} from "../../logger";
-import {Job} from "../../job";
-import Axios, {AxiosRequestConfig} from "axios";
-import {ApiQueue} from "../api-queue";
-import {SessionInjector} from "../../auth";
-import {ApiError, logResponse, logErrorResponse} from "../api";
+import { logger } from "../../logger";
+import { Job } from "../../job";
+import Axios, { AxiosRequestConfig } from "axios";
+import { ApiQueue } from "../api-queue";
+import { SessionInjector } from "../../auth";
+import { ApiError, logResponse, logErrorResponse } from "../api";
 
 export const futApi = Axios.create({
   baseURL:
@@ -14,8 +14,8 @@ export const futApi = Axios.create({
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931'
   }
 });
-const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.7;
 
+const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.5;
 const queue = new ApiQueue(requestsPerSec, "fut", eaConfigResolver);
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
@@ -63,10 +63,16 @@ futApi.interceptors.response.use(
       Job.stopAllJobs();
     }
 
-    if (status === 429) {
+    if ([512, 521].indexOf(status) > -1) {
+      logger.error("[FUT] stopped all jobs: Temporary ban or just too many requests.");
+      Job.stopAllJobs();
+    }
+
+    if ([426, 429].indexOf(status) > -1) {
       logger.warn("[FUT] will slow down all jobs by 1/3 for next 30 mins");
       Job.slowDownAllJobsForNextMins(30);
     }
+
     return Promise.reject(new ApiError(status, config, message));
   }
 );

@@ -24,7 +24,7 @@ export namespace AutoBuyerService {
     const duped: Target = targets.filter(
       t => t.resourceId === target.resourceId
     )[0];
-    const playerStr = playerService.readable({ id: target.assetId });
+    const playerStr = playerService.readable({id: target.assetId});
 
     if (!!duped) {
       logger.warn(
@@ -60,6 +60,7 @@ export namespace AutoBuyerService {
       autoBuyBidderJob.stop();
       autoBuyBidderJob = undefined;
     }
+
     if (autoBuyBuyNowJob) {
       autoBuyBuyNowJob.stop();
       autoBuyBuyNowJob = undefined;

@@ -16,9 +16,11 @@ playerApp.get("", async function(req, res) {
   try {
     futbinPrice = await playerService.getFutbinPrice(resourceId);
   } catch {}
+
   try {
     marketPrice = await playerService.getMarketPrice(resourceId);
   } catch {}
+
   res.send({
     name: playerService.readable({ assetId }),
     futbinPrice,

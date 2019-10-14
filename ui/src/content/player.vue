@@ -15,7 +15,7 @@
           </p>
           <p>
             <span>Market samples:</span>
-            <span>{{ price.marketPrice.samplecount }}</span>
+            <span>{{ price.marketPrice.sampleCount }}</span>
           </p>
         </div>
       </div>

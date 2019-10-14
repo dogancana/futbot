@@ -44,7 +44,7 @@ export namespace tradeService {
   export async function sellPlayerCheap(
     player: fut.ItemData
   ): Promise<fut.ItemData & { price: SellPrice }> {
-    let price: SellPrice = await getOptimalSellPrice(player.resourceId);
+    let price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
     if (!price) {
       logger.error(
         `No price information for ${playerService.readable(player)}`
