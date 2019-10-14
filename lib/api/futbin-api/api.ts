@@ -11,7 +11,7 @@ export const futbinApi = Axios.create({
   }
 });
 const requestsPerSec =
-  parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 5;
+  parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 2;
 
 const queue = new ApiQueue(requestsPerSec, "futbin");
 let futbinStopped = false;
