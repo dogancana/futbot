@@ -1,3 +1,4 @@
+import { logger } from "./../logger";
 import { GoodAuctionInvestorProps } from "./jobs/good-auction-investor";
 import { futbin, fut } from "../api";
 import {
@@ -18,11 +19,8 @@ export namespace investService {
   export async function getTargets(
     query: futbin.PlayersQuery
   ): Promise<TargetInfo[]> {
-    const platform = await fut.getPlatform();
-    const priceKey = `${platform.toLowerCase()}_price`;
     const defaultQuery = {
       page: 1,
-      [priceKey]: "1000-2500",
       sort: "likes",
       order: "desc"
     };
@@ -30,6 +28,7 @@ export namespace investService {
       ...defaultQuery,
       ...query
     });
+    logger.debug(`[InvestService]: Target ids: ${playerIds}`);
 
     const playerInfos: TargetInfo[] = [];
     for (const playerId of playerIds) {
