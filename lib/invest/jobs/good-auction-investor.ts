@@ -9,6 +9,7 @@ const BATCH_START_PAGE = 5; // Better for checking transfer with >1 min remainin
 const BATCH_PAGES_TO_SEE = 3; // Setting it more would result on bloating futbin queue
 const PROFIT_MARGIN_PERCT = 20;
 const EXPIRE_TIME_LIMIT = 180; // seconds
+const MIN_MARKET_SAMPLE_COUNT = 10;
 
 export interface GoodAuctionInvestorProps {
   budget: number;
@@ -171,10 +172,13 @@ export class GoodAuctionInvestor extends Job {
     calculateResult();
     // use futbin to prices as a filter to avoid requests to fut
     if (goodBuy && !marketSellPrice) {
-      marketSellPrice = (await playerService.getMarketPrice(
+      const { minBuyNow, samplecount } = await playerService.getMarketPrice(
         a.itemData.resourceId
-      )).minBuyNow;
-      sellPrice = marketSellPrice;
+      );
+      sellPrice = minBuyNow;
+      if (samplecount < MIN_MARKET_SAMPLE_COUNT) {
+        goodBuy = false;
+      }
       calculateResult();
     }
 
