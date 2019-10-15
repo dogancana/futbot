@@ -1,15 +1,14 @@
 # FutBot
 
 This is a very simple data source/trade bot for FIFA 20 fut api written in Typescript/Javascript for node.js.  
-The main purpose is automate simple activities. There is no intention to create a complete api as futapi.  
-To inject your session into node server, there is a chrome extension in the project.  
+The main purpose is to automate simple activities. There is no intention to create a complete api as futapi.  
+To inject your session into node server, there is a chrome extension in the project.  This extension is also drawing on fut web app, so that you can access features easily. 
 It's tested with FIFA 20
 
 # Prepare
 
 ```Config```  
 The project needs a configuration file (.env) in order to get some user preferences and region based api endpoint (I was lazy to figure it out automatically). You can copy .env.local file as .env file if you are in europe.  
-Without the file, server won't work.
 
 
 # Start
@@ -26,7 +25,7 @@ $ yarn
 $ yarn build
 ```
 Load the extension in developer mode to chrome. Build output should be under /ui/build  
-Login to fut web app so that the extension can stole your session and inject it into node server.
+Login to fut web app so that the extension can steal your session and inject it into node server.
 Since this server is not intented to be deployed somewhere, there is no session in node server. Instead, your Fut web app session will be shared for any task in the server.
 
 # Existing features:
@@ -46,14 +45,17 @@ It's best to use prior to sell
   
 http://localhost:9999/invest/low-players?budget=50000&min=1000&max=5000&maxTargetPool=150
 When you start investing with a budget, a job will start to buy cheap players for cheaper (<80%) futbin prices. Since players are already cheap, it will try to use buyNow feature all the time. 
-The job figures investment targets from most popular futbin players in 1000 - 2500 range (can be overwritten with min max query params).
+The job figures investment targets from most popular futbin players in 1000 - 5000 price range (can be overwritten with min max query params).
 Once the job finds a player with a safe price to buy, it'll buy and resell it. Sometimes you get errors on reselling because processing player time takes more than expected (5s). If you also have trade-bot/sell job running, it'll catch these players and sell for same price.
 The job will continue to spend all the budget for buying players. 
 Sell prices won't be added back to actual budget.  
 If you start this job in the night with parameters I provided, you might have ~10-20k profit in the morning.
 
+http://localhost:9999/invest/good-auctions?budget=50000&min=5000&max=10000
+This is similar to low players investor job. Only difference is, this job is focused on expensive players with low current bid amounts. This job searches market for auctions, which will expire soon. In these auctions, the task will try to find players for 20% profit margin and bid accordingly.
 
-There are many more endpoints to use. But I don't think they are worth to mention in this point. You can read them in files named ```*.*-app.ts``` 
+
+There are more endpoints to use. But I don't think they are worth to mention in this point. You can read them in files named ```*.*-app.ts``` 
 
 # Existing UI Features
 
@@ -63,9 +65,9 @@ There are many more endpoints to use. But I don't think they are worth to mentio
 # Disclaimer and Notes
 
 I'm pretty sure this would violate some terms and conditions. Use on your own risk  
-The requests against fut api and futbin api are limited per minute. The values should be good enough to execute the bot for couple of ours. You can check request stats from http://localhost:9999/stats  
-If you get auth errors, just refresh fut web app or click to some features to update sid, so extension can send new auth information to server  
-I'm trying all the features from my profile. I generally try it with all quality (including specials). But still there might be weird edge cases which can cause bugs. 
+The requests against fut api and futbin api are limited per minute. The values should be good enough to execute the bot for couple of hours. You can check request stats from http://localhost:9999/stats  
+In case of temporary ban from fut api, jobs will be stopped automatically. If you are banned from futbin, bot won't make any requests to futbin for next couple of hours.
+I'm trying all the features from my profile. I generally try it with all quality (including specials). But still there might be weird edge cases which can cause bugs or losses. 
 
 # Known Bugs
 
@@ -73,7 +75,6 @@ I'm trying all the features from my profile. I generally try it with all quality
 
 # Sync issues
 
-FUT Web app is making requests with an incremental timestamp/id. If you execute actions in this bot, your FUT Web app and this server might be out of sync after some time and you'd see weird transfer lists, player lists etc. To sync it again just refresh FUT Web App.  
 It's better to not use FUT Web App if you are planning to auto sell/buy for a long time from this bot.
 
 # Auth errors
