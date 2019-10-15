@@ -53,20 +53,21 @@ export class SellXPlayers extends Job {
         const sellResult = await tradeService.sellPlayerCheap(player);
         if (sellResult) this.soldPlayers.push(sellResult);
       } catch (e) {
+        const response = e.response || {}
+        const status = response.status || 500;
         logger.error(
           `${SellXPlayers.jobName}; couldnt sell ${playerService.readable(
             player
           )} because of error:${e.message}}`
         );
         if (
-          e.response &&
           TRADE_PILE_FULL_ERROR_CODES.indexOf(e.response.status) > -1
         ) {
           logger.info(
             `${SellXPlayers.jobName} will restart after 15mins. Waiting to sell some players`
           );
         } else if (
-          PASS_THROUGH_SELL_ERROR_CODES.indexOf(e.response.status) > -1
+          PASS_THROUGH_SELL_ERROR_CODES.indexOf(status) > -1
         ) {
           continue;
         }
