@@ -81,6 +81,8 @@ export class LowPlayerInvestor extends Job {
 
     let batch = 0;
     while (true) {
+      if (batch >= MAX_AUCTION_TRY) break;
+
       batch++;
       let auctions = (await fut.getPlayerTransferData(
         target.resourceId,
@@ -91,9 +93,7 @@ export class LowPlayerInvestor extends Job {
         .filter(a => !a.tradeOwner);
 
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
-      if (auctions.length === 0
-        && batch < MAX_AUCTION_TRY
-      ) {
+      if (auctions.length === 0) {
         continue;
       }
 
@@ -135,8 +135,6 @@ export class LowPlayerInvestor extends Job {
         }
         break;
       }
-
-      if (batch >= MAX_AUCTION_TRY) break;
     }
   }
 
@@ -169,7 +167,7 @@ async function setupTargets(price: string, maxTargets: number) {
   const clubPlayers = await fut.getClubPlayers();
   const isInClubPlayers = (resourceId: number) => clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
 
-  for (let i = 0; i < pageLimit; i++) {
+  for (let i = 1; i <= pageLimit; i++) {
     targets = targets.concat(
       await investService.getTargets({
         page: i,
