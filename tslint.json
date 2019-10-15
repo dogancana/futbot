@@ -2,6 +2,13 @@
   "defaultSeverity": "error",
   "extends": ["tslint:recommended", "tslint-config-prettier"],
   "jsRules": {},
-  "rules": {},
-  "rulesDirectory": []
+  "rules": {
+    "object-literal-sort-keys": false,
+    "interface-name": false,
+    "import-name": false,
+    "import-blacklist": [false],
+    "no-submodule-imports": false,
+    "prefer-object-spread": false,
+    "prefer-array-literal": [true, { "allow-type-parameters": true }]
+  }
 }
