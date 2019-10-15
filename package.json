@@ -6,7 +6,8 @@
   "scripts": {
     "start": "ts-node --inspect=5858 lib/app.ts",
     "dev": "nodemon",
-    "docs": "typedoc --out ./doc lib"
+    "docs": "typedoc --out ./doc lib",
+    "lint": "tslint 'lib/**/*.ts'"
   },
   "keywords": [],
   "author": "",
