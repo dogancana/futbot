@@ -1,4 +1,5 @@
 import Axios, { AxiosAdapter, AxiosRequestConfig } from 'axios';
+import { logger } from './../logger';
 
 const memory = {};
 
@@ -31,6 +32,8 @@ function key(request: AxiosRequestConfig): string {
   }
   try {
     dataStr = JSON.stringify(request.data);
-  } catch {}
+  } catch {
+    logger.debug(`[Cache Adapter]: Coulnt stringfy object ${request.data}`);
+  }
   return `${url}${dataStr}`;
 }

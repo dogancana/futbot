@@ -9,6 +9,7 @@
     "import-blacklist": [false],
     "no-submodule-imports": false,
     "prefer-object-spread": false,
-    "prefer-array-literal": [true, { "allow-type-parameters": true }]
+    "no-namespace": false,
+    "max-classes-per-file": false
   }
 }

@@ -23,10 +23,14 @@ export namespace tradeService {
   }
 
   export function stopSelling() {
-    clearPileJob && clearPileJob.stop();
+    if (clearPileJob) {
+      clearPileJob.stop();
+    }
     clearPileJob = null;
 
-    sellXPlayersJob && sellXPlayersJob.stop();
+    if (sellXPlayersJob) {
+      sellXPlayersJob.stop();
+    }
     sellXPlayersJob = null;
 
     return sellReport();

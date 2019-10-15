@@ -196,7 +196,10 @@ export namespace fut {
     return platform;
   }
 
-  export async function bid(tradeId: number, bid: number): Promise<void> {
+  export async function bidToTrade(
+    tradeId: number,
+    bid: number
+  ): Promise<void> {
     await futApi.put(`/trade/${tradeId}/bid`, {
       bid
     });

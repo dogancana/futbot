@@ -29,7 +29,7 @@ export namespace playerService {
     };
 
     auctions.forEach(a => {
-      if (a.itemData.resourceId != resourceId) {
+      if (a.itemData.resourceId !== resourceId) {
         return;
       }
 

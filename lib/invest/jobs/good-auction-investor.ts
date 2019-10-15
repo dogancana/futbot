@@ -88,8 +88,7 @@ export class GoodAuctionInvestor extends Job {
         .filter(p => !p.tradeOwner)
         .filter(p => p.expires < EXPIRE_TIME_LIMIT);
 
-      for (let j = 0; j < possibleTargets.length; j++) {
-        const possibleTarget = possibleTargets[j];
+      for (const possibleTarget of possibleTargets) {
         const {
           goodBuy,
           sellPrice,
@@ -105,7 +104,9 @@ export class GoodAuctionInvestor extends Job {
               this.budget
             }`
           );
-          if (!auctionsToWatch.find(v => v.tradeId == possibleTarget.tradeId)) {
+          if (
+            !auctionsToWatch.find(v => v.tradeId === possibleTarget.tradeId)
+          ) {
             const auction = {
               ...possibleTarget,
               maxBuyPrice
@@ -130,7 +131,7 @@ export class GoodAuctionInvestor extends Job {
         }`
       );
       try {
-        await fut.bid(a.tradeId, bidPrice);
+        await fut.bidToTrade(a.tradeId, bidPrice);
         this.budget -= bidPrice;
       } catch (e) {
         logger.error(
@@ -160,7 +161,8 @@ export class GoodAuctionInvestor extends Job {
       )).minBuyNow;
     }
 
-    let profitMargin: number, goodBuy: boolean;
+    let profitMargin: number;
+    let goodBuy: boolean;
     let sellPrice = futbinSellPrice || marketSellPrice;
     const calculateResult = () => {
       profitMargin = ((sellPrice - askingPrice) / sellPrice) * 100;

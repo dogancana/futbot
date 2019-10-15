@@ -1,10 +1,11 @@
 import * as express from 'express';
 import { futbin } from '../api';
+import { logger } from './../logger';
 import { playerService } from './player-service';
 
 export const playerApp = express();
 
-playerApp.get('', async function(req, res) {
+playerApp.get('', async (req, res) => {
   const { assetId, resourceId } = req.query;
 
   if (!resourceId || !assetId) {
@@ -12,13 +13,26 @@ playerApp.get('', async function(req, res) {
     return;
   }
 
-  let futbinPrice: futbin.Price, marketPrice: playerService.MarketPrice;
+  let futbinPrice: futbin.Price;
+  let marketPrice: playerService.MarketPrice;
   try {
     futbinPrice = await playerService.getFutbinPrice(resourceId);
-  } catch {}
+  } catch {
+    logger.error(
+      `[Player App] error while retrieving futbin price for ${playerService.readable(
+        { resourceId }
+      )}`
+    );
+  }
   try {
     marketPrice = await playerService.getMarketPrice(resourceId);
-  } catch {}
+  } catch {
+    logger.error(
+      `[Player App] error while retrieving market price for ${playerService.readable(
+        { resourceId }
+      )}`
+    );
+  }
   res.send({
     name: playerService.readable({ assetId }),
     futbinPrice,

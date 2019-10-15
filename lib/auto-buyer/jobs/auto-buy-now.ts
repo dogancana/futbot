@@ -30,7 +30,7 @@ export class AutoBuyBuyNow extends Job {
       if (lowest.buyNowPrice <= target.maxPrice) {
         logger.info(`Found ${playerStr} for ${lowest.buyNowPrice}, buying.`);
         try {
-          await fut.bid(lowest.tradeId, lowest.buyNowPrice);
+          await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
           const justBoughtTarget = await fut.waitAndGetPurchasedItem(
             target.resourceId
           );

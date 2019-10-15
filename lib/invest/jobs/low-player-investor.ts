@@ -73,7 +73,8 @@ export class LowPlayerInvestor extends Job {
     }
 
     const safeBuyValue = value.startingBid * BUY_REFERENCE_PERCT;
-    const price = p => (p.currentBid != 0 ? p.currentBid : p.startingBid);
+    const price = (p: fut.AuctionInfo) =>
+      p.currentBid !== 0 ? p.currentBid : p.startingBid;
     let batch = 0;
     while (true) {
       let auctions = (await fut.getPlayerTransferData(
@@ -96,7 +97,7 @@ export class LowPlayerInvestor extends Job {
           break;
         }
         try {
-          await fut.bid(lowest.tradeId, lowest.buyNowPrice);
+          await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
           logger.info(
             `${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`
           );

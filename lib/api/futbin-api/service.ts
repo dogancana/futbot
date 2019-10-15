@@ -84,7 +84,7 @@ export namespace futbin {
       })
       .get()
       .map(id => parseInt(id, 10))
-      .filter(id => !!id && id !== NaN);
+      .filter((id: number) => !!id && !isNaN(id));
 
     return players;
   }

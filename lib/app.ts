@@ -1,4 +1,5 @@
 // Leave this at top
+// tslint:disable-next-line: no-var-requires
 require('dotenv').config();
 import './custom-types/index';
 
@@ -37,6 +38,6 @@ app.use('/auto-buyer', autoBuyerApp);
 app.get('/ping', (req, res) => res.send('pong'));
 
 const server = http.createServer(app);
-server.listen(app.get('port'), function() {
+server.listen(app.get('port'), () => {
   logger.info('Express server listening on port ' + app.get('port'));
 });
