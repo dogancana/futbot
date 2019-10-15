@@ -37,12 +37,12 @@ export function getFutbinSellPrice(price: futbin.Price): SellPrice {
   }
 
   // ignore old prices
-  if (price.updatedMinsAgo === -1 || price.updatedMinsAgo > 60) {
+  if (price.updatedMinsAgo === -1 || price.updatedMinsAgo > 120) {
     return null;
   }
 
   // ignore low price-range percentage (https://www.futbin.com/prp)
-  if (price.prp < 25) {
+  if (price.prp < 20) {
     return null;
   }
 

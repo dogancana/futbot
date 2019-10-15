@@ -8,10 +8,13 @@ import { logger } from "../../logger";
 import { AxiosError } from "axios";
 
 const BUY_REFERENCE_PERCT = 0.7;
-const MAX_AUCTION_TRY = process.env.FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER || 3;
+const MAX_AUCTION_TRY = parseInt(process.env.FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER) || 3;
 const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 4000;
 const MAX_TARGET_POOL = 30;
+
+// calculate the number of jobs per minute: fut-requests per sec / auctions & price-queries
+const TIMES_PER_MIN = Math.floor((parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) * 60) / (3 + MAX_AUCTION_TRY));
 
 let targets: investService.TargetInfo[] = [];
 let setingUp = false;
@@ -38,7 +41,7 @@ export class LowPlayerInvestor extends Job {
   private maxTargetPool: number = MAX_TARGET_POOL;
 
   constructor({budget, min, max, maxTargetPool}: LowPlayerInvestorProps) {
-    super(LowPlayerInvestor.jobName, 5);
+    super(LowPlayerInvestor.jobName, TIMES_PER_MIN);
 
     Object.assign(this, {
       min,
@@ -70,16 +73,18 @@ export class LowPlayerInvestor extends Job {
     const playerStr = playerService.readable({assetId: target.assetId});
     const sellPrice = await getOptimalSellPrice(target.resourceId);
     if (!sellPrice.buyNowPrice || !sellPrice.startingBid) {
+      logger.info(`${LowPlayerInvestor.jobName} Skipping ${playerStr}: missing price-samples`);
       return;
     }
 
     const safeBuyValue = sellPrice.startingBid * BUY_REFERENCE_PERCT;
-    const price = p => (p.currentBid != 0 ? p.currentBid : p.startingBid);
+
     let batch = 0;
     while (true) {
+      batch++;
       let auctions = (await fut.getPlayerTransferData(
         target.resourceId,
-        batch++,
+        0,
         {maxb: tradePrice(safeBuyValue)}
       ))
         .filter(a => !a.watched)
@@ -91,21 +96,16 @@ export class LowPlayerInvestor extends Job {
       }
 
       const lowest = auctions[0];
-      const lowestTargetPrice = price(lowest);
-      if (lowestTargetPrice <= safeBuyValue) {
+      if (lowest.buyNowPrice <= safeBuyValue) {
         if (this.budget <= lowest.buyNowPrice) {
           break;
         }
 
         try {
+          logger.info(`${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`);
           await fut.bid(lowest.tradeId, lowest.buyNowPrice);
-          logger.info(
-            `${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`
-          );
 
-          const sellTarget = await fut.waitAndGetPurchasedItem(
-            target.resourceId
-          );
+          const sellTarget = await fut.waitAndGetPurchasedItem(target.resourceId);
           if (sellTarget) {
             this.boughtPlayers.push({
               ...sellPrice,
@@ -126,9 +126,7 @@ export class LowPlayerInvestor extends Job {
         } catch (e) {
           const err: AxiosError = e;
           logger.error(
-            `[Invest:LowPlayer]: bid error for ${playerService.readable(
-              lowest.itemData
-            )} with bid ${lowest.buyNowPrice}. Reason: ${
+            `[Invest:LowPlayer]: bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${
               err.response.status
             }, ${err.response.data}`
           );
@@ -136,7 +134,7 @@ export class LowPlayerInvestor extends Job {
         break;
       }
 
-      if (batch > MAX_AUCTION_TRY) break;
+      if (batch >= MAX_AUCTION_TRY) break;
     }
   }
 

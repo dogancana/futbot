@@ -17,7 +17,10 @@ const queue = new ApiQueue(requestsPerSec, "futbin");
 let futbinStopped = false;
 
 futbinApi.interceptors.request.use(async config => {
-  if (futbinStopped) return Promise.reject(config);
+  if (futbinStopped) {
+    return Promise.reject(config);
+  }
+
   return await queue.addRequestToQueue(config);
 });
 
@@ -32,9 +35,7 @@ futbinApi.interceptors.response.use(
     logErrorResponse("FUTBIN", value);
     if (status === 403) {
       futbinStopped = true;
-      logger.warn(
-        `[FUTBIN] Requests stopped for next 30 mins because of 403 error`
-      );
+      logger.warn(`[FUTBIN] Requests stopped for next 30 mins because of 403 error`);
       setTimeout(() => (futbinStopped = false), 30 * 60 * 60 * 1000);
     }
 

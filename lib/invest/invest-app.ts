@@ -23,23 +23,12 @@ investApp.get("/low-players", async (req, res) => {
   const {budget, min, max} = getBudgetMinMax(req.query);
   if (!budgetMinMaxQueryCheck(res, budget, min, max)) return;
 
-  res.send(
-    investService.startLowPlayerInvvest({budget, min, max, maxTargetPool})
-  );
+  res.send(investService.startLowPlayerInvest({budget, min, max, maxTargetPool}));
 });
 
 investApp.get("/low-players-stop", async (req, res) => {
   investService.clearLowPlayerInvest();
   res.send('OK');
-});
-
-investApp.get('/low-players-relist', async (req, res) => {
-  try {
-    const resp = await investService.reListLowPlayer();
-    res.send(resp)
-  } catch (e) {
-    res.status(500).send(e.message)
-  }
 });
 
 investApp.get("/good-auctions", async (req, res) => {

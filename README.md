@@ -40,6 +40,9 @@ Once in a while it gets your players from club, figures a good price according t
 ```Query Paramters: ``` maxRating  
 `Mindstet:` Probably you have 100s of unwanted players with a price range of 0-5000. Quickselling them actually means loosing money. You can start this selling feature and get rid of them for lowest futbin prices/lowest market buyNow prices.
 
+http://localhost:9999/trade-bot/relist-expired
+This will update the sell price for and re-list expired items
+
 http://localhost:9999/trade-bot/clear-pile
 This will clear transfer list from sold/expired items
 It's best to use prior to sell  

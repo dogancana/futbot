@@ -35,8 +35,8 @@ export namespace playerService {
         return;
       }
 
-      // ignore the "default" 10000 buy-now price
-      if (a.buyNowPrice === 10000) {
+      // ignore the default buy-now price
+      if (a.buyNowPrice === a.itemData.marketDataMaxPrice) {
         invalidSamples++;
         return;
       }
@@ -58,11 +58,6 @@ export namespace playerService {
     if (price.sampleCount > 0) {
       price.averageBuyNow /= price.sampleCount;
       price.averageStartingBid /= price.sampleCount;
-    }
-
-    // if there are more invalid samples than valid ones, invalidate the player
-    if (invalidSamples > price.sampleCount) {
-      price.sampleCount = 0;
     }
 
     price.minBuyNow = price.minBuyNow === Number.MAX_VALUE ? 0 : price.minBuyNow;

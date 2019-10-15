@@ -15,7 +15,11 @@ export const futApi = Axios.create({
   }
 });
 
-const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.5;
+const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC);
+if (!requestsPerSec) {
+  throw new Error('Invalid request-speed limit');
+}
+
 const queue = new ApiQueue(requestsPerSec, "fut", eaConfigResolver);
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
@@ -42,6 +46,7 @@ futApi.interceptors.request.use(async config => {
       "Session not copied!. First load Fut Web App with extension"
     );
   }
+
   return await queue.addRequestToQueue(config);
 });
 
@@ -60,11 +65,15 @@ futApi.interceptors.response.use(
 
     if ([401, 403, 458].indexOf(status) > -1) {
       logger.error("[FUT] stopped all jobs for critical auth error");
+
+      queue.clear();
       Job.stopAllJobs();
     }
 
     if ([512, 521].indexOf(status) > -1) {
       logger.error("[FUT] stopped all jobs: Temporary ban or just too many requests.");
+
+      queue.clear();
       Job.stopAllJobs();
     }
 
