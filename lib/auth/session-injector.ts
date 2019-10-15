@@ -1,6 +1,6 @@
-import {tmpdir} from "os";
-import {resolve} from "path";
-import {readFileIfRecent, writeFileSyncSafe} from "../utils";
+import { tmpdir } from 'os';
+import { resolve } from 'path';
+import { readFileIfRecent, writeFileSyncSafe } from '../utils';
 
 export interface Auth {
   ipPort: string;
@@ -16,11 +16,11 @@ export interface Session {
   lastStamp?: number;
 }
 
-const fileName = resolve(tmpdir(), "futbot-session.json");
+const fileName = resolve(tmpdir(), 'futbot-session.json');
 const write = (s: Session) => writeFileSyncSafe<Session>(fileName, s);
 
 let apiSession: Session = {};
-readFileIfRecent<Session>(fileName).then((s) => (apiSession = s || {}));
+readFileIfRecent<Session>(fileName).then(s => (apiSession = s || {}));
 
 export class SessionInjector {
   static get auth(): Auth {

@@ -1,9 +1,9 @@
-import { AxiosResponse } from "axios";
-import { fut } from "../../api";
-import { logger } from "../../logger";
-import { playerService } from "../../player";
-import { tradePrice } from "../../trader/trade-utils";
-import { Job } from "./../../job";
+import { AxiosResponse } from 'axios';
+import { fut } from '../../api';
+import { logger } from '../../logger';
+import { playerService } from '../../player';
+import { tradePrice } from '../../trader/trade-utils';
+import { Job } from './../../job';
 
 const BATCH_START_PAGE = 5; // Better for checking transfer with >1 min remaining
 const BATCH_PAGES_TO_SEE = 3; // Setting it more would result on bloating futbin queue
@@ -30,7 +30,7 @@ export class GoodAuctionInvestor extends Job {
   private profitMargin: number = PROFIT_MARGIN_PERCT;
 
   constructor(p: GoodAuctionInvestorProps) {
-    super("Invest:GoodAuction", 2);
+    super('Invest:GoodAuction', 2);
     Object.assign(this, p);
     this.start(this.loop);
   }
@@ -38,11 +38,11 @@ export class GoodAuctionInvestor extends Job {
   public report() {
     return {
       targets: auctionsToWatch.map(
-        (a) =>
+        a =>
           `${playerService.readable(a.itemData)} for max ${
             a.maxBuyPrice
-          }. Expires in ${a.expires}seconds`,
-      ),
+          }. Expires in ${a.expires}seconds`
+      )
     };
   }
 
@@ -53,25 +53,27 @@ export class GoodAuctionInvestor extends Job {
 
   private async updateAuctionsToWatch() {
     const auctions = await fut.checkAuctionStatus(
-      auctionsToWatch.map((a) => a.tradeId),
+      auctionsToWatch.map(a => a.tradeId)
     );
     auctionsToWatch = auctionsToWatch
-      .map((a) => ({
+      .map(a => ({
         ...a,
-        ...auctions.find((b) => b.tradeId === a.tradeId),
-        itemData: a.itemData, // auction status object clears out item data. We put it back
+        ...auctions.find(b => b.tradeId === a.tradeId),
+        itemData: a.itemData // auction status object clears out item data. We put it back
       }))
-      .filter((a) => a.expires > 0);
+      .filter(a => a.expires > 0);
   }
 
   private async bidTargets() {
-    if (!auctionsToWatch || auctionsToWatch.length === 0) { return; }
+    if (!auctionsToWatch || auctionsToWatch.length === 0) {
+      return;
+    }
     await this.updateAuctionsToWatch();
 
-    const targets = auctionsToWatch.filter((a) => a.bidState !== "highest");
+    const targets = auctionsToWatch.filter(a => a.bidState !== 'highest');
 
     // create new event handling point to ignore job task execution
-    targets.forEach(async (t) => await this.bidAuction(t));
+    targets.forEach(async t => await this.bidAuction(t));
   }
 
   private async loopMarket() {
@@ -82,9 +84,9 @@ export class GoodAuctionInvestor extends Job {
     ) {
       const players = await fut.searchTransferMarket(i, this.min, this.max);
       const possibleTargets = players
-        .filter((p) => !p.watched)
-        .filter((p) => !p.tradeOwner)
-        .filter((p) => p.expires < EXPIRE_TIME_LIMIT);
+        .filter(p => !p.watched)
+        .filter(p => !p.tradeOwner)
+        .filter(p => p.expires < EXPIRE_TIME_LIMIT);
 
       for (let j = 0; j < possibleTargets.length; j++) {
         const possibleTarget = possibleTargets[j];
@@ -93,20 +95,20 @@ export class GoodAuctionInvestor extends Job {
           sellPrice,
           askingPrice,
           profitMargin,
-          maxBuyPrice,
+          maxBuyPrice
         } = await this.analyzePrice(possibleTarget);
         if (goodBuy) {
           logger.info(
             `[Invest:GoodAuction]: ${playerService.readable(
-              possibleTarget.itemData,
+              possibleTarget.itemData
             )} can be bought for ${askingPrice}, which is less than optimal price ${sellPrice}. Profit margin ${profitMargin}. Budget: ${
               this.budget
-            }`,
+            }`
           );
-          if (!auctionsToWatch.find((v) => v.tradeId == possibleTarget.tradeId)) {
+          if (!auctionsToWatch.find(v => v.tradeId == possibleTarget.tradeId)) {
             const auction = {
               ...possibleTarget,
-              maxBuyPrice,
+              maxBuyPrice
             };
             auctionsToWatch.push(auction);
             this.bidAuction(auction);
@@ -122,10 +124,10 @@ export class GoodAuctionInvestor extends Job {
     if (bidPrice < this.budget) {
       logger.info(
         `[Invest:GoodAuction]: ${playerService.readable(
-          a.itemData,
+          a.itemData
         )} bidding for ${bidPrice}, Expires ${a.expires}, Buynow ${
           a.buyNowPrice
-        }`,
+        }`
       );
       try {
         await fut.bid(a.tradeId, bidPrice);
@@ -133,8 +135,8 @@ export class GoodAuctionInvestor extends Job {
       } catch (e) {
         logger.error(
           `[Invevst:GoodAuction]: bid failed for ${playerService.readable(
-            a.itemData,
-          )} with bid amount ${bidPrice}. Reason: ${(e as AxiosResponse).data}`,
+            a.itemData
+          )} with bid amount ${bidPrice}. Reason: ${(e as AxiosResponse).data}`
         );
       }
     }
@@ -144,7 +146,7 @@ export class GoodAuctionInvestor extends Job {
     let futbinSellPrice: number;
     try {
       futbinSellPrice = (await playerService.getFutbinPrice(
-        a.itemData.resourceId,
+        a.itemData.resourceId
       )).LCPrice;
     } catch {
       futbinSellPrice = 0;
@@ -154,7 +156,7 @@ export class GoodAuctionInvestor extends Job {
 
     if (!futbinSellPrice) {
       marketSellPrice = (await playerService.getMarketPrice(
-        a.itemData.resourceId,
+        a.itemData.resourceId
       )).minBuyNow;
     }
 
@@ -168,7 +170,7 @@ export class GoodAuctionInvestor extends Job {
     // use futbin to prices as a filter to avoid requests to fut
     if (goodBuy && !marketSellPrice) {
       marketSellPrice = (await playerService.getMarketPrice(
-        a.itemData.resourceId,
+        a.itemData.resourceId
       )).minBuyNow;
       sellPrice = marketSellPrice;
       calculateResult();
@@ -179,7 +181,7 @@ export class GoodAuctionInvestor extends Job {
       askingPrice,
       sellPrice,
       profitMargin,
-      maxBuyPrice: sellPrice * ((100 - this.profitMargin) / 100),
+      maxBuyPrice: sellPrice * ((100 - this.profitMargin) / 100)
     };
   }
 }

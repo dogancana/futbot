@@ -1,6 +1,6 @@
-import { interval, Observable, Subscription } from "rxjs";
-import { startWith } from "rxjs/operators";
-import { logger } from "./logger";
+import { interval, Observable, Subscription } from 'rxjs';
+import { startWith } from 'rxjs/operators';
+import { logger } from './logger';
 const min = 60 * 1000;
 
 const jobs: {
@@ -8,7 +8,6 @@ const jobs: {
 } = {};
 
 export class Job {
-
   public static stopAllJobs(): number {
     let stopped = 0;
     const keys = Object.keys(jobs);
@@ -21,7 +20,9 @@ export class Job {
   }
 
   public static slowDownAllJobsForNextMins(mins: number) {
-    if (Job.slowed) { return; }
+    if (Job.slowed) {
+      return;
+    }
 
     Job.slowed = true;
 

@@ -1,11 +1,11 @@
-import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { logger } from "../logger";
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { logger } from '../logger';
 
 export class ApiError extends Error {
   constructor(
     public status: number,
     public config: AxiosRequestConfig,
-    public message: string,
+    public message: string
   ) {
     super(message);
   }
@@ -17,7 +17,7 @@ export class ApiError extends Error {
 
 export function logResponse(apiName: string, r: AxiosResponse) {
   const { config, data, status, fromCache } = r;
-  const cachedStr: string = fromCache ? "[Cached]" : "";
+  const cachedStr: string = fromCache ? '[Cached]' : '';
   logger.debug(`[${apiName}]: ${status}${cachedStr} ${config.url}`);
 }
 
@@ -28,6 +28,6 @@ export function logErrorResponse(apiName: string, v: any) {
   logger.error(
     `[${apiName}]: ${status} ${config.method} ${config.url} ${
       config.data
-    } ${message} ${JSON.stringify(data)}`,
+    } ${message} ${JSON.stringify(data)}`
   );
 }

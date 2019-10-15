@@ -1,12 +1,12 @@
-import { fut } from "../../api";
-import { Job } from "../../job";
-import { logger } from "../../logger";
-import { playerService } from "../../player";
-import { AutoBuyerService } from "../auto-buyer.service";
+import { fut } from '../../api';
+import { Job } from '../../job';
+import { logger } from '../../logger';
+import { playerService } from '../../player';
+import { AutoBuyerService } from '../auto-buyer.service';
 
 export class AutoBuyBuyNow extends Job {
   constructor() {
-    const jobName = "AutoBuyer::BuyNow";
+    const jobName = 'AutoBuyer::BuyNow';
 
     super(jobName, 2);
     this.start(this.loopOverTargets);
@@ -18,19 +18,21 @@ export class AutoBuyBuyNow extends Job {
     for (const target of targets) {
       const playerStr = playerService.readable({ assetId: target.resourceId });
       const auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
-        maxb: target.maxPrice,
+        maxb: target.maxPrice
       }))
-        .filter((a) => !a.tradeOwner)
+        .filter(a => !a.tradeOwner)
         .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
 
       const lowest = auctions[0];
-      if (!lowest) { continue; }
+      if (!lowest) {
+        continue;
+      }
       if (lowest.buyNowPrice <= target.maxPrice) {
         logger.info(`Found ${playerStr} for ${lowest.buyNowPrice}, buying.`);
         try {
           await fut.bid(lowest.tradeId, lowest.buyNowPrice);
           const justBoughtTarget = await fut.waitAndGetPurchasedItem(
-            target.resourceId,
+            target.resourceId
           );
           await fut.sendToClub(justBoughtTarget.id);
         } catch (e) {

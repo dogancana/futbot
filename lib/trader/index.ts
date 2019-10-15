@@ -1,1 +1,1 @@
-export * from "./trade-bot-app";
+export * from './trade-bot-app';

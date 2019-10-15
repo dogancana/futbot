@@ -1,4 +1,4 @@
-import { fut } from "../api";
+import { fut } from '../api';
 
 interface IPlyaerFilter {
   quality?: fut.Quality;
@@ -6,14 +6,18 @@ interface IPlyaerFilter {
   tradeableOnly?: boolean;
 }
 export function filterPlayers(players, filters: IPlyaerFilter) {
-  return players.filter((player) => {
+  return players.filter(player => {
     let result = true;
 
     if (filters.quality) {
-      const maxRatings = {bronze: 64, silver: 74, gold: 100};
-      let rating = "bronze";
-      if (player.rating > maxRatings.bronze) { rating = "silver"; }
-      if (player.rating > maxRatings.silver) { rating = "gold"; }
+      const maxRatings = { bronze: 64, silver: 74, gold: 100 };
+      let rating = 'bronze';
+      if (player.rating > maxRatings.bronze) {
+        rating = 'silver';
+      }
+      if (player.rating > maxRatings.silver) {
+        rating = 'gold';
+      }
 
       result = result && rating === filters.quality;
     }

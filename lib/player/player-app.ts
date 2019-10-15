@@ -1,14 +1,14 @@
-import * as express from "express";
-import { futbin } from "../api";
-import { playerService } from "./player-service";
+import * as express from 'express';
+import { futbin } from '../api';
+import { playerService } from './player-service';
 
 export const playerApp = express();
 
-playerApp.get("", async function(req, res) {
+playerApp.get('', async function(req, res) {
   const { assetId, resourceId } = req.query;
 
   if (!resourceId || !assetId) {
-    res.status(500).send("Provide assetId and resourceId in query params");
+    res.status(500).send('Provide assetId and resourceId in query params');
     return;
   }
 
@@ -22,6 +22,6 @@ playerApp.get("", async function(req, res) {
   res.send({
     name: playerService.readable({ assetId }),
     futbinPrice,
-    marketPrice,
+    marketPrice
   });
 });

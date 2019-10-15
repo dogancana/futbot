@@ -1,1 +1,1 @@
-export * from "./club-app";
+export * from './club-app';
