@@ -5,8 +5,12 @@ import { cacheEntry } from "./cache-adapter";
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
 
 export class ApiQueue {
+
+  public static getApiQueueStats() {
+    return ApiQueue.apiQueues.map((q) => q.stats());
+  }
   private static apiQueues: ApiQueue[] = [];
-  private queue: (() => void)[] = [];
+  private queue: Array<() => void> = [];
   private interval: Subscription;
   private apiName: string;
   private requestCount = 0;
@@ -17,7 +21,7 @@ export class ApiQueue {
   constructor(
     requestsPerSec: number,
     apiName: string,
-    configResolver?: ConfigResolver
+    configResolver?: ConfigResolver,
   ) {
     this.apiName = apiName;
     this.interval = interval(Math.ceil(1000 / requestsPerSec)).subscribe(() => {
@@ -32,16 +36,12 @@ export class ApiQueue {
     ApiQueue.apiQueues.push(this);
   }
 
-  public static getApiQueueStats() {
-    return ApiQueue.apiQueues.map(q => q.stats());
-  }
-
   public addRequestToQueue(
-    config: AxiosRequestConfig
+    config: AxiosRequestConfig,
   ): Promise<AxiosRequestConfig> {
     if (cacheEntry(config)) {
       this.cacheHitCount++;
-      console.log('cache?', config)
+      console.log("cache?", config);
       return Promise.resolve(config);
     }
     return new Promise((resolve, reject) => {
@@ -61,7 +61,7 @@ export class ApiQueue {
       requestCount: this.requestCount,
       cacheHitCount: this.cacheHitCount,
       queueCount: this.queue.length,
-      requestsPerSecond: (this.requestCount / timeSpent).toFixed(1)
+      requestsPerSecond: (this.requestCount / timeSpent).toFixed(1),
     };
   }
 }

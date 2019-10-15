@@ -1,9 +1,9 @@
-import { logger } from "../../logger";
-import { Job } from "../../job";
 import Axios, { AxiosRequestConfig } from "axios";
-import { ApiQueue } from "../api-queue";
 import { SessionInjector } from "../../auth";
-import { ApiError, logResponse, logErrorResponse } from "../api";
+import { Job } from "../../job";
+import { logger } from "../../logger";
+import { ApiError, logErrorResponse, logResponse } from "../api";
+import { ApiQueue } from "../api-queue";
 
 export const futApi = Axios.create({
   baseURL:
@@ -12,8 +12,8 @@ export const futApi = Axios.create({
   timeout: 30000,
   headers: {
     "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931"
-  }
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931",
+  },
 });
 const requestsPerSec =
   parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.5;
@@ -38,12 +38,12 @@ function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
   return config;
 }
 
-futApi.interceptors.request.use(async config => {
+futApi.interceptors.request.use(async (config) => {
   if (!SessionInjector.auth) {
     throw new ApiError(
       401,
       config,
-      "Session not copied!. First load Fut Web App with extension"
+      "Session not copied!. First load Fut Web App with extension",
     );
   }
   return await queue.addRequestToQueue(config);
@@ -51,12 +51,12 @@ futApi.interceptors.request.use(async config => {
 
 futApi.interceptors.response.use(
   // success
-  value => {
+  (value) => {
     logResponse("FUT", value);
     return value;
   },
   // error
-  value => {
+  (value) => {
     const { config, response = {}, message } = value;
     const { status = 500 } = response;
 
@@ -72,5 +72,5 @@ futApi.interceptors.response.use(
       Job.slowDownAllJobsForNextMins(30);
     }
     return Promise.reject(new ApiError(status, config, message));
-  }
+  },
 );

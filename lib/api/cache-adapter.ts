@@ -3,10 +3,10 @@ import Axios, {AxiosAdapter, AxiosRequestConfig} from "axios";
 const memory = {};
 
 export const simpleCacheAdapter: AxiosAdapter = async function adapter(
-  req: AxiosRequestConfig
+  req: AxiosRequestConfig,
 ) {
   const value = memory[key(req)];
-  if (value) return value;
+  if (value) { return value; }
 
   const res = await Axios.request({...req, adapter: null});
   memory[key(req)] = {...res, fromCache: true};

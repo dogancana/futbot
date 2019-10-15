@@ -1,6 +1,6 @@
-import { StaticItems } from "./../static/static-items";
 import { logger } from "../logger";
 import { playerService } from "../player";
+import { StaticItems } from "./../static/static-items";
 import { AutoBuyBidder, AutoBuyBuyNow } from "./jobs";
 
 export namespace AutoBuyerService {
@@ -22,35 +22,35 @@ export namespace AutoBuyerService {
     }
 
     const duped: Target = targets.filter(
-      t => t.resourceId === target.resourceId
+      (t) => t.resourceId === target.resourceId,
     )[0];
     const playerStr = playerService.readable({ id: target.assetId });
 
     if (!!duped) {
       logger.warn(
-        `${playerStr} is already in auto buy list. Replacing price information with maxPrice=${target.maxPrice}`
+        `${playerStr} is already in auto buy list. Replacing price information with maxPrice=${target.maxPrice}`,
       );
       Object.assign(duped, target);
     } else {
       const playerItemData = StaticItems.itemData[target.assetId];
       if (!playerItemData) {
         throw new Error(
-          `We couldnt find the player with assetId ${target.assetId}`
+          `We couldnt find the player with assetId ${target.assetId}`,
         );
       }
       logger.info(
-        `${playerStr} added to list with maxPrice=${target.maxPrice}`
+        `${playerStr} added to list with maxPrice=${target.maxPrice}`,
       );
       targets.push({
         ...target,
-        readable: playerStr
+        readable: playerStr,
       });
     }
   }
 
   export function startJobs() {
-    if (!autoBuyBidderJob) autoBuyBidderJob = new AutoBuyBidder();
-    if (!autoBuyBuyNowJob) autoBuyBuyNowJob = new AutoBuyBuyNow();
+    if (!autoBuyBidderJob) { autoBuyBidderJob = new AutoBuyBidder(); }
+    if (!autoBuyBuyNowJob) { autoBuyBuyNowJob = new AutoBuyBuyNow(); }
 
     return report();
   }
@@ -73,8 +73,8 @@ export namespace AutoBuyerService {
       targets,
       jobs: {
         autoBuyBidder: autoBuyBidderJob ? autoBuyBidderJob.execTime : null,
-        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.execTime : null
-      }
+        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.execTime : null,
+      },
     };
   }
 }

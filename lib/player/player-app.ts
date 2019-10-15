@@ -1,6 +1,6 @@
 import * as express from "express";
-import { playerService } from "./player-service";
 import { futbin } from "../api";
+import { playerService } from "./player-service";
 
 export const playerApp = express();
 
@@ -22,6 +22,6 @@ playerApp.get("", async function(req, res) {
   res.send({
     name: playerService.readable({ assetId }),
     futbinPrice,
-    marketPrice
+    marketPrice,
   });
 });

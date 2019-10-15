@@ -1,9 +1,9 @@
-import {ItemData} from "./static-items";
-import {logger} from "./../logger";
 import * as express from "express";
+import {tmpdir} from "os";
 import {resolve} from "path";
-import {tmpdir} from 'os';
-import {writeFileSyncSafe, readFileIfRecent} from "../utils";
+import {readFileIfRecent, writeFileSyncSafe} from "../utils";
+import {logger} from "./../logger";
+import {ItemData} from "./static-items";
 
 export interface StaticPlayerData {
   commonName: string;
@@ -22,7 +22,7 @@ export interface ItemData {
 const fileName = resolve(tmpdir(), "futbot-static-data.json");
 const write = (s: ItemData) => writeFileSyncSafe<ItemData>(fileName, s);
 let itemData: ItemData = {};
-readFileIfRecent<ItemData>(fileName).then(i => (itemData = i || {}));
+readFileIfRecent<ItemData>(fileName).then((i) => (itemData = i || {}));
 let fileWriterTimeout: ReturnType<typeof setTimeout>;
 
 export const staticItemsApp = express();
@@ -34,8 +34,8 @@ export class StaticItems {
 }
 
 staticItemsApp.get("/need-data", (req, res) => {
-  if (Object.keys(itemData).length > 1) res.status(500).send("NO");
-  else res.status(200).send("YES");
+  if (Object.keys(itemData).length > 1) { res.status(500).send("NO"); }
+  else { res.status(200).send("YES"); }
 });
 
 staticItemsApp.post("/push-data", (req, res) => {
@@ -43,10 +43,10 @@ staticItemsApp.post("/push-data", (req, res) => {
 
   itemData = {
     ...itemData,
-    ...req.body
+    ...req.body,
   };
 
-  if (fileWriterTimeout) clearTimeout(fileWriterTimeout);
+  if (fileWriterTimeout) { clearTimeout(fileWriterTimeout); }
   fileWriterTimeout = setTimeout(() => {
     write(itemData);
   }, 2000);

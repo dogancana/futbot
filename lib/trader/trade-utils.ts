@@ -1,5 +1,5 @@
-import { playerService } from "../player";
 import { fut, futbin } from "../api";
+import { playerService } from "../player";
 
 const HIGHER_PRICE_BOUNDRY = 1.05;
 const LOWER_PRIVE_BOUNDRY = 0.95;
@@ -38,16 +38,16 @@ export function getFutbinSellPrice(price: futbin.Price): SellPrice {
     return null;
   }
 
-  let referencePrice = prices[0] * 1.05;
+  const referencePrice = prices[0] * 1.05;
 
   return {
     buyNowPrice: tradePrice(referencePrice * HIGHER_PRICE_BOUNDRY),
-    startingBid: tradePrice(referencePrice * LOWER_PRIVE_BOUNDRY)
+    startingBid: tradePrice(referencePrice * LOWER_PRIVE_BOUNDRY),
   };
 }
 
 export function getMarketSellPrice(
-  price: playerService.MarketPrice
+  price: playerService.MarketPrice,
 ): SellPrice {
   if (!price) {
     return null;
@@ -59,15 +59,15 @@ export function getMarketSellPrice(
 
   return {
     buyNowPrice: tradePrice(price.minBuyNow * HIGHER_PRICE_BOUNDRY),
-    startingBid: tradePrice(price.minBuyNow * LOWER_PRIVE_BOUNDRY)
+    startingBid: tradePrice(price.minBuyNow * LOWER_PRIVE_BOUNDRY),
   };
 }
 
 export async function getOptimalSellPrice(
-  resourceId: number
+  resourceId: number,
 ): Promise<SellPrice> {
   const futbinPrice: futbin.Price = await playerService.getFutbinPrice(
-    resourceId
+    resourceId,
   );
   const futbinSellPrice: SellPrice = getFutbinSellPrice(futbinPrice);
   const marketPrice: playerService.MarketPrice = futbinSellPrice
@@ -79,7 +79,7 @@ export async function getOptimalSellPrice(
     futbinSellPrice ||
     marketSellPrice || {
       startingBid: NaN,
-      buyNowPrice: NaN
+      buyNowPrice: NaN,
     }
   );
 }

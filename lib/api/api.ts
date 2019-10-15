@@ -5,7 +5,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public config: AxiosRequestConfig,
-    public message: string
+    public message: string,
   ) {
     super(message);
   }
@@ -28,6 +28,6 @@ export function logErrorResponse(apiName: string, v: any) {
   logger.error(
     `[${apiName}]: ${status} ${config.method} ${config.url} ${
       config.data
-    } ${message} ${JSON.stringify(data)}`
+    } ${message} ${JSON.stringify(data)}`,
   );
 }

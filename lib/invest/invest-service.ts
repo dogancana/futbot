@@ -1,11 +1,11 @@
+import { fut, futbin } from "../api";
 import { logger } from "./../logger";
-import { GoodAuctionInvestorProps } from "./jobs/good-auction-investor";
-import { futbin, fut } from "../api";
 import {
+  GoodAuctionInvestor,
   LowPlayerInvestor,
   LowPlayerInvestorProps,
-  GoodAuctionInvestor
 } from "./jobs";
+import { GoodAuctionInvestorProps } from "./jobs/good-auction-investor";
 
 export namespace investService {
   let lowPlayerInvestJob: LowPlayerInvestor;
@@ -17,16 +17,16 @@ export namespace investService {
     assetId: number;
   }
   export async function getTargets(
-    query: futbin.PlayersQuery
+    query: futbin.PlayersQuery,
   ): Promise<TargetInfo[]> {
     const defaultQuery = {
       page: 1,
       sort: "likes",
-      order: "desc"
+      order: "desc",
     };
     const playerIds = await futbin.getPlayerIDs({
       ...defaultQuery,
-      ...query
+      ...query,
     });
     logger.debug(`[InvestService]: Target ids: ${playerIds}`);
 
@@ -40,31 +40,32 @@ export namespace investService {
   }
 
   export function startLowPlayerInvvest(props: LowPlayerInvestorProps) {
-    if (!lowPlayerInvestJob) lowPlayerInvestJob = new LowPlayerInvestor(props);
+    if (!lowPlayerInvestJob) { lowPlayerInvestJob = new LowPlayerInvestor(props); }
 
     return {
       timesTargetBought: lowPlayerInvestJob.execTime,
-      report: lowPlayerInvestJob.report()
+      report: lowPlayerInvestJob.report(),
     };
   }
 
   export function clearLowPlayerInvest() {
-    if (lowPlayerInvestJob) lowPlayerInvestJob.stop();
+    if (lowPlayerInvestJob) { lowPlayerInvestJob.stop(); }
     lowPlayerInvestJob = null;
   }
 
   export function startGoodAuctionInvest(props: GoodAuctionInvestorProps) {
-    if (!goodAuctionInvestor)
+    if (!goodAuctionInvestor) {
       goodAuctionInvestor = new GoodAuctionInvestor(props);
+    }
 
     return {
       timesMarketChecked: goodAuctionInvestor.execTime,
-      report: goodAuctionInvestor.report()
+      report: goodAuctionInvestor.report(),
     };
   }
 
   export function clearGoodAuctionInvest() {
-    if (goodAuctionInvestor) goodAuctionInvestor.stop();
+    if (goodAuctionInvestor) { goodAuctionInvestor.stop(); }
     goodAuctionInvestor = null;
   }
 }

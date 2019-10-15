@@ -16,7 +16,7 @@ export namespace playerService {
     samplecount: number;
   }
   export async function getMarketPrice(
-    resourceId: number
+    resourceId: number,
   ): Promise<MarketPrice> {
     const auctions = await getAuctions(resourceId);
 
@@ -25,15 +25,16 @@ export namespace playerService {
       minStartingBid: Number.MAX_VALUE,
       averageBuyNow: 0,
       averageStartingBid: 0,
-      samplecount: 0
+      samplecount: 0,
     };
 
-    auctions.forEach(a => {
-      if (a.itemData.resourceId != resourceId) return;
+    auctions.forEach((a) => {
+      if (a.itemData.resourceId != resourceId) { return; }
 
-      if (a.buyNowPrice < price.minBuyNow) price.minBuyNow = a.buyNowPrice;
-      if (a.startingBid < price.minStartingBid)
+      if (a.buyNowPrice < price.minBuyNow) { price.minBuyNow = a.buyNowPrice; }
+      if (a.startingBid < price.minStartingBid) {
         price.minStartingBid = a.startingBid;
+      }
       price.averageBuyNow += a.buyNowPrice;
       price.averageStartingBid += a.startingBid;
       price.samplecount++;
@@ -67,7 +68,7 @@ export namespace playerService {
     const id = player.assetId || player.id || -1;
     const data = StaticItems.itemData[id] || {
       name: "?????",
-      rating: 0
+      rating: 0,
     };
     // if (data.name === "?????") console.log("readable", { player, StaticItems });
 

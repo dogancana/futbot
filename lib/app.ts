@@ -2,20 +2,20 @@
 require("dotenv").config();
 import "./custom-types/index";
 
-import { autoBuyerApp } from "./auto-buyer/auto-buyer-app";
-import { logger } from "./logger";
-import * as express from "express";
 import * as bodyParser from "body-parser";
-import * as http from "http";
 import * as cors from "cors";
-import { clubApp } from "./club/club-app";
-import { tradeBotApp } from "./trader/trade-bot-app";
-import { playerApp } from "./player/player-app";
+import * as express from "express";
+import * as http from "http";
 import { authApp } from "./auth";
+import { autoBuyerApp } from "./auto-buyer/auto-buyer-app";
+import { clubApp } from "./club/club-app";
+import { startCorsProxy } from "./cors-proxy";
+import { investApp } from "./invest/invest-app";
+import { logger } from "./logger";
+import { playerApp } from "./player/player-app";
 import { staticItemsApp } from "./static";
 import { statsApp } from "./stats";
-import { investApp } from "./invest/invest-app";
-import { startCorsProxy } from "./cors-proxy";
+import { tradeBotApp } from "./trader/trade-bot-app";
 
 const app = express();
 startCorsProxy();
