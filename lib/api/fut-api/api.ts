@@ -63,14 +63,14 @@ futApi.interceptors.response.use(
 
     logErrorResponse("FUT", value);
 
-    if ([401, 403, 458].indexOf(status) > -1) {
+    if ([401, 403].indexOf(status) > -1) {
       logger.error("[FUT] stopped all jobs for critical auth error");
 
       queue.clear();
       Job.stopAllJobs();
     }
 
-    if ([512, 521].indexOf(status) > -1) {
+    if ([458, 512, 521].indexOf(status) > -1) {
       logger.error("[FUT] stopped all jobs: Temporary ban or just too many requests.");
 
       queue.clear();
