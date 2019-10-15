@@ -1,6 +1,6 @@
-import {AxiosRequestConfig} from "axios";
-import {interval, Subscription} from "rxjs";
-import {cacheEntry} from "./cache-adapter";
+import { AxiosRequestConfig } from "axios";
+import { interval, Subscription } from "rxjs";
+import { cacheEntry } from "./cache-adapter";
 
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
 
@@ -28,6 +28,7 @@ export class ApiQueue {
     });
     this.configResolver = configResolver;
     this.queueStart = new Date().getTime();
+    this.cacheHitCount = 0;
     ApiQueue.apiQueues.push(this);
   }
 
@@ -40,6 +41,7 @@ export class ApiQueue {
   ): Promise<AxiosRequestConfig> {
     if (cacheEntry(config)) {
       this.cacheHitCount++;
+      console.log('cache?', config)
       return Promise.resolve(config);
     }
     return new Promise((resolve, reject) => {

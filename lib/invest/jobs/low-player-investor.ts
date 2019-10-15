@@ -9,9 +9,6 @@ import { AxiosError } from "axios";
 
 const BUY_REFERENCE_PERCT = 0.7;
 const MAX_AUCTION_TRY = 3;
-const MIN_TARGET_PRICE = 1000;
-const MAX_TARGET_PRICE = 4000;
-const MAX_TARGET_POOL = 30;
 let targets: investService.TargetInfo[] = [];
 let setingUp = false;
 
@@ -22,7 +19,7 @@ export interface LowPlayerInvestorProps {
   maxTargetPool?: number;
 }
 export class LowPlayerInvestor extends Job {
-  private static jobName = "Invest:LowPlayerInvestor";
+  public static jobName = "Invest:LowPlayerInvestor";
   private spent: number = 0;
   private budget: number = 20000;
   private boughtPlayers: ({ price: number; assetId: number })[];
@@ -41,20 +38,18 @@ export class LowPlayerInvestor extends Job {
     });
 
     this.boughtPlayers = [];
-    this.start(this.buyTargets);
+    this.start(this.loopOverTargets);
   }
 
-  private async buyTargets() {
-    const minPrice = this.min || MIN_TARGET_PRICE;
-    const maxPrice = this.max || MAX_TARGET_PRICE;
-    const pcPrice = `${minPrice}-${maxPrice}`;
+  private async loopOverTargets() {
+    const pcPrice = `${this.min}-${this.max}`;
 
     if (!targets || targets.length === 0) {
-      setupTargets(pcPrice, this.maxTargetPool || MAX_TARGET_POOL);
+      setupTargets(pcPrice, this.maxTargetPool);
       return;
     }
 
-    if (this.budget < minPrice) {
+    if (this.budget < this.min) {
       investService.clearLowPlayerInvest();
       return;
     }
@@ -149,7 +144,7 @@ async function setupTargets(price: string, maxTargets: number) {
   const priceKey = `${platform.toLowerCase()}_price`;
   const clubPlayers = await fut.getClubPlayers();
   const isInClubPlayers = (resourceId: number) =>
-    clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
+    clubPlayers.find(p => p.resourceId === resourceId);
 
   for (let i = 0; i < pageLimit; i++) {
     targets = targets.concat(
@@ -162,5 +157,6 @@ async function setupTargets(price: string, maxTargets: number) {
 
   targets = uniq(targets);
   targets = targets.filter(t => !isInClubPlayers(t.resourceId));
+  logger.info(`${LowPlayerInvestor.jobName} ${targets.length} targets set up`);
   setingUp = false;
 }
