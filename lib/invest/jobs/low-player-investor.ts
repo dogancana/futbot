@@ -91,7 +91,9 @@ export class LowPlayerInvestor extends Job {
         .filter(a => !a.tradeOwner);
 
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
-      if (auctions.length === 0) {
+      if (auctions.length === 0
+        && batch < MAX_AUCTION_TRY
+      ) {
         continue;
       }
 
