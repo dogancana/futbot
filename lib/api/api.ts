@@ -1,4 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import '../custom-types/'; // this is weird
 import { logger } from '../logger';
 
 export class ApiError extends Error {
