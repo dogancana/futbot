@@ -1,5 +1,5 @@
 import { fut } from '../../api';
-import { Job } from '../../job';
+import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { AutoBuyerService } from '../auto-buyer.service';

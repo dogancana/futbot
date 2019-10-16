@@ -1,9 +1,10 @@
 import { AxiosResponse } from 'axios';
 import { fut } from '../../api';
+import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { tradePrice } from '../../trader/trade-utils';
-import { Job } from './../../job';
+import { investService } from '../invest-service';
 
 const BATCH_START_PAGE = 5; // Better for checking transfer with >1 min remaining
 const BATCH_PAGES_TO_SEE = 3; // Setting it more would result on bloating futbin queue
@@ -48,7 +49,14 @@ export class GoodAuctionInvestor extends Job {
   }
 
   private async loop() {
-    this.bidTargets(); // don't wait to not miss auctions
+    if (this.budget < this.min) {
+      this.stop();
+      this.finished = true;
+      investService.clearGoodAuctionInvest();
+      return;
+    }
+
+    this.bidTargets(); // don't await to not miss auctions
     await this.loopMarket();
   }
 

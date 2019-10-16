@@ -1,4 +1,4 @@
-import { Job } from '../../job';
+import { Job } from '../../jobs';
 
 export class AutoBuyBidder extends Job {
   constructor() {

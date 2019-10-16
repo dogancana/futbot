@@ -1,6 +1,6 @@
 import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
-import { Job } from '../../job';
+import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { ApiError, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
@@ -69,7 +69,8 @@ futApi.interceptors.response.use(
 
     if (status === 429) {
       logger.warn('[FUT] will slow down all jobs by 1/3 for next 30 mins');
-      Job.slowDownAllJobsForNextMins(30);
+      Job.changeJobSpeedsBy(1 / 3);
+      setTimeout(() => Job.changeJobSpeedsBy(3), 1000 * 60 * 30);
     }
     return Promise.reject(new ApiError(status, config, message));
   }

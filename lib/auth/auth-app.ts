@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { Job } from '../jobs';
 import { logger } from './../logger';
 import { SessionInjector } from './session-injector';
 
@@ -19,6 +20,8 @@ async function setAuthSession(
     SessionInjector.auth = auth;
   }
   SessionInjector.lastStamp = parseInt(lastStamp, 10);
+  logger.info(`New auth token received. Will resume all stopped jobs if any`);
+  Job.resumeAllJobs();
   res.send('OK');
 }
 

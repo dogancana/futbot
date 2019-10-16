@@ -39,9 +39,9 @@ futbinApi.interceptors.response.use(
     if (status === 403) {
       futbinStopped = true;
       logger.warn(
-        `[FUTBIN] Requests stopped for next 30 mins because of 403 error`
+        `[FUTBIN] Requests stopped for next 6 hours because of 403 error (temporary band by futbin)`
       );
-      setTimeout(() => (futbinStopped = false), 30 * 60 * 60 * 1000);
+      setTimeout(() => (futbinStopped = false), 6 * 60 * 60 * 1000);
     }
     return Promise.reject(new ApiError(status, config, message));
   }

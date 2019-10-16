@@ -1,8 +1,12 @@
 import { AxiosRequestConfig } from 'axios';
 import { interval, Subscription } from 'rxjs';
+import { Job } from '../jobs';
+import { logger } from './../logger';
 import { cacheEntry } from './cache-adapter';
 
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
+const MAX_OPTIMUM_QUEUE_LENGTH = 10;
+const QUEUE_SIZE_CHECK_FREQUENCY_MS = 3 * 60 * 1000;
 
 export class ApiQueue {
   public static getApiQueueStats() {
@@ -33,6 +37,7 @@ export class ApiQueue {
     this.queueStart = new Date().getTime();
     this.cacheHitCount = 0;
     ApiQueue.apiQueues.push(this);
+    setInterval(this.checkHandleQueueBloating, QUEUE_SIZE_CHECK_FREQUENCY_MS);
   }
 
   public addRequestToQueue(
@@ -61,5 +66,14 @@ export class ApiQueue {
       queueCount: this.queue.length,
       requestsPerSecond: (this.requestCount / timeSpent).toFixed(1)
     };
+  }
+
+  private checkHandleQueueBloating() {
+    if (this.queue.length > MAX_OPTIMUM_QUEUE_LENGTH) {
+      logger.warn(
+        `Queue for ${this.apiName} is bloated(${this.queue.length} requests waiting). Slowing down all jobs by 20%`
+      );
+      Job.changeJobSpeedsBy(0.8);
+    }
   }
 }
