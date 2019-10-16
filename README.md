@@ -80,3 +80,7 @@ It's better to not use FUT Web App if you are planning to auto sell/buy for a lo
 # Auth errors
 
 On the first auth error this bot gets from EA servers, it'll invalidate the auth tokens and stop working till you send new sid from FUT Web App (via extension)
+
+# Discord
+
+Join [this](https://discord.gg/FqtRXZ) discord server if you have any questions/suggestions. You can also share some feedback for possible enhancements to the bot. 
