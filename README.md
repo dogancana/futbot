@@ -67,7 +67,7 @@ If you start this job in the night with parameters I provided, you might have ~1
 http://localhost:9999/invest/good-auctions?budget=50000&min=5000&max=10000  
 This is similar to low players investor job. Only difference is, this job is focused on expensive players with low current bid amounts. This job searches market for auctions, which will expire soon. In these auctions, the task will try to find players for 20% profit margin and bid accordingly.
 
-http://localhost:9999/jobs/start-favourite  
+http://localhost:9999/jobs/start-favourites  
 You can start a set of jobs from one endpoint. You can configure this in .env file. There is an example in .env.local file. Look for FUTBOT_FAVOURITE_JOBS value in there and configure for your own needs.
 
 http://localhost:9999/jobs/list  
