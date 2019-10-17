@@ -65,6 +65,7 @@ futApi.interceptors.response.use(
     if ([401, 403, 458].indexOf(status) > -1) {
       logger.error('[FUT] stopped all jobs for critical auth error');
       Job.stopAllJobs();
+      queue.clear();
     }
 
     if (status === 429) {

@@ -42,6 +42,7 @@ futbinApi.interceptors.response.use(
         `[FUTBIN] Requests stopped for next 6 hours because of 403 error (temporary ban by futbin)`
       );
       setTimeout(() => (futbinStopped = false), 6 * 60 * 60 * 1000);
+      queue.clear();
     }
     return Promise.reject(new ApiError(status, config, message));
   }
