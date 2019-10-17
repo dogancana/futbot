@@ -35,7 +35,7 @@ export class Job {
   public static list() {
     return jobs.map(job => ({
       ...pick(job, 'id', 'execTime', 'timesPerMin', 'avgExecTimeS', 'finished'),
-      stopped: job.sub.closed,
+      stopped: !job.sub || job.sub.closed,
       report: job.report()
     }));
   }
@@ -62,8 +62,13 @@ export class Job {
   }
 
   public stop(): void {
+    if (!this.sub || this.sub.closed) {
+      return;
+    }
+
     logger.debug(`Stoping job ${this.id}`);
     this.sub.unsubscribe();
+    delete this.sub;
   }
 
   public isFinished(): boolean {
@@ -71,6 +76,10 @@ export class Job {
   }
 
   public start(task?: () => Promise<void>): void {
+    if (this.finished || !!this.sub) {
+      return;
+    }
+
     this.task = task || this.task;
     if (!this.task) {
       logger.error(`JOB[${this.id}] couldn't be started. No task found`);

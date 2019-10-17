@@ -1,7 +1,12 @@
 import Axios from 'axios';
 import { ApiQueue } from '../api-queue';
 import { logger } from './../../logger';
-import { ApiError, logErrorResponse, logResponse } from './../api';
+import {
+  ApiError,
+  calculateRTT,
+  logErrorResponse,
+  logResponse
+} from './../api';
 
 export const futbinApi = Axios.create({
   baseURL: 'https://www.futbin.com/20/',
@@ -21,6 +26,9 @@ logger.info(
 );
 
 futbinApi.interceptors.request.use(async config => {
+  config.metaData = {
+    startTime: new Date()
+  };
   if (futbinStopped) {
     return Promise.reject(config);
   }
@@ -30,11 +38,13 @@ futbinApi.interceptors.request.use(async config => {
 futbinApi.interceptors.response.use(
   value => {
     logResponse('FUTBIN', value);
+    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
     return value;
   },
   value => {
     const { config, data, response = {}, message } = value;
     const { status } = response;
+    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
     logErrorResponse('FUTBIN', value);
     if (status === 403) {
       futbinStopped = true;
@@ -42,6 +52,7 @@ futbinApi.interceptors.response.use(
         `[FUTBIN] Requests stopped for next 6 hours because of 403 error (temporary ban by futbin)`
       );
       setTimeout(() => (futbinStopped = false), 6 * 60 * 60 * 1000);
+      queue.clear();
     }
     return Promise.reject(new ApiError(status, config, message));
   }

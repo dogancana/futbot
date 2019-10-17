@@ -2,7 +2,7 @@ import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
-import { ApiError, logErrorResponse, logResponse } from '../api';
+import { ApiError, calculateRTT, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
 
 export const futApi = Axios.create({
@@ -39,6 +39,9 @@ function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
 }
 
 futApi.interceptors.request.use(async config => {
+  config.metaData = {
+    startTime: new Date()
+  };
   if (!SessionInjector.auth) {
     throw new ApiError(
       401,
@@ -53,18 +56,21 @@ futApi.interceptors.response.use(
   // success
   value => {
     logResponse('FUT', value);
+    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
     return value;
   },
   // error
   value => {
     const { config, response = {}, message } = value;
     const { status = 500 } = response;
+    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
 
     logErrorResponse('FUT', value);
 
     if ([401, 403, 458].indexOf(status) > -1) {
       logger.error('[FUT] stopped all jobs for critical auth error');
       Job.stopAllJobs();
+      queue.clear();
     }
 
     if (status === 429) {

@@ -32,3 +32,10 @@ export function logErrorResponse(apiName: string, v: any) {
     } ${message} ${JSON.stringify(data)}`
   );
 }
+
+export function calculateRTT(config: AxiosRequestConfig): number {
+  if (!config || !config.metaData || !config.metaData.startTime) {
+    return null;
+  }
+  return new Date().getTime() - config.metaData.startTime.getTime();
+}
