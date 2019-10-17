@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios';
-import { pick, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import { fut } from '../../api';
-import { Job } from '../../job';
+import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { getOptimalSellPrice, tradePrice } from '../../trader/trade-utils';
@@ -28,7 +28,10 @@ export class LowPlayerInvestor extends Job {
   private maxTargetPool: number = 150;
 
   constructor({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
-    super(LowPlayerInvestor.jobName, 5);
+    super(
+      LowPlayerInvestor.jobName,
+      3 // per min. Avg ex time 16s
+    );
 
     Object.assign(this, {
       min,
@@ -61,6 +64,8 @@ export class LowPlayerInvestor extends Job {
     }
 
     if (this.budget < this.min) {
+      this.stop();
+      this.finished = true;
       investService.clearLowPlayerInvest();
       return;
     }

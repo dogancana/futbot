@@ -1,8 +1,8 @@
 import { fut } from '../api';
 import { club } from '../club/club-service';
+import { Job } from '../jobs';
 import { playerService } from '../player';
 import { StaticItems } from '../static';
-import { Job } from './../job';
 import { logger } from './../logger';
 import { tradeService } from './trade-service';
 import { SellPrice } from './trade-utils';
@@ -35,13 +35,24 @@ export class SellXPlayers extends Job {
   constructor(amount: number = 10, maxRating: number = 84) {
     super(
       SellXPlayers.jobName,
-      1 // once per min
+      1 // per min avg exec time: 29s
     );
 
     this.amount = amount;
     this.maxRating = maxRating;
     this.soldPlayers = [];
     this.start(this.sellPlayers);
+  }
+
+  public report() {
+    return {
+      soldPlayers: this.soldPlayers.map(
+        a =>
+          `${playerService.readable(a)} sold for ${a.price.startingBid}/${
+            a.price.buyNowPrice
+          }`
+      )
+    };
   }
 
   private async sellPlayers() {

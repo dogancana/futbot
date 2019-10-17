@@ -1,5 +1,7 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import '../custom-types/'; // this is weird
 import { logger } from '../logger';
+import { ApiQueue } from './api-queue';
 
 export class ApiError extends Error {
   constructor(
@@ -15,19 +17,53 @@ export class ApiError extends Error {
   }
 }
 
-export function logResponse(apiName: string, r: AxiosResponse) {
+export function logResponse(
+  apiName: string,
+  r: AxiosResponse,
+  queue: ApiQueue
+) {
   const { config, data, status, fromCache } = r;
-  const cachedStr: string = fromCache ? '[Cached]' : '';
+  const cachedStr: string = fromCache === true ? '[Cached]' : '';
+  handleRTT(apiName, config, queue);
+  if (fromCache) {
+    queue.cacheHitCount++;
+  }
+
   logger.debug(`[${apiName}]: ${status}${cachedStr} ${config.url}`);
 }
 
-export function logErrorResponse(apiName: string, v: any) {
+export function logErrorResponse(apiName: string, v: any, queue: ApiQueue) {
   const { config, response = {}, message } = v;
-  const { status = 500, data } = response;
+  const { status = 500, data, fromCache } = response;
+  handleRTT(apiName, config, queue);
+  if (fromCache) {
+    queue.cacheHitCount++;
+  }
 
   logger.error(
     `[${apiName}]: ${status} ${config.method} ${config.url} ${
       config.data
     } ${message} ${JSON.stringify(data)}`
   );
+}
+
+function handleRTT(
+  apiName: string,
+  config: AxiosRequestConfig,
+  queue: ApiQueue
+) {
+  const rtt = calculateRTT(config);
+  queue.averageRTTimeStat.addSample(rtt);
+  if (rtt > 15000) {
+    logger.debug(
+      `[${apiName}] request to ${config.url} took ${rtt}ms to complete`
+    );
+  }
+}
+
+function calculateRTT(config: AxiosRequestConfig): number {
+  if (!config || !config.metaData || !config.metaData.startTime) {
+    return null;
+  }
+  return new Date().getTime() - config.metaData.startTime.getTime();
 }

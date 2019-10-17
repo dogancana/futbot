@@ -1,6 +1,6 @@
 import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
-import { Job } from '../../job';
+import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { ApiError, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
@@ -46,13 +46,17 @@ futApi.interceptors.request.use(async config => {
       'Session not copied!. First load Fut Web App with extension'
     );
   }
-  return await queue.addRequestToQueue(config);
+  const c = await queue.addRequestToQueue(config);
+  c.metaData = {
+    startTime: new Date()
+  };
+  return c;
 });
 
 futApi.interceptors.response.use(
   // success
   value => {
-    logResponse('FUT', value);
+    logResponse('FUT', value, queue);
     return value;
   },
   // error
@@ -60,16 +64,18 @@ futApi.interceptors.response.use(
     const { config, response = {}, message } = value;
     const { status = 500 } = response;
 
-    logErrorResponse('FUT', value);
+    logErrorResponse('FUT', value, queue);
 
     if ([401, 403, 458].indexOf(status) > -1) {
       logger.error('[FUT] stopped all jobs for critical auth error');
       Job.stopAllJobs();
+      queue.clear();
     }
 
     if (status === 429) {
       logger.warn('[FUT] will slow down all jobs by 1/3 for next 30 mins');
-      Job.slowDownAllJobsForNextMins(30);
+      Job.changeJobSpeedsBy(1 / 3);
+      setTimeout(() => Job.changeJobSpeedsBy(3), 1000 * 60 * 30);
     }
     return Promise.reject(new ApiError(status, config, message));
   }
