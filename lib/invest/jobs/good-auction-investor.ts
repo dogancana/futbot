@@ -32,7 +32,10 @@ export class GoodAuctionInvestor extends Job {
   private profitMargin: number = PROFIT_MARGIN_PERCT;
 
   constructor(p: GoodAuctionInvestorProps) {
-    super('Invest:GoodAuction', 2);
+    super(
+      'Invest:GoodAuction',
+      2 // per min. Avg ex time 29s
+    );
     Object.assign(this, p);
     this.start(this.loop);
   }

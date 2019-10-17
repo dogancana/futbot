@@ -1,3 +1,4 @@
+import Axios from 'axios';
 import * as express from 'express';
 import { Job } from './job';
 
@@ -13,4 +14,12 @@ jobsApp.get('/resume-all', async (req, res) => {
 
 jobsApp.get('/stop-all', async (req, res) => {
   res.send(Job.stopAllJobs());
+});
+
+jobsApp.get('/start-night-mode', async (req, res) => {
+  const selfAddress = `http://localhost:${process.env.PORT || 9999}`;
+  const endpointsStr = process.env.FUTBOT_NIGHT_MODE || '';
+  const endpoints = endpointsStr.split(',');
+  await Promise.all(endpoints.map(s => Axios.get(`${selfAddress}${s}`)));
+  res.send(Job.list());
 });

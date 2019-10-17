@@ -12,7 +12,7 @@ export const futbinApi = Axios.create({
   }
 });
 const requestsPerSec =
-  parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 2;
+  parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 1.5;
 
 const queue = new ApiQueue(requestsPerSec, 'futbin');
 let futbinStopped = false;
@@ -39,7 +39,7 @@ futbinApi.interceptors.response.use(
     if (status === 403) {
       futbinStopped = true;
       logger.warn(
-        `[FUTBIN] Requests stopped for next 6 hours because of 403 error (temporary band by futbin)`
+        `[FUTBIN] Requests stopped for next 6 hours because of 403 error (temporary ban by futbin)`
       );
       setTimeout(() => (futbinStopped = false), 6 * 60 * 60 * 1000);
     }

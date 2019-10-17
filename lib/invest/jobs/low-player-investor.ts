@@ -28,7 +28,10 @@ export class LowPlayerInvestor extends Job {
   private maxTargetPool: number = 150;
 
   constructor({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
-    super(LowPlayerInvestor.jobName, 5);
+    super(
+      LowPlayerInvestor.jobName,
+      3 // per min. Avg ex time 16s
+    );
 
     Object.assign(this, {
       min,
