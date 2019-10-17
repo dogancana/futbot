@@ -8,6 +8,7 @@ const jobs: Job[] = [];
 
 export class Job {
   public static stopAllJobs() {
+    logger.info('Stopping all running jobs');
     jobs.forEach(j => j.stop());
     return Job.list();
   }
@@ -32,21 +33,11 @@ export class Job {
   }
 
   public static list() {
-    return Object.keys(jobs).map(key => {
-      const job = jobs[key];
-      return {
-        ...pick(
-          job,
-          'id',
-          'execTime',
-          'timesPerMin',
-          'avgExecTimeS',
-          'finished'
-        ),
-        stopped: job.sub.closed,
-        report: job.report()
-      };
-    });
+    return jobs.map(job => ({
+      ...pick(job, 'id', 'execTime', 'timesPerMin', 'avgExecTimeS', 'finished'),
+      stopped: job.sub.closed,
+      report: job.report()
+    }));
   }
 
   public execTime = 0;
@@ -63,7 +54,7 @@ export class Job {
 
     this.id = `${name}_${new Date().getTime()}`;
 
-    jobs[this.id] = this;
+    jobs.push(this);
   }
 
   public report(): any {

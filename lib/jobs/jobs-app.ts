@@ -16,9 +16,9 @@ jobsApp.get('/stop-all', async (req, res) => {
   res.send(Job.stopAllJobs());
 });
 
-jobsApp.get('/start-night-mode', async (req, res) => {
+jobsApp.get('/start-favourites', async (req, res) => {
   const selfAddress = `http://localhost:${process.env.PORT || 9999}`;
-  const endpointsStr = process.env.FUTBOT_NIGHT_MODE || '';
+  const endpointsStr = process.env.FUTBOT_FAVOURITE_JOBS || '';
   const endpoints = endpointsStr.split(',');
   await Promise.all(endpoints.map(s => Axios.get(`${selfAddress}${s}`)));
   res.send(Job.list());
