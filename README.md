@@ -103,4 +103,4 @@ I'm trying all the features from my profile. I generally try it with all quality
 
 ## Discord
 
-Join [this](https://discord.gg/FqtRXZ) discord server if you have any questions/suggestions. You can also share some feedback for possible enhancements to the bot. 
+Join [this](https://discord.gg/WJQsv6h) discord server if you have any questions/suggestions. You can also share some feedback for possible enhancements to the bot. 
