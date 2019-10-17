@@ -1,7 +1,7 @@
-import * as Axios from "axios";
+import * as Axios from 'axios';
 
 // Overwrites for /api/cache-adapter.ts
-declare module "axios" {
+declare module 'axios' {
   interface AxiosResponse<T> {
     fromCache?: boolean;
   }

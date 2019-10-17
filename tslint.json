@@ -1,0 +1,15 @@
+{
+  "defaultSeverity": "error",
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "jsRules": {},
+  "rules": {
+    "object-literal-sort-keys": false,
+    "interface-name": false,
+    "import-name": false,
+    "import-blacklist": [false],
+    "no-submodule-imports": false,
+    "prefer-object-spread": false,
+    "no-namespace": false,
+    "max-classes-per-file": false
+  }
+}

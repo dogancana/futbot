@@ -1,8 +1,8 @@
-import { logger } from "../../logger";
-import { playerService } from "../../player";
-import * as querystring from "querystring";
-import { futApi } from "./api";
-import { simpleCacheAdapter } from "../cache-adapter";
+import * as querystring from 'querystring';
+import { logger } from '../../logger';
+import { playerService } from '../../player';
+import { simpleCacheAdapter } from '../cache-adapter';
+import { futApi } from './api';
 
 export namespace fut {
   export interface ItemData {
@@ -10,8 +10,8 @@ export namespace fut {
     cardsubtypeid: number;
     discardValue: number;
     id: number;
-    itemState: "free" | undefined;
-    itemType: "player" | undefined;
+    itemState: 'free' | undefined;
+    itemType: 'player' | undefined;
     lastSalePrice: number;
     leagueId: number;
     marketDataMaxPrice: number;
@@ -24,8 +24,8 @@ export namespace fut {
     untradeable: boolean;
   }
 
-  export type Platform = "pc" | "ps" | "xbox";
-  export type Quality = "bronze" | "silver" | "gold" | "special";
+  export type Platform = 'pc' | 'ps' | 'xbox';
+  export type Quality = 'bronze' | 'silver' | 'gold' | 'special';
 
   export async function getClubPlayers(page = 0): Promise<ItemData[]> {
     const response = await futApi.get(
@@ -36,13 +36,13 @@ export namespace fut {
 
   export interface AuctionInfo {
     tradeId: number;
-    bidState: "none" | "highest" | "outbid";
+    bidState: 'none' | 'highest' | 'outbid';
     buyNowPrice: number;
     currentBid: number;
     expires: number;
     itemData: ItemData;
     startingBid: number;
-    tradeState: "active" | "closed" | "expired";
+    tradeState: 'active' | 'closed' | 'expired';
     watched: boolean;
     tradeOwner: boolean;
   }
@@ -55,7 +55,7 @@ export namespace fut {
     const defaultQuery = {
       start: batch * 20,
       num: 21,
-      type: "player",
+      type: 'player',
       maskedDefId: assetId
     };
     const response = await futApi.get(
@@ -77,18 +77,20 @@ export namespace fut {
     const q = {
       start: batch * 20,
       num: 21,
-      type: "player",
-      lev: "gold",
+      type: 'player',
+      lev: 'gold',
       micr: minBid,
       macr: maxBid,
       minb: minBnow,
       maxb: maxBnow
     };
     Object.keys(q).forEach(key => {
-      if (!q[key]) delete q[key];
+      if (!q[key]) {
+        delete q[key];
+      }
     });
     const response = await futApi.get(
-      `/transfermarket?${querystring.stringify({...q})}`
+      `/transfermarket?${querystring.stringify({ ...q })}`
     );
     return response.data.auctionInfo;
   }
@@ -97,11 +99,11 @@ export namespace fut {
     transferIds: ReadonlyArray<number>
   ): Promise<ReadonlyArray<AuctionInfo>> {
     if (!transferIds || transferIds.length === 0) {
-      throw new Error("Please provide transferIds");
+      throw new Error('Please provide transferIds');
     }
 
     const response = await futApi.get(
-      `/trade/status/lite?tradeIds=${transferIds.join(",")}`
+      `/trade/status/lite?tradeIds=${transferIds.join(',')}`
     );
     return response.data.auctionInfo;
   }
@@ -122,25 +124,25 @@ export namespace fut {
   }
 
   export async function sellPlayer(req: AuctionRequest) {
-    const playerStr = playerService.readable({assetId: req.itemData.assetId});
+    const playerStr = playerService.readable({ assetId: req.itemData.assetId });
     logger.info(
       `${playerStr} will be sold for ${req.startingBid}/${req.buyNowPrice}`
     );
     const pileResponse = await futApi.put(`/item`, {
-      itemData: [{id: req.itemData.id, pile: "trade"}]
+      itemData: [{ id: req.itemData.id, pile: 'trade' }]
     });
     if (pileResponse) {
       const response = await futApi.post(`/auctionhouse`, req);
       return response.data;
     } else {
-      throw new Error("couldnt move to trade pile");
+      throw new Error('couldnt move to trade pile');
     }
   }
 
   interface PutItemData {
     id: number;
     reason?: string;
-    pile: "club" | string;
+    pile: 'club' | string;
     success: boolean;
     errorCode?: number;
   }
@@ -151,13 +153,13 @@ export namespace fut {
 
   export async function sendToClub(id: number): Promise<PutItemResult> {
     const pileResponse = await futApi.put(`/item`, {
-      itemData: [{id, pile: "club"}]
+      itemData: [{ id, pile: 'club' }]
     });
     return pileResponse.data;
   }
 
-  export async function clearSold() {
-    return futApi.request({url: "/trade/sold", method: "DELETE"});
+  export function clearSold() {
+    return futApi.request({ url: '/trade/sold', method: 'DELETE' });
   }
 
   export async function getTradePile(): Promise<AuctionInfo[]> {
@@ -166,7 +168,7 @@ export namespace fut {
   }
 
   export interface ClubItemMeta {
-    type: "kits" | "balls" | "players" | "stadia" | "staff" | "trophies";
+    type: 'kits' | 'balls' | 'players' | 'stadia' | 'staff' | 'trophies';
     contextId: number;
     contextValue: number;
     typeValue: number;
@@ -180,19 +182,24 @@ export namespace fut {
   let platform: Platform = null;
 
   export async function getPlatform(): Promise<Platform> {
-    if (platform) return platform;
+    if (platform) {
+      return platform;
+    }
 
     const resp = await futApi.get(
       `/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
-      {adapter: simpleCacheAdapter}
+      { adapter: simpleCacheAdapter }
     );
-    platform = resp.data.userAccountInfo.personas[0].userClubList.filter(
-      c => c.year === "2020"
-    )[0].platform.replace(/\d/gi, '');
+    platform = resp.data.userAccountInfo.personas[0].userClubList
+      .filter(c => c.year === '2020')[0]
+      .platform.replace(/\d/gi, '');
     return platform;
   }
 
-  export async function bid(tradeId: number, bid: number): Promise<void> {
+  export async function bidToTrade(
+    tradeId: number,
+    bid: number
+  ): Promise<void> {
     await futApi.put(`/trade/${tradeId}/bid`, {
       bid
     });

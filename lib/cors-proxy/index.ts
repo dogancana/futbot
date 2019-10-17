@@ -1,3 +1,5 @@
+import { logger } from './../logger';
+// tslint:disable-next-line: no-var-requires
 const CorsAnywhere = require('cors-anywhere');
 
 const host = process.env.CORS_PROXY_HOST || '0.0.0.0';
@@ -11,8 +13,8 @@ export function startCorsProxy() {
       originWhitelist: [], // Allow all origins
       requireHeader: ['origin', 'x-requested-with'],
       removeHeaders: []
-    }).listen(port, host, function () {
-      console.log('Running CORS Anywhere on ' + host + ':' + port);
-    })
+    }).listen(port, host, () => {
+      logger.info('Running CORS Anywhere on ' + host + ':' + port);
+    });
   }
 }

@@ -1,5 +1,5 @@
-import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { logger } from "../logger";
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { logger } from '../logger';
 
 export class ApiError extends Error {
   constructor(
@@ -17,7 +17,7 @@ export class ApiError extends Error {
 
 export function logResponse(apiName: string, r: AxiosResponse) {
   const { config, data, status, fromCache } = r;
-  const cachedStr: string = fromCache ? "[Cached]" : "";
+  const cachedStr: string = fromCache ? '[Cached]' : '';
   logger.debug(`[${apiName}]: ${status}${cachedStr} ${config.url}`);
 }
 

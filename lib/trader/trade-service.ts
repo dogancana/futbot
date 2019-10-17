@@ -1,8 +1,8 @@
-import { ClearPile, SellXPlayers } from "./trade-jobs";
-import { fut } from "../api";
-import { playerService } from "../player";
-import { logger } from "../logger";
-import { SellPrice, getOptimalSellPrice } from "./trade-utils";
+import { fut } from '../api';
+import { logger } from '../logger';
+import { playerService } from '../player';
+import { ClearPile, SellXPlayers } from './trade-jobs';
+import { getOptimalSellPrice, SellPrice } from './trade-utils';
 
 export namespace tradeService {
   let clearPileJob: ClearPile;
@@ -13,17 +13,25 @@ export namespace tradeService {
   }
 
   export function startSelling(maxRating?: number) {
-    if (!clearPileJob) clearPileJob = new ClearPile();
-    if (!sellXPlayersJob) sellXPlayersJob = new SellXPlayers(5, maxRating);
+    if (!clearPileJob) {
+      clearPileJob = new ClearPile();
+    }
+    if (!sellXPlayersJob) {
+      sellXPlayersJob = new SellXPlayers(5, maxRating);
+    }
 
     return sellReport();
   }
 
   export function stopSelling() {
-    clearPileJob && clearPileJob.stop();
+    if (clearPileJob) {
+      clearPileJob.stop();
+    }
     clearPileJob = null;
 
-    sellXPlayersJob && sellXPlayersJob.stop();
+    if (sellXPlayersJob) {
+      sellXPlayersJob.stop();
+    }
     sellXPlayersJob = null;
 
     return sellReport();
@@ -45,7 +53,11 @@ export namespace tradeService {
   export async function sellPlayerCheap(
     player: fut.ItemData
   ): Promise<fut.ItemData & { price: SellPrice }> {
+<<<<<<< HEAD
     let price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
+=======
+    const price: SellPrice = await getOptimalSellPrice(player.resourceId);
+>>>>>>> dc/master
     if (!price) {
       logger.error(
         `No price information for ${playerService.readable(player)}`
@@ -104,12 +116,12 @@ export namespace tradeService {
 
   export async function clearPile(): Promise<string[]> {
     let players = await fut.getTradePile();
-    players = players.filter(p => p.tradeId === 0 || p.tradeState !== "active");
+    players = players.filter(p => p.tradeId === 0 || p.tradeState !== 'active');
     const expired = players.filter(
-      p => p.tradeId === 0 || p.tradeState === "expired"
+      p => p.tradeId === 0 || p.tradeState === 'expired'
     );
     const sold = players.filter(
-      p => p.tradeId === 0 || p.tradeState === "closed"
+      p => p.tradeId === 0 || p.tradeState === 'closed'
     );
 
     if (sold.length > 0) {

@@ -1,7 +1,7 @@
-import { StaticItems } from "./../static/static-items";
-import { logger } from "../logger";
-import { playerService } from "../player";
-import { AutoBuyBidder, AutoBuyBuyNow } from "./jobs";
+import { logger } from '../logger';
+import { playerService } from '../player';
+import { StaticItems } from './../static/static-items';
+import { AutoBuyBidder, AutoBuyBuyNow } from './jobs';
 
 export namespace AutoBuyerService {
   let autoBuyBidderJob: AutoBuyBidder;
@@ -18,7 +18,7 @@ export namespace AutoBuyerService {
 
   export function addTarget(target: Target) {
     if (target.maxPrice < 0) {
-      throw new Error("Max price cannot be negative");
+      throw new Error('Max price cannot be negative');
     }
 
     const duped: Target = targets.filter(
@@ -49,8 +49,12 @@ export namespace AutoBuyerService {
   }
 
   export function startJobs() {
-    if (!autoBuyBidderJob) autoBuyBidderJob = new AutoBuyBidder();
-    if (!autoBuyBuyNowJob) autoBuyBuyNowJob = new AutoBuyBuyNow();
+    if (!autoBuyBidderJob) {
+      autoBuyBidderJob = new AutoBuyBidder();
+    }
+    if (!autoBuyBuyNowJob) {
+      autoBuyBuyNowJob = new AutoBuyBuyNow();
+    }
 
     return report();
   }

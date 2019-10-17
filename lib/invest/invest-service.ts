@@ -1,10 +1,11 @@
-import { GoodAuctionInvestorProps } from "./jobs/good-auction-investor";
-import { futbin, fut } from "../api";
+import { fut, futbin } from '../api';
+import { logger } from './../logger';
 import {
+  GoodAuctionInvestor,
   LowPlayerInvestor,
-  LowPlayerInvestorProps,
-  GoodAuctionInvestor
-} from "./jobs";
+  LowPlayerInvestorProps
+} from './jobs';
+import { GoodAuctionInvestorProps } from './jobs/good-auction-investor';
 
 export namespace investService {
   let lowPlayerInvestJob: LowPlayerInvestor;
@@ -24,15 +25,16 @@ export namespace investService {
     const prpKey = `${platform.toLowerCase()}_prp`;
     const defaultQuery = {
       page: 1,
-      [priceKey]: "1000-2500",
-      [prpKey]: "20,100",
-      sort: "likes",
-      order: "desc"
+      [priceKey]: '1000-2500',
+      [prpKey]: '20,100',
+      sort: 'likes',
+      order: 'desc'
     };
     const playerIds = await futbin.getPlayerIDs({
       ...defaultQuery,
       ...query
     });
+    logger.debug(`[InvestService]: Target ids: ${playerIds}`);
 
     const playerInfos: TargetInfo[] = [];
     for (const playerId of playerIds) {
@@ -59,7 +61,6 @@ export namespace investService {
     if (lowPlayerInvestJob) {
       lowPlayerInvestJob.stop();
     }
-
     lowPlayerInvestJob = null;
   }
 
@@ -78,7 +79,6 @@ export namespace investService {
     if (goodAuctionInvestor) {
       goodAuctionInvestor.stop();
     }
-
     goodAuctionInvestor = null;
   }
 }

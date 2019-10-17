@@ -1,10 +1,10 @@
-import * as express from "express";
-import { ApiQueue } from "../api";
+import * as express from 'express';
+import { ApiQueue } from '../api';
 
 export const statsApp = express();
 const started = new Date();
 
-statsApp.get("", (req, res) => {
+statsApp.get('', (req, res) => {
   const now = new Date();
   const timeSpentSeconds = Math.ceil(
     (now.getTime() - started.getTime()) / 1000

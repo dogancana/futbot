@@ -1,17 +1,18 @@
-import { logger } from "../../logger";
-import { Job } from "../../job";
-import Axios, { AxiosRequestConfig } from "axios";
-import { ApiQueue } from "../api-queue";
-import { SessionInjector } from "../../auth";
-import { ApiError, logResponse, logErrorResponse } from "../api";
+import Axios, { AxiosRequestConfig } from 'axios';
+import { SessionInjector } from '../../auth';
+import { Job } from '../../job';
+import { logger } from '../../logger';
+import { ApiError, logErrorResponse, logResponse } from '../api';
+import { ApiQueue } from '../api-queue';
 
 export const futApi = Axios.create({
   baseURL:
     process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
-    "https://utas.external.s2.fut.ea.com/ut/game/fifa20",
+    'https://utas.external.s2.fut.ea.com/ut/game/fifa20',
   timeout: 30000,
   headers: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931'
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931'
   }
 });
 
@@ -19,13 +20,15 @@ const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC);
 if (!requestsPerSec) {
   throw new Error('Invalid request-speed limit');
 }
+logger.info(`[FUT]: There will be maximum ${requestsPerSec} requests per sec`);
 
-const queue = new ApiQueue(requestsPerSec, "fut", eaConfigResolver);
+const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
-  config.headers.Origin = "https://www.easports.com";
-  config.headers.Referer = "https://www.easports.com/fifa/ultimate-team/web-app/";
-  config.headers["X-UT-SID"] = SessionInjector.auth.sid;
+  config.headers.Origin = 'https://www.easports.com';
+  config.headers.Referer =
+    'https://www.easports.com/fifa/ultimate-team/web-app/';
+  config.headers['X-UT-SID'] = SessionInjector.auth.sid;
 
   // const url = new URL(config.url);
   // let next = SessionInjector.lastStamp + 1;
@@ -43,7 +46,7 @@ futApi.interceptors.request.use(async config => {
     throw new ApiError(
       401,
       config,
-      "Session not copied!. First load Fut Web App with extension"
+      'Session not copied!. First load Fut Web App with extension'
     );
   }
 
@@ -53,32 +56,28 @@ futApi.interceptors.request.use(async config => {
 futApi.interceptors.response.use(
   // success
   value => {
-    logResponse("FUT", value);
+    logResponse('FUT', value);
     return value;
   },
   // error
   value => {
-    const {config, response = {}, message} = value;
-    const {status = 500} = response;
+    const { config, response = {}, message } = value;
+    const { status = 500 } = response;
 
-    logErrorResponse("FUT", value);
+    logErrorResponse('FUT', value);
 
-    if ([401, 403].indexOf(status) > -1) {
-      logger.error("[FUT] stopped all jobs for critical auth error");
-
-      queue.clear();
-      Job.stopAllJobs();
-    }
-
-    if ([458, 512, 521].indexOf(status) > -1) {
-      logger.error("[FUT] stopped all jobs: Temporary ban or just too many requests.");
+    if ([401, 403, 458, 512, 521].indexOf(status) > -1) {
+      logger.error(
+        '[FUT] stopped all jobs: Temporary ban or just too many requests. Status: ' +
+          status
+      );
 
       queue.clear();
       Job.stopAllJobs();
     }
 
     if ([426, 429].indexOf(status) > -1) {
-      logger.warn("[FUT] will slow down all jobs by 1/3 for next 30 mins");
+      logger.warn('[FUT] will slow down all jobs by 1/3 for next 30 mins');
       Job.slowDownAllJobsForNextMins(30);
     }
 

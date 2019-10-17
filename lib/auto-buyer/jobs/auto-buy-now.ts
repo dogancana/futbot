@@ -1,12 +1,12 @@
-import { Job } from "../../job";
-import { AutoBuyerService } from "../auto-buyer.service";
-import { playerService } from "../../player";
-import { fut } from "../../api";
-import { logger } from "../../logger";
+import { fut } from '../../api';
+import { Job } from '../../job';
+import { logger } from '../../logger';
+import { playerService } from '../../player';
+import { AutoBuyerService } from '../auto-buyer.service';
 
 export class AutoBuyBuyNow extends Job {
   constructor() {
-    const jobName = "AutoBuyer::BuyNow";
+    const jobName = 'AutoBuyer::BuyNow';
 
     super(jobName, 2);
     this.start(this.loopOverTargets);
@@ -24,11 +24,13 @@ export class AutoBuyBuyNow extends Job {
         .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
 
       const lowest = auctions[0];
-      if (!lowest) continue;
+      if (!lowest) {
+        continue;
+      }
       if (lowest.buyNowPrice <= target.maxPrice) {
         logger.info(`Found ${playerStr} for ${lowest.buyNowPrice}, buying.`);
         try {
-          await fut.bid(lowest.tradeId, lowest.buyNowPrice);
+          await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
           const justBoughtTarget = await fut.waitAndGetPurchasedItem(
             target.resourceId
           );

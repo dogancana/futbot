@@ -1,14 +1,16 @@
-import * as express from "express";
-import { investService } from "./invest-service";
-import { fut } from "../api";
+import * as express from 'express';
+import { fut } from '../api';
+import { investService } from './invest-service';
 
 export const investApp = express();
 
-investApp.get("/players", async (req, res) => {
-  const {budget, min, max} = getBudgetMinMax(req.query);
+investApp.get('/players', async (req, res) => {
+  const { budget, min, max } = getBudgetMinMax(req.query);
   const platform = await fut.getPlatform();
   const priceKey = `${platform.toLowerCase()}_price`;
-  if (!budgetMinMaxQueryCheck(res, Number.MAX_VALUE, min, max)) return;
+  if (!budgetMinMaxQueryCheck(res, Number.MAX_VALUE, min, max)) {
+    return;
+  }
 
   res.send(
     await investService.getTargets({
@@ -18,28 +20,34 @@ investApp.get("/players", async (req, res) => {
   );
 });
 
-investApp.get("/low-players", async (req, res) => {
-  const {maxTargetPool} = req.query;
-  const {budget, min, max} = getBudgetMinMax(req.query);
-  if (!budgetMinMaxQueryCheck(res, budget, min, max)) return;
+investApp.get('/low-players', async (req, res) => {
+  const { maxTargetPool } = req.query;
+  const { budget, min, max } = getBudgetMinMax(req.query);
+  if (!budgetMinMaxQueryCheck(res, budget, min, max)) {
+    return;
+  }
 
-  res.send(investService.startLowPlayerInvest({budget, min, max, maxTargetPool}));
+  res.send(
+    investService.startLowPlayerInvest({ budget, min, max, maxTargetPool })
+  );
 });
 
-investApp.get("/low-players-stop", async (req, res) => {
+investApp.get('/low-players-stop', async (req, res) => {
   investService.clearLowPlayerInvest();
   res.send('OK');
 });
 
-investApp.get("/good-auctions", async (req, res) => {
-  const {budget, min, max} = getBudgetMinMax(req.query);
-  if (!budgetMinMaxQueryCheck(res, budget, min, max)) return;
+investApp.get('/good-auctions', async (req, res) => {
+  const { budget, min, max } = getBudgetMinMax(req.query);
+  if (!budgetMinMaxQueryCheck(res, budget, min, max)) {
+    return;
+  }
 
-  res.send(investService.startGoodAuctionInvest({budget, min, max}));
+  res.send(investService.startGoodAuctionInvest({ budget, min, max }));
 });
 
 function getBudgetMinMax(query: any) {
-  let {budget, min, max} = query;
+  const { budget, min, max } = query;
   return {
     budget: budget && parseInt(budget, 10),
     min: min && parseInt(min, 10),
@@ -54,7 +62,7 @@ function budgetMinMaxQueryCheck(
   max: number
 ): boolean {
   if (!budget) {
-    res.status(500).send("Send budget in query");
+    res.status(500).send('Send budget in query');
     return false;
   }
 

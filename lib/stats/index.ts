@@ -1,1 +1,1 @@
-export * from './stats-app'
+export * from './stats-app';

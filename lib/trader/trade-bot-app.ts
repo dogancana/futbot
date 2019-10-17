@@ -3,30 +3,29 @@ import { tradeService } from './trade-service';
 
 export const tradeBotApp = express();
 
-tradeBotApp.get('/start-selling', async function (req, res) {
-  const {maxRating} = req.query;
+tradeBotApp.get('/start-selling', async function(req, res) {
+  const { maxRating } = req.query;
   res.send(tradeService.startSelling(maxRating));
 });
 
-tradeBotApp.get('/stop-selling', async function (req, res) {
+tradeBotApp.get('/stop-selling', async function(req, res) {
   res.send(tradeService.stopSelling());
 });
-
 
 tradeBotApp.get('/relist-expired', async (req, res) => {
   try {
     const resp = await tradeService.relistExpired();
-    res.send(resp)
+    res.send(resp);
   } catch (e) {
-    res.status(500).send(e.message)
+    res.status(500).send(e.message);
   }
 });
 
-tradeBotApp.get('/clear-pile', async function (req, res) {
+tradeBotApp.get('/clear-pile', async (req, res) => {
   try {
     const resp = await tradeService.clearPile();
-    res.send(resp)
+    res.send(resp);
   } catch (e) {
-    res.status(500).send(e.message)
+    res.status(500).send(e.message);
   }
 });

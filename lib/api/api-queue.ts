@@ -1,12 +1,12 @@
-import { AxiosRequestConfig } from "axios";
-import { interval, Subscription } from "rxjs";
-import { cacheEntry } from "./cache-adapter";
+import { AxiosRequestConfig } from 'axios';
+import { interval, Subscription } from 'rxjs';
+import { cacheEntry } from './cache-adapter';
 
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
 
 export class ApiQueue {
   private static apiQueues: ApiQueue[] = [];
-  private queue: (() => void)[] = [];
+  private queue: Array<() => void> = [];
   private interval: Subscription;
   private apiName: string;
   private requestCount = 0;
@@ -29,6 +29,7 @@ export class ApiQueue {
 
     this.configResolver = configResolver;
     this.queueStart = new Date().getTime();
+    this.cacheHitCount = 0;
     ApiQueue.apiQueues.push(this);
   }
 
@@ -49,8 +50,10 @@ export class ApiQueue {
     }
 
     // fast-track for bids
-    if (config.url.match(/\/bid$/ig)) {
-      return Promise.resolve(!!this.configResolver ? this.configResolver(config) : config);
+    if (config.url.match(/\/bid$/gi)) {
+      return Promise.resolve(
+        !!this.configResolver ? this.configResolver(config) : config
+      );
     }
 
     return new Promise((resolve, reject) => {

@@ -1,6 +1,6 @@
-import { logger } from "./logger";
-import { interval, Observable, Subscription } from "rxjs";
-import { startWith } from "rxjs/operators";
+import { interval, Observable, Subscription } from 'rxjs';
+import { startWith } from 'rxjs/operators';
+import { logger } from './logger';
 const min = 60 * 1000;
 
 const jobs: {
@@ -8,26 +8,6 @@ const jobs: {
 } = {};
 
 export class Job {
-  private static slowed: boolean = false;
-  private source: Observable<any>;
-  private sub: Subscription;
-  public execTime = 0;
-  private id: string;
-  private task: () => Promise<void>;
-  protected futbinRequests: number;
-  protected futRequests: number;
-
-  constructor(protected name: string, private timesPerMin: number) {
-    this.start = this.start.bind(this);
-    this.stop = this.stop.bind(this);
-
-    this.id = `${name}_${new Date().getTime()}`;
-    this.futRequests = 0;
-    this.futbinRequests = 0;
-
-    jobs[this.id] = this;
-  }
-
   public static stopAllJobs(): number {
     let stopped = 0;
     const keys = Object.keys(jobs);
@@ -40,7 +20,9 @@ export class Job {
   }
 
   public static slowDownAllJobsForNextMins(mins: number) {
-    if (Job.slowed) return;
+    if (Job.slowed) {
+      return;
+    }
 
     Job.slowed = true;
 
@@ -60,6 +42,25 @@ export class Job {
       }
       Job.slowed = false;
     }, mins * 60 * 1000);
+  }
+  private static slowed: boolean = false;
+  public execTime = 0;
+  protected futbinRequests: number;
+  protected futRequests: number;
+  private source: Observable<any>;
+  private sub: Subscription;
+  private id: string;
+  private task: () => Promise<void>;
+
+  constructor(protected name: string, private timesPerMin: number) {
+    this.start = this.start.bind(this);
+    this.stop = this.stop.bind(this);
+
+    this.id = `${name}_${new Date().getTime()}`;
+    this.futRequests = 0;
+    this.futbinRequests = 0;
+
+    jobs[this.id] = this;
   }
 
   public stop(): void {

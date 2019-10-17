@@ -1,5 +1,5 @@
-import { fut, futbin } from "../api";
-import { StaticItems } from "../static";
+import { fut, futbin } from '../api';
+import { StaticItems } from '../static';
 
 export namespace playerService {
   export async function getFutbinPrice(resourceId: number) {
@@ -30,25 +30,16 @@ export namespace playerService {
     };
 
     auctions.forEach(a => {
-      if (a.itemData.resourceId != resourceId) {
-        invalidSamples++;
-        return;
-      }
-
-      // ignore the default buy-now price
-      if (a.buyNowPrice === a.itemData.marketDataMaxPrice) {
-        invalidSamples++;
+      if (a.itemData.resourceId !== resourceId) {
         return;
       }
 
       if (a.buyNowPrice < price.minBuyNow) {
         price.minBuyNow = a.buyNowPrice;
       }
-
       if (a.startingBid < price.minStartingBid) {
         price.minStartingBid = a.startingBid;
       }
-
       price.averageBuyNow += a.buyNowPrice;
       price.averageStartingBid += a.startingBid;
       price.sampleCount++;
@@ -86,7 +77,7 @@ export namespace playerService {
   }): string {
     const id = player.assetId || player.id || -1;
     const data = StaticItems.itemData[id] || {
-      name: "?????",
+      name: '?????',
       rating: 0
     };
     // if (data.name === "?????") console.log("readable", { player, StaticItems });

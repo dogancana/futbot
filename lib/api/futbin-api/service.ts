@@ -1,7 +1,7 @@
-import * as querystring from "querystring";
-import * as cheerio from "cheerio";
-import { futbinApi } from "./api";
-import { simpleCacheAdapter } from "../cache-adapter";
+import * as cheerio from 'cheerio';
+import * as querystring from 'querystring';
+import { simpleCacheAdapter } from '../cache-adapter';
+import { futbinApi } from './api';
 
 export namespace futbin {
   export interface Prices {
@@ -12,7 +12,7 @@ export namespace futbin {
 
   export interface Price {
     LCPrice: number;
-    prices: [];
+    prices: number[];
     updatedMinsAgo: number;
     minPrice: number;
     maxPrice: number;
@@ -20,23 +20,25 @@ export namespace futbin {
   }
 
   export async function getPrice(resourceId): Promise<Prices> {
-    if (!resourceId) return null;
+    if (!resourceId) {
+      return null;
+    }
 
     const response = await futbinApi.get(`/playerPrices?player=${resourceId}`, {
       adapter: simpleCacheAdapter
     });
     const apiPrices = response.data[resourceId].prices;
     const result: Prices = {
-      pc: {prices: []},
-      xbox: {prices: []},
-      ps: {prices: []}
+      pc: { prices: [] },
+      xbox: { prices: [] },
+      ps: { prices: [] }
     } as any;
-    const platforms = ["pc", "xbox", "ps"];
+    const platforms = ['pc', 'xbox', 'ps'];
 
     platforms.forEach(platform => {
       for (let i = 1; i < 6; i++) {
         const price = parseFutbinPrice(
-          apiPrices[platform][`LCPrice${i > 1 ? i : ""}`]
+          apiPrices[platform][`LCPrice${i > 1 ? i : ''}`]
         );
         result[platform].prices.push(price);
         result[platform].prices = result[platform].prices.filter(p => p !== 0);
@@ -63,27 +65,29 @@ export namespace futbin {
     pc_price?: string;
     xbox_price?: string;
     ps_price?: string;
-    version?: "gold" | string;
-    sort?: "likes" | string;
-    order?: "desc" | string;
+    version?: 'gold' | string;
+    sort?: 'likes' | string;
+    order?: 'desc' | string;
   }
 
   export async function getPlayerIDs(query: PlayersQuery): Promise<number[]> {
     const resp = await futbinApi.get(
-      `/players?${querystring.stringify(query, null, null, { encodeURIComponent: uri => uri })}`,
-      {adapter: simpleCacheAdapter}
+      `/players?${querystring.stringify(query, null, null, {
+        encodeURIComponent: uri => uri
+      })}`,
+      { adapter: simpleCacheAdapter }
     );
     const html = resp.data;
     const $ = cheerio.load(html);
-    const players: number[] = $("#repTb tbody tr")
+    const players: number[] = $('#repTb tbody tr')
       .map((i, elm) => {
         const player = $(elm);
-        const execResult = /player\/([0-9]+)/.exec(player.data("url"));
+        const execResult = /player\/([0-9]+)/.exec(player.data('url'));
         return execResult && execResult[1]; // futbinId
       })
       .get()
       .map(id => parseInt(id, 10))
-      .filter(id => !!id && !isNaN(id));
+      .filter((id: number) => !!id && !isNaN(id));
 
     return players;
   }
@@ -94,12 +98,12 @@ export namespace futbin {
     });
     const html = resp.data;
     const $ = cheerio.load(html);
-    const info = $("#page-info");
+    const info = $('#page-info');
 
     return {
-      resourceId: parseInt(info.data("player-resource"), 10),
-      futbinId: parseInt(info.data("id"), 10),
-      assetId: parseInt(info.data("baseid"), 10)
+      resourceId: parseInt(info.data('player-resource'), 10),
+      futbinId: parseInt(info.data('id'), 10),
+      assetId: parseInt(info.data('baseid'), 10)
     };
   }
 }
@@ -109,11 +113,16 @@ function parseUpdateTime(str: string): number {
     return null;
   }
 
-  if (str.includes("week") || str.includes("days") || str.includes("month") || str.includes("year")) {
+  if (
+    str.includes('week') ||
+    str.includes('days') ||
+    str.includes('month') ||
+    str.includes('year')
+  ) {
     return Number.MAX_VALUE;
-  } else if (str.includes("hour")) {
+  } else if (str.includes('hour')) {
     return parseInt(str, 10) * 60;
-  } else if (str.includes("min")) {
+  } else if (str.includes('min')) {
     return parseInt(str, 10);
   } else {
     return -1;
@@ -121,5 +130,5 @@ function parseUpdateTime(str: string): number {
 }
 
 function parseFutbinPrice(str: string | number): number {
-  return parseInt(str.toString().replace(/,/g, ""), 10);
+  return parseInt(str.toString().replace(/,/g, ''), 10);
 }

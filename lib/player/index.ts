@@ -1,2 +1,2 @@
-export * from './player-app'
-export * from './player-service'
+export * from './player-app';
+export * from './player-service';

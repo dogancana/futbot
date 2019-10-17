@@ -1,19 +1,19 @@
-const SERVER_HREF = "http://localhost:9999";
+const SERVER_HREF = 'http://localhost:9999';
 const repositories = window.repositories;
 const authData = {};
 const FUT_API_URL =
   process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
-  "https://utas.external.s2.fut.ea.com/ut/game/fifa20";
+  'https://utas.external.s2.fut.ea.com/ut/game/fifa20';
 
 main();
 
 function main() {
-  intercept("https://utas.external.s2.fut.ea.com/ut/auth", scrapAuthData);
-  intercept("https://utas.external.s2.fut.ea.com/ut/game", getLastStamp);
+  intercept('fut.ea.com/ut/auth', scrapAuthData);
+  intercept('fut.ea.com/ut/game', getLastStamp);
 
-  window.addEventListener("load", loadEvent => {
+  window.addEventListener('load', loadEvent => {
     let window = loadEvent.currentTarget;
-    window.document.title = "(Futbot) FUT Web App!";
+    window.document.title = '(Futbot) FUT Web App!';
   });
 }
 
@@ -21,7 +21,7 @@ function intercept(urlmatch, callback) {
   let send = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.send = function() {
     this.addEventListener(
-      "readystatechange",
+      'readystatechange',
       function() {
         if (this.responseURL.includes(urlmatch) && this.readyState === 4) {
           callback(this);
@@ -38,7 +38,7 @@ function scrapAuthData(req) {
   authData.auth = data;
   setTimeout(() => {
     feedServer();
-  }, 5000);   // wait for webapp to get data
+  }, 5000); // wait for webapp to get data
 }
 
 function getLastStamp(req) {
@@ -54,8 +54,8 @@ function getLastStamp(req) {
 
 function feedServer() {
   fetch(`${SERVER_HREF}/auth`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(authData)
   });
   pushDataToServer();
@@ -74,8 +74,8 @@ function pushDataToServer() {
       });
       setTimeout(() => {
         fetch(`${SERVER_HREF}/static/push-data`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(obj)
         });
       }, 300);
