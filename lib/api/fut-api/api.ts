@@ -20,6 +20,7 @@ const requestsPerSec =
 logger.info(`[FUT]: There will be maximum ${requestsPerSec} requests per sec`);
 
 const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
+let slowedDownAfterTooManyRequests = false;
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
   config.headers.Origin = 'https://www.easports.com';
@@ -72,10 +73,14 @@ futApi.interceptors.response.use(
       queue.clear();
     }
 
-    if (status === 429) {
+    if (status === 429 && !slowedDownAfterTooManyRequests) {
+      slowedDownAfterTooManyRequests = true;
       logger.warn('[FUT] will slow down all jobs by 1/3 for next 30 mins');
       Job.changeJobSpeedsBy(1 / 3);
-      setTimeout(() => Job.changeJobSpeedsBy(3), 1000 * 60 * 30);
+      setTimeout(() => {
+        Job.changeJobSpeedsBy(3);
+        slowedDownAfterTooManyRequests = false;
+      }, 1000 * 60 * 30);
     }
     return Promise.reject(new ApiError(status, config, message));
   }

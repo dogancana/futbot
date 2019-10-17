@@ -7,7 +7,7 @@ import { playerService } from '../../player';
 import { getOptimalSellPrice, tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
-const BUY_REFERENCE_PERCT = 0.7;
+const BUY_REFERENCE_PERCT = 0.8;
 const MAX_AUCTION_TRY = 3;
 let targets: investService.TargetInfo[] = [];
 let setingUp = false;
@@ -30,7 +30,7 @@ export class LowPlayerInvestor extends Job {
   constructor({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
     super(
       LowPlayerInvestor.jobName,
-      3 // per min. Avg ex time 16s
+      1 // per min. Avg ex time 16s
     );
 
     Object.assign(this, {

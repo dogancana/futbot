@@ -25,7 +25,7 @@ export class ApiQueue {
   private static apiQueues: ApiQueue[] = [];
   public averageRTTimeStat: AvgStat;
   public cacheHitCount;
-  private queue: Array<() => void> = [];
+  private queue: Array<{ resolve: () => void; reject: () => void }> = [];
   private interval: Subscription;
   private apiName: string;
   private requestCount = 0;
@@ -42,8 +42,8 @@ export class ApiQueue {
     this.apiName = apiName;
     this.interval = interval(Math.ceil(1000 / requestsPerSec)).subscribe(() => {
       if (this.queue.length > 0) {
-        const fn = this.queue.shift();
-        fn();
+        const { resolve } = this.queue.shift();
+        resolve();
       }
     });
     this.averageQueueTimeStat = new AvgStat(5);
@@ -67,13 +67,18 @@ export class ApiQueue {
     }
     return new Promise(async (resolve, reject) => {
       const queueTime = new Date().getTime();
-      this.queue.push(() => {
-        this.requestCount++;
-        const c = !!this.configResolver ? this.configResolver(config) : config;
-        const resolveTimeMS = new Date().getTime() - queueTime;
-        this.averageQueueTimeStat.addSample(resolveTimeMS);
+      this.queue.push({
+        reject,
+        resolve: () => {
+          this.requestCount++;
+          const c = !!this.configResolver
+            ? this.configResolver(config)
+            : config;
+          const resolveTimeMS = new Date().getTime() - queueTime;
+          this.averageQueueTimeStat.addSample(resolveTimeMS);
 
-        resolve(c);
+          resolve(c);
+        }
       });
     });
   }
@@ -93,6 +98,7 @@ export class ApiQueue {
   }
 
   public clear() {
+    this.queue.forEach(({ reject }) => reject());
     this.queue = [];
   }
 
@@ -102,8 +108,8 @@ export class ApiQueue {
       logger.warn(
         `Queue for ${this.apiName} is bloated(${this.queue.length} requests waiting). Pausing jobs for a minute and slowing by ${SPEED_UP_FACTOR}`
       );
-      Job.changeJobSpeedsBy(1 - SPEED_UP_FACTOR);
       Job.stopAllJobs();
+      Job.changeJobSpeedsBy(1 - SPEED_UP_FACTOR);
       setTimeout(() => {
         Job.resumeAllJobs();
       }, 60 * 1000);
@@ -115,7 +121,11 @@ export class ApiQueue {
       logger.warn(
         `Queue for ${this.apiName} was working inefficiently. Speeding up ${SPEED_UP_FACTOR}`
       );
+      Job.stopAllJobs();
       Job.changeJobSpeedsBy(1 + SPEED_UP_FACTOR);
+      setTimeout(() => {
+        Job.resumeAllJobs();
+      }, 30 * 1000);
     }
   }
 }

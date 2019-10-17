@@ -26,9 +26,7 @@ export class Job {
 
   public static changeJobSpeedsBy(multFactor: number) {
     for (const job of jobs) {
-      job.stop();
       job.timesPerMin = job.timesPerMin * multFactor;
-      setTimeout(() => job.start(), job.timesPerMin);
     }
   }
 

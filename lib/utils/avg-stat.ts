@@ -21,9 +21,7 @@ export class AvgStat {
   }
 
   public avg() {
-    const samples = flatten(this.samples).filter(
-      s => s != null && s !== undefined
-    );
+    const samples = flatten(this.samples);
     return samples.reduce((prev, curr) => prev + curr, 0) / samples.length;
   }
 

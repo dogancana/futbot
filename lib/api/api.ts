@@ -24,20 +24,22 @@ export function logResponse(
 ) {
   const { config, data, status, fromCache } = r;
   const cachedStr: string = fromCache === true ? '[Cached]' : '';
-  handleRTT(apiName, config, queue);
   if (fromCache) {
     queue.cacheHitCount++;
+  } else {
+    handleRTT(apiName, config, queue);
   }
 
   logger.debug(`[${apiName}]: ${status}${cachedStr} ${config.url}`);
 }
 
 export function logErrorResponse(apiName: string, v: any, queue: ApiQueue) {
-  const { config, response = {}, message } = v;
+  const { config = {}, response = {}, message } = v;
   const { status = 500, data, fromCache } = response;
-  handleRTT(apiName, config, queue);
   if (fromCache) {
     queue.cacheHitCount++;
+  } else {
+    handleRTT(apiName, config, queue);
   }
 
   logger.error(

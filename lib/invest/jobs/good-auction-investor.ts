@@ -7,7 +7,7 @@ import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
 const BATCH_START_PAGE = 5; // Better for checking transfer with >1 min remaining
-const BATCH_PAGES_TO_SEE = 3; // Setting it more would result on bloating futbin queue
+const BATCH_PAGES_TO_SEE = 2; // Setting it more would result on bloating futbin queue
 const PROFIT_MARGIN_PERCT = 20;
 const EXPIRE_TIME_LIMIT = 180; // seconds
 const MIN_MARKET_SAMPLE_COUNT = 10;
@@ -30,11 +30,13 @@ export class GoodAuctionInvestor extends Job {
   private min: number = 1000;
   private max: number = 10000;
   private profitMargin: number = PROFIT_MARGIN_PERCT;
+  private boughtItems: AuctionTarget[] = [];
+  private lostItems: AuctionTarget[] = [];
 
   constructor(p: GoodAuctionInvestorProps) {
     super(
       'Invest:GoodAuction',
-      2 // per min. Avg ex time 29s
+      3 // per min. Avg ex time 29s
     );
     Object.assign(this, p);
     this.start(this.loop);
@@ -47,7 +49,14 @@ export class GoodAuctionInvestor extends Job {
           `${playerService.readable(a.itemData)} for max ${
             a.maxBuyPrice
           }. Expires in ${a.expires}seconds`
-      )
+      ),
+      bought: this.boughtItems.map(
+        a =>
+          `${playerService.readable(a.itemData)} bought for ${
+            a.currentBid
+          }. Sell price: ${a.maxBuyPrice * this.profitMargin}`
+      ),
+      budget: this.budget
     };
   }
 
@@ -67,13 +76,24 @@ export class GoodAuctionInvestor extends Job {
     const auctions = await fut.checkAuctionStatus(
       auctionsToWatch.map(a => a.tradeId)
     );
-    auctionsToWatch = auctionsToWatch
-      .map(a => ({
-        ...a,
-        ...auctions.find(b => b.tradeId === a.tradeId),
-        itemData: a.itemData // auction status object clears out item data. We put it back
-      }))
-      .filter(a => a.expires > 0);
+
+    auctionsToWatch = auctionsToWatch.map(a => ({
+      ...a,
+      ...auctions.find(b => b.tradeId === a.tradeId),
+      itemData: a.itemData // auction status object clears out item data. We put it back
+    }));
+
+    const boughtItems = auctionsToWatch.filter(
+      a => a.bidState === 'highest' && a.expires < 1
+    );
+    this.boughtItems = [...this.boughtItems, ...boughtItems];
+    boughtItems.forEach(i => (this.budget -= i.currentBid));
+    const lostItems = auctionsToWatch.filter(
+      a => a.bidState === 'outbid' && a.expires < 1
+    );
+    this.lostItems = [...this.lostItems, ...lostItems];
+
+    auctionsToWatch = auctionsToWatch.filter(a => a.expires > 0);
   }
 
   private async bidTargets() {
@@ -144,7 +164,6 @@ export class GoodAuctionInvestor extends Job {
       );
       try {
         await fut.bidToTrade(a.tradeId, bidPrice);
-        this.budget -= bidPrice;
       } catch (e) {
         logger.error(
           `[Invevst:GoodAuction]: bid failed for ${playerService.readable(
