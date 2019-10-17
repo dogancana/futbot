@@ -100,9 +100,9 @@ export class ApiQueue {
     if (this.queue.length > MAX_OPTIMUM_QUEUE_LENGTH) {
       this.queueCheckOptimalCount = 0;
       logger.warn(
-        `Queue for ${this.apiName} is bloated(${this.queue.length} requests waiting). Pausing jobs for a minute and slowing by 20%`
+        `Queue for ${this.apiName} is bloated(${this.queue.length} requests waiting). Pausing jobs for a minute and slowing by ${SPEED_UP_FACTOR}`
       );
-      Job.changeJobSpeedsBy(0.8);
+      Job.changeJobSpeedsBy(1 - SPEED_UP_FACTOR);
       Job.stopAllJobs();
       setTimeout(() => {
         Job.resumeAllJobs();
@@ -113,9 +113,9 @@ export class ApiQueue {
     ) {
       this.queueCheckOptimalCount = 0;
       logger.warn(
-        `Queue for ${this.apiName} was working inefficiently. Speeding up 20%`
+        `Queue for ${this.apiName} was working inefficiently. Speeding up ${SPEED_UP_FACTOR}`
       );
-      Job.changeJobSpeedsBy(1.2);
+      Job.changeJobSpeedsBy(1 + SPEED_UP_FACTOR);
     }
   }
 }
