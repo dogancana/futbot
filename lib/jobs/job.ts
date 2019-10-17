@@ -27,7 +27,7 @@ export class Job {
     for (const job of jobs) {
       job.stop();
       job.timesPerMin = job.timesPerMin * multFactor;
-      setTimeout(job.start, job.timesPerMin);
+      setTimeout(() => job.start(), job.timesPerMin);
     }
   }
 
@@ -40,7 +40,7 @@ export class Job {
           'id',
           'execTime',
           'timesPerMin',
-          'avgExecTimeMS',
+          'avgExecTimeS',
           'finished'
         ),
         stopped: job.sub.closed,
@@ -55,7 +55,7 @@ export class Job {
   private sub: Subscription;
   private id: string;
   private task: () => Promise<void>;
-  private avgExecTimeMS: number = 0;
+  private avgExecTimeS: number = 0;
 
   constructor(protected name: string, private timesPerMin: number) {
     this.start = this.start.bind(this);
@@ -71,6 +71,7 @@ export class Job {
   }
 
   public stop(): void {
+    logger.debug(`Stoping job ${this.id}`);
     this.sub.unsubscribe();
   }
 
@@ -97,8 +98,8 @@ export class Job {
       }
       const t = new Date().getTime() - start;
       logger.info(`JOB[${this.id}] execution finished in ${t}`);
-      this.avgExecTimeMS =
-        ((this.execTime - 1) * this.avgExecTimeMS + t) / this.execTime;
+      this.avgExecTimeS =
+        ((this.execTime - 1) * this.avgExecTimeS + t) / this.execTime;
     });
   }
 }
