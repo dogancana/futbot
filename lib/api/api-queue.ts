@@ -24,11 +24,11 @@ export class ApiQueue {
   }
   private static apiQueues: ApiQueue[] = [];
   public averageRTTimeStat: AvgStat;
+  public cacheHitCount;
   private queue: Array<() => void> = [];
   private interval: Subscription;
   private apiName: string;
   private requestCount = 0;
-  private cacheHitCount = 0;
   private configResolver: ConfigResolver;
   private queueStart: number;
   private queueCheckOptimalCount: number = 0;
@@ -63,10 +63,9 @@ export class ApiQueue {
     config: AxiosRequestConfig
   ): Promise<AxiosRequestConfig> {
     if (cacheEntry(config)) {
-      this.cacheHitCount++;
       return Promise.resolve(config);
     }
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const queueTime = new Date().getTime();
       this.queue.push(() => {
         this.requestCount++;
@@ -88,6 +87,7 @@ export class ApiQueue {
       cacheHitCount: this.cacheHitCount,
       queueCount: this.queue.length,
       averageQueueTimeMS: this.averageQueueTimeStat.avg().toFixed(0),
+      averageRTTimeMS: this.averageRTTimeStat.avg().toFixed(0),
       requestsPerSecond: (this.requestCount / timeSpent).toFixed(1)
     };
   }

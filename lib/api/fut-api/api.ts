@@ -2,7 +2,7 @@ import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
-import { ApiError, calculateRTT, logErrorResponse, logResponse } from '../api';
+import { ApiError, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
 
 export const futApi = Axios.create({
@@ -39,9 +39,6 @@ function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
 }
 
 futApi.interceptors.request.use(async config => {
-  config.metaData = {
-    startTime: new Date()
-  };
   if (!SessionInjector.auth) {
     throw new ApiError(
       401,
@@ -49,23 +46,25 @@ futApi.interceptors.request.use(async config => {
       'Session not copied!. First load Fut Web App with extension'
     );
   }
-  return await queue.addRequestToQueue(config);
+  const c = await queue.addRequestToQueue(config);
+  c.metaData = {
+    startTime: new Date()
+  };
+  return c;
 });
 
 futApi.interceptors.response.use(
   // success
   value => {
-    logResponse('FUT', value);
-    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
+    logResponse('FUT', value, queue);
     return value;
   },
   // error
   value => {
     const { config, response = {}, message } = value;
     const { status = 500 } = response;
-    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
 
-    logErrorResponse('FUT', value);
+    logErrorResponse('FUT', value, queue);
 
     if ([401, 403, 458].indexOf(status) > -1) {
       logger.error('[FUT] stopped all jobs for critical auth error');

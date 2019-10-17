@@ -35,7 +35,7 @@ export class SellXPlayers extends Job {
   constructor(amount: number = 10, maxRating: number = 84) {
     super(
       SellXPlayers.jobName,
-      2 // per min avg exec time: 29s
+      1 // per min avg exec time: 29s
     );
 
     this.amount = amount;

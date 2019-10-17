@@ -1,12 +1,7 @@
 import Axios from 'axios';
 import { ApiQueue } from '../api-queue';
 import { logger } from './../../logger';
-import {
-  ApiError,
-  calculateRTT,
-  logErrorResponse,
-  logResponse
-} from './../api';
+import { ApiError, logErrorResponse, logResponse } from './../api';
 
 export const futbinApi = Axios.create({
   baseURL: 'https://www.futbin.com/20/',
@@ -26,26 +21,25 @@ logger.info(
 );
 
 futbinApi.interceptors.request.use(async config => {
-  config.metaData = {
-    startTime: new Date()
-  };
   if (futbinStopped) {
     return Promise.reject(config);
   }
-  return await queue.addRequestToQueue(config);
+  const c = await queue.addRequestToQueue(config);
+  c.metaData = {
+    startTime: new Date()
+  };
+  return c;
 });
 
 futbinApi.interceptors.response.use(
   value => {
-    logResponse('FUTBIN', value);
-    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
+    logResponse('FUTBIN', value, queue);
     return value;
   },
   value => {
     const { config, data, response = {}, message } = value;
     const { status } = response;
-    queue.averageRTTimeStat.addSample(calculateRTT(value.config));
-    logErrorResponse('FUTBIN', value);
+    logErrorResponse('FUTBIN', value, queue);
     if (status === 403) {
       futbinStopped = true;
       logger.warn(
