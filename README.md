@@ -7,8 +7,9 @@ It's tested with FIFA 20
 
 ## Table of contents
 
-**[Prepare](#prepare)**<br>
-**[Start](#start)**<br>
+**[Use Latest stable version](#use-latest-stable-version)**<br>
+**[Prepare (Dev Mode)](#prepare)**<br>
+**[Start (Dev Mode)](#start)**<br>
 **[Existing features](#existing-features)**<br>
 **[Existing UI Features](#existing-ui-features)**<br>
 **[What to do on errors](#what-to-do-on-errors)**<br>
@@ -16,15 +17,23 @@ It's tested with FIFA 20
 **[Known Bugs](#known-bugs)**<br>
 **[Discord](#discord)**<br>
 
+## Use Latest stable version
 
-## Prepare
+Go to [releases page](https://github.com/dogancana/futbot/releases) and select 'futbot.zip' under assest of latest version.  
+In this file you'll find executable version for server and ready to use chrome extension.  
+Activate developer mode in chrome://extensions page and click 'Load Unpacked' to load Futbot extension. Once it's loaded, go to fut web app and you should see title changed to '(FUTBOT) Fut Web App'.  The extension is there to read your session data and send it to server, so it's essential. If you get new version of the extension, you need to load it again. There is no automatic update because I cannot put this extension to chrome market.  
+When you are done with the extension, you can start the server. Server needs .env file to be present in the same directory, so that you can configure necessary parameters (In future this will be moved to UI). Note, whenever you need to change something in .env file, you need to restart the server.  
+Now you are all set to use existing features described later in this documentation.  
+**Note for people outside of Europe**: You need to change 'FUTBOT_FUT_API_ENDPOINT_OVERWRITE' value in .env file. Once you load the extension, go to fut web app and click to Futbot extension. It should tell you the endpoint. Just use that value and restart your server.
+
+## Prepare (Dev Mode)
 ```Node and yarn```  
 Install [node](https://nodejs.org/en/) and [yarn](https://yarnpkg.com/lang/en/docs/install/). Installing yarn via installation scripts are generally easier. 
- 
+
 ```Config```  
 The project needs a configuration file (.env) in order to get some user preferences and region based api endpoint (I was lazy to figure it out automatically). You can copy .env.local file as .env file if you are in europe.  If you are outside of europe, there is a really small change you need to make. In order to figure out your corresponding ea server, you should open developer tools in your browser and refresh fut web application. It'll stop you from debugging by adding infinite debuggers. Just click to deactive debug points and click play. Then go to network tab and search for a url similar to 'https://utas.external.s2.fut.ea.com/ut/game/fifa20'. Only different part should be 's2'. Once you find your url, change it in .env file and you are good to go. Note: any change in .env file requires app to restart.
 
-## Start
+## Start (Dev Mode)
 
 Start the server
 
@@ -43,10 +52,10 @@ Since this server is not intented to be deployed somewhere, there is no session 
 
 ## Existing features:
 
-http://localhost:9999/club/players
+http://localhost:9999/club/players  
 This just returns your players in club, not in tradepile
 
-http://localhost:9999/trade-bot/start-selling
+http://localhost:9999/trade-bot/start-selling  
 This will start 2 jobs: Clearing transfer pile and selling players who are not in your active squad. 
 Once in a while it gets your players from club, figures a good price according to futbin/fut market data. And sells them if prices are trustable enough.  
 ```Query Paramters: ``` maxRating  
@@ -82,7 +91,8 @@ There are more endpoints to use. But I don't think they are worth to mention in 
 
 ## Existing UI Features
 
-```Player prices:``` The extension will add small visual components to players. Example below:
+```Player prices:```  
+The extension will add small visual components to players. Example below:
 ![](doc/gifs/player-price.gif)
 
 ## What to do on errors
