@@ -11,3 +11,6 @@ cd extension
 yarn
 yarn build
 cp -R build ../dist/extension
+
+# Zip
+zip -r futbot.zip dist
