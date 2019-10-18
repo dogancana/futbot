@@ -9,6 +9,7 @@ cp .env.local futbot/.env
 
 # Build extension
 cd extension
+nvm use 8 #https://github.com/YuraDev/vue-chrome-extension-template/issues/17
 yarn
 yarn build
 cp -R build ../futbot/extension

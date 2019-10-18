@@ -20,6 +20,7 @@ module.exports = {
     'identity.email'
   ],
   devtools_page: 'pages/devtools.html',
+  options_page: 'pages/options.html',
   content_scripts: [
     {
       js: ['js/inject.js'],
@@ -28,6 +29,10 @@ module.exports = {
       all_frames: true
     }
   ],
+  browser_action: {
+    default_title: 'Futbot',
+    default_popup: 'pages/popup.html'
+  },
   content_security_policy: "script-src 'self' 'unsafe-eval'; object-src 'self'",
   web_accessible_resources: ['js/content.js']
 };

@@ -1,9 +1,6 @@
 const SERVER_HREF = 'http://localhost:9999';
 const repositories = window.repositories;
 const authData = {};
-const FUT_API_URL =
-  process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
-  'https://utas.external.s2.fut.ea.com/ut/game/fifa20';
 
 main();
 
@@ -35,10 +32,24 @@ function intercept(urlmatch, callback) {
 
 function scrapAuthData(req) {
   const data = JSON.parse(req.responseText);
+  storeEndpoint(data.ipPort);
   authData.auth = data;
   setTimeout(() => {
     feedServer();
   }, 5000); // wait for webapp to get data
+}
+
+// ipPort: 'utas\.external\.s.\.fut\.ea\.com'
+function storeEndpoint(ipPort) {
+  const res = /utas\.external\.(s.)\.fut\.ea\.com/g.exec(ipPort);
+  const instance = res ? res[1] : null;
+  const endpoint = 'https://utas.external.<instance>.fut.ea.com/ut/game/fifa20'.replace(
+    '<instance>',
+    instance
+  );
+  if (instance) {
+    localStorage.setItem('futbot_endpoint', endpoint);
+  }
 }
 
 function getLastStamp(req) {
