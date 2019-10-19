@@ -1,9 +1,9 @@
 import * as querystring from 'querystring';
+import { envConfig } from '../../config';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { simpleCacheAdapter } from '../cache-adapter';
 import { futApi } from './api';
-import { envConfig } from '../../config';
 
 export namespace fut {
   export interface ItemData {
