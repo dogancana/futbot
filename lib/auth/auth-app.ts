@@ -10,19 +10,23 @@ async function setAuthSession(
   res: express.Response
 ): Promise<void> {
   const { auth, lastStamp } = req.body;
-  logger.info(`
-  auth
-  ${JSON.stringify(auth.sid)}
-  ${JSON.stringify(lastStamp)}
-  `);
 
   if (auth) {
     SessionInjector.auth = auth;
+    if (auth.sid) {
+      logger.info(`Received auth token fron extension!`);
+      SessionInjector.lastStamp = parseInt(lastStamp, 10);
+      logger.info(
+        `New auth token received. Will resume all stopped jobs if any`
+      );
+      Job.resumeAllJobs();
+      res.send('OK');
+    } else {
+      logger.error('Couldnt receive auth token from extension.');
+    }
+  } else {
+    logger.error('Couldnt receive auth token from extension.');
   }
-  SessionInjector.lastStamp = parseInt(lastStamp, 10);
-  logger.info(`New auth token received. Will resume all stopped jobs if any`);
-  Job.resumeAllJobs();
-  res.send('OK');
 }
 
 async function getAuthSession(
