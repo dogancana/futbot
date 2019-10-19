@@ -44,7 +44,7 @@ export namespace tradeService {
       soldPlayers:
         sellXPlayersJob &&
         sellXPlayersJob.soldPlayers.map(p => ({
-          player: playerService.readable({assetId: p.assetId}),
+          player: playerService.readable({ assetId: p.assetId }),
           ...p.price
         }))
     };
@@ -53,11 +53,7 @@ export namespace tradeService {
   export async function sellPlayerCheap(
     player: fut.ItemData
   ): Promise<fut.ItemData & { price: SellPrice }> {
-<<<<<<< HEAD
-    let price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
-=======
-    const price: SellPrice = await getOptimalSellPrice(player.resourceId);
->>>>>>> dc/master
+    const price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
     if (!price) {
       logger.error(
         `No price information for ${playerService.readable(player)}`
@@ -68,7 +64,7 @@ export namespace tradeService {
     const resp = await fut.sellPlayer({
       ...price,
       duration: 3600,
-      itemData: {id: player.id, assetId: player.assetId}
+      itemData: { id: player.id, assetId: player.assetId }
     });
     if (resp) {
       return {
@@ -79,35 +75,40 @@ export namespace tradeService {
   }
 
   export async function relistExpired(): Promise<string[]> {
-    let players = await fut.getTradePile(),
-      response = [];
+    let players = await fut.getTradePile();
+    const response = [];
 
-    players = players.filter(p => p.tradeId === 0 || p.tradeState !== "active");
-    const expired = players.filter(
-      p => p.tradeState === "expired"
-    );
+    players = players.filter(p => p.tradeId === 0 || p.tradeState !== 'active');
+    const expired = players.filter(p => p.tradeState === 'expired');
 
     for (const player of expired) {
       const playerString = `${playerService.readable({
         assetId: player.itemData.assetId
       })} (bought: ${player.itemData.lastSalePrice})`;
 
-      const sellPrice = await getOptimalSellPrice(player.itemData.resourceId, true);
+      const sellPrice = await getOptimalSellPrice(
+        player.itemData.resourceId,
+        true
+      );
       if (!sellPrice.buyNowPrice || !sellPrice.startingBid) {
         logger.info(`No price for ${playerString}`);
         continue;
       }
 
       if (sellPrice.startingBid <= player.itemData.lastSalePrice) {
-        logger.info(`Re-listing of ${playerString} skipped. Sell-Price too low: ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`);
+        logger.info(
+          `Re-listing of ${playerString} skipped. Sell-Price too low: ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`
+        );
         continue;
       }
 
-      response.push(`${playerString} for ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`);
+      response.push(
+        `${playerString} for ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`
+      );
       await fut.sellPlayer({
         ...sellPrice,
         duration: 3600,
-        itemData: {id: player.itemData.id, assetId: player.itemData.assetId}
+        itemData: { id: player.itemData.id, assetId: player.itemData.assetId }
       });
     }
 
@@ -156,7 +157,7 @@ export namespace tradeService {
     }
 
     return players.map(p =>
-      playerService.readable({assetId: p.itemData.assetId})
+      playerService.readable({ assetId: p.itemData.assetId })
     );
   }
 }

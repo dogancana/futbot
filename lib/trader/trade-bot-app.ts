@@ -3,12 +3,12 @@ import { tradeService } from './trade-service';
 
 export const tradeBotApp = express();
 
-tradeBotApp.get('/start-selling', async function(req, res) {
+tradeBotApp.get('/start-selling', async (req, res) => {
   const { maxRating } = req.query;
   res.send(tradeService.startSelling(maxRating));
 });
 
-tradeBotApp.get('/stop-selling', async function(req, res) {
+tradeBotApp.get('/stop-selling', async (req, res) => {
   res.send(tradeService.stopSelling());
 });
 

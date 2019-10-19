@@ -1,15 +1,15 @@
-import { Job } from '../../job';
-import { investService } from '../invest-service';
-import { playerService } from '../../player';
+import { AxiosError } from 'axios';
 import { uniq } from 'lodash';
 import { fut } from '../../api';
-import { getOptimalSellPrice, tradePrice } from '../../trader/trade-utils';
+import { Job } from '../../job';
 import { logger } from '../../logger';
-import { AxiosError } from 'axios';
+import { playerService } from '../../player';
+import { getOptimalSellPrice, tradePrice } from '../../trader/trade-utils';
+import { investService } from '../invest-service';
 
 const BUY_REFERENCE_PERCT = 0.7;
 const MAX_AUCTION_TRY =
-  parseInt(process.env.FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER) || 3;
+  parseInt(process.env.FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER, 10) || 3;
 const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 4000;
 const MAX_TARGET_POOL = 30;
@@ -34,12 +34,12 @@ export class LowPlayerInvestor extends Job {
   public static jobName = 'Invest:LowPlayerInvestor';
   private spent: number = 0;
   private budget: number = 20000;
-  private boughtPlayers: ({
+  private boughtPlayers: Array<{
     price: number;
     assetId: number;
     buyNowPrice: number;
     startingBid: number;
-  })[];
+  }>;
   private min: number = MIN_TARGET_PRICE;
   private max: number = MAX_TARGET_PRICE;
   private maxTargetPool: number = MAX_TARGET_POOL;
@@ -56,6 +56,24 @@ export class LowPlayerInvestor extends Job {
 
     this.boughtPlayers = [];
     this.start(this.loopOverTargets);
+  }
+
+  public report() {
+    return {
+      budget: this.budget,
+      spent: this.spent,
+      boughtPlayers: this.boughtPlayers.map(p => ({
+        price: p.price,
+        sell: `${p.startingBid}/${p.buyNowPrice}`,
+        name: playerService.readable({ assetId: p.assetId })
+      }))
+    };
+  }
+
+  public targetCount() {
+    return {
+      count: targets.length
+    };
   }
 
   private async loopOverTargets() {
@@ -86,7 +104,9 @@ export class LowPlayerInvestor extends Job {
 
     let batch = 0;
     while (true) {
-      if (batch >= MAX_AUCTION_TRY) break;
+      if (batch >= MAX_AUCTION_TRY) {
+        break;
+      }
 
       batch++;
       let auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
@@ -141,24 +161,6 @@ export class LowPlayerInvestor extends Job {
         break;
       }
     }
-  }
-
-  public report() {
-    return {
-      budget: this.budget,
-      spent: this.spent,
-      boughtPlayers: this.boughtPlayers.map(p => ({
-        price: p.price,
-        sell: `${p.startingBid}/${p.buyNowPrice}`,
-        name: playerService.readable({ assetId: p.assetId })
-      }))
-    };
-  }
-
-  public targetCount() {
-    return {
-      count: targets.length
-    };
   }
 }
 

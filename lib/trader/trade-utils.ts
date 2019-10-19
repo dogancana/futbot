@@ -46,7 +46,7 @@ export function getFutbinSellPrice(price: futbin.Price): SellPrice {
     return null;
   }
 
-  let referencePrice = prices[0] * 1.05;
+  const referencePrice = prices[0] * 1.05;
   return {
     buyNowPrice: tradePrice(referencePrice * HIGHER_PRICE_BOUNDRY),
     startingBid: tradePrice(referencePrice * LOWER_PRICE_BOUNDRY)
@@ -78,7 +78,9 @@ export async function getOptimalSellPrice(
 ): Promise<SellPrice> {
   let futbinSellPrice: SellPrice = null;
   if (false === forceMarket) {
-    const futbinPrice: futbin.Price = await playerService.getFutbinPrice(resourceId);
+    const futbinPrice: futbin.Price = await playerService.getFutbinPrice(
+      resourceId
+    );
     futbinSellPrice = getFutbinSellPrice(futbinPrice);
   }
 

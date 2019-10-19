@@ -5,6 +5,9 @@ import { cacheEntry } from './cache-adapter';
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
 
 export class ApiQueue {
+  public static getApiQueueStats() {
+    return ApiQueue.apiQueues.map(q => q.stats());
+  }
   private static apiQueues: ApiQueue[] = [];
   private queue: Array<() => void> = [];
   private interval: Subscription;
@@ -31,10 +34,6 @@ export class ApiQueue {
     this.queueStart = new Date().getTime();
     this.cacheHitCount = 0;
     ApiQueue.apiQueues.push(this);
-  }
-
-  public static getApiQueueStats() {
-    return ApiQueue.apiQueues.map(q => q.stats());
   }
 
   public clear() {
