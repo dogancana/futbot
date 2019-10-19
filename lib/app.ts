@@ -1,7 +1,6 @@
 // Leave this at top
 // tslint:disable-next-line: no-var-requires
 require('dotenv').config();
-import './custom-types/index';
 
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';

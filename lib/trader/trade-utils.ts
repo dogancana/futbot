@@ -1,4 +1,5 @@
 import { fut, futbin } from '../api';
+import { envConfig } from '../config';
 import { playerService } from '../player';
 
 const HIGHER_PRICE_BOUNDRY = 1.05;
@@ -61,7 +62,7 @@ export function getMarketSellPrice(
   }
 
   // if there are less then x active auctions, skip the player
-  const auctionCount = process.env.FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES || 3;
+  const auctionCount = envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES;
   if (price.sampleCount <= auctionCount) {
     return null;
   }

@@ -1,5 +1,6 @@
 import Axios from 'axios';
 import * as express from 'express';
+import { envConfig } from '../config';
 import { Job } from './job';
 
 export const jobsApp = express();
@@ -18,8 +19,8 @@ jobsApp.get('/stop-all', async (req, res) => {
 
 jobsApp.get('/start-favourites', async (req, res) => {
   const selfAddress = `http://localhost:${process.env.PORT || 9999}`;
-  const endpointsStr = process.env.FUTBOT_FAVOURITE_JOBS || '';
+  const endpointsStr = envConfig().FUTBOT_FAVOURITE_JOBS;
   const endpoints = endpointsStr.split(',');
-  await Promise.all(endpoints.map(s => Axios.get(`${selfAddress}${s}`)));
+  endpoints.map(async s => await Axios.get(`${selfAddress}${s}`));
   res.send(Job.list());
 });

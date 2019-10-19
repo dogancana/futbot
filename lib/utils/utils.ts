@@ -1,4 +1,4 @@
-import { readFileSync, stat, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, stat, unlinkSync, writeFileSync } from 'fs';
 import { logger } from '../logger';
 
 export function whenFileUpdated(fileName: string): Promise<Date> {

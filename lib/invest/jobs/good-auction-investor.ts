@@ -1,5 +1,6 @@
 import { AxiosResponse } from 'axios';
 import { fut } from '../../api';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
@@ -7,8 +8,8 @@ import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
 const BATCH_START_PAGE = 5; // Better for checking transfer with >1 min remaining
-const BATCH_PAGES_TO_SEE = 2; // Setting it more would result on bloating futbin queue
-const PROFIT_MARGIN_PERCT = 20;
+const BATCH_PAGES_TO_SEE = 1; // Setting it more would result on bloating futbin queue
+const PROFIT_MARGIN_PERCT = envConfig().FUTBOT_PROFIT_MARGIN;
 const EXPIRE_TIME_LIMIT = 180; // seconds
 const MIN_MARKET_SAMPLE_COUNT = 10;
 
@@ -29,14 +30,13 @@ export class GoodAuctionInvestor extends Job {
   private budget: number;
   private min: number = 1000;
   private max: number = 10000;
-  private profitMargin: number = PROFIT_MARGIN_PERCT;
   private boughtItems: AuctionTarget[] = [];
   private lostItems: AuctionTarget[] = [];
 
   constructor(p: GoodAuctionInvestorProps) {
     super(
       'Invest:GoodAuction',
-      3 // per min. Avg ex time 29s
+      4 // per min. Avg ex time 29s
     );
     Object.assign(this, p);
     this.start(this.loop);
@@ -51,12 +51,10 @@ export class GoodAuctionInvestor extends Job {
           }. Expires in ${a.expires}seconds`
       ),
       bought: this.boughtItems.map(
-        a =>
-          `${playerService.readable(a.itemData)} bought for ${
-            a.currentBid
-          }. Sell price: ${a.maxBuyPrice * this.profitMargin}`
+        a => `${playerService.readable(a.itemData)} bought for ${a.currentBid}.`
       ),
-      budget: this.budget
+      budget: this.budget,
+      profitMargin: PROFIT_MARGIN_PERCT
     };
   }
 
@@ -120,6 +118,10 @@ export class GoodAuctionInvestor extends Job {
         .filter(p => !p.tradeOwner)
         .filter(p => p.expires < EXPIRE_TIME_LIMIT);
 
+      logger.info(
+        `[GoodAuctions]: Checking ${possibleTargets.length} auctions for ${PROFIT_MARGIN_PERCT}% profit margin.`
+      );
+
       for (const possibleTarget of possibleTargets) {
         const {
           goodBuy,
@@ -176,6 +178,11 @@ export class GoodAuctionInvestor extends Job {
 
   private async analyzePrice(a: fut.AuctionInfo) {
     let futbinSellPrice: number;
+    let marketSellPrice: number;
+    let profitMargin: number;
+    let goodBuy: boolean;
+    let sellPrice = futbinSellPrice || marketSellPrice;
+
     try {
       futbinSellPrice = (await playerService.getFutbinPrice(
         a.itemData.resourceId
@@ -184,20 +191,21 @@ export class GoodAuctionInvestor extends Job {
       futbinSellPrice = 0;
     }
     const askingPrice = a.currentBid || a.startingBid;
-    let marketSellPrice: number;
 
     if (!futbinSellPrice) {
-      marketSellPrice = (await playerService.getMarketPrice(
+      const marketPrice = await playerService.getMarketPrice(
         a.itemData.resourceId
-      )).minBuyNow;
+      );
+      if (marketPrice.sampleCount < MIN_MARKET_SAMPLE_COUNT) {
+        goodBuy = false;
+      } else {
+        marketSellPrice = marketPrice.minBuyNow;
+      }
     }
 
-    let profitMargin: number;
-    let goodBuy: boolean;
-    let sellPrice = futbinSellPrice || marketSellPrice;
     const calculateResult = () => {
       profitMargin = ((sellPrice - askingPrice) / sellPrice) * 100;
-      goodBuy = profitMargin > this.profitMargin;
+      goodBuy = profitMargin > PROFIT_MARGIN_PERCT;
     };
     calculateResult();
     // use futbin to prices as a filter to avoid requests to fut
@@ -217,7 +225,7 @@ export class GoodAuctionInvestor extends Job {
       askingPrice,
       sellPrice,
       profitMargin,
-      maxBuyPrice: sellPrice * ((100 - this.profitMargin) / 100)
+      maxBuyPrice: sellPrice * ((100 - PROFIT_MARGIN_PERCT) / 100)
     };
   }
 }

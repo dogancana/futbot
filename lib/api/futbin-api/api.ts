@@ -1,4 +1,5 @@
 import Axios from 'axios';
+import { envConfig } from '../../config';
 import { ApiQueue } from '../api-queue';
 import { logger } from './../../logger';
 import { ApiError, logErrorResponse, logResponse } from './../api';
@@ -11,8 +12,7 @@ export const futbinApi = Axios.create({
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931'
   }
 });
-const requestsPerSec =
-  parseFloat(process.env.FUTBOT_FUTBIN_REQUESTS_PER_SEC) || 1.5;
+const requestsPerSec = envConfig().FUTBOT_FUTBIN_REQUESTS_PER_SEC;
 
 const queue = new ApiQueue(requestsPerSec, 'futbin');
 let futbinStopped = false;

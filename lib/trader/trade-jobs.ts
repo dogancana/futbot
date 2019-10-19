@@ -1,3 +1,4 @@
+import { uniqBy } from 'lodash';
 import { fut } from '../api';
 import { club } from '../club/club-service';
 import { Job } from '../jobs';
@@ -18,7 +19,11 @@ export class ClearPile extends Job {
     );
 
     this.start(async () => {
-      await tradeService.clearPile();
+      try {
+        await tradeService.clearPile();
+      } catch (e) {
+        logger.error(`Error while clearing trade pile: ${e}`);
+      }
     });
   }
 }
@@ -48,7 +53,7 @@ export class SellXPlayers extends Job {
     return {
       soldPlayers: this.soldPlayers.map(
         a =>
-          `${playerService.readable(a)} sold for ${a.price.startingBid}/${
+          `${playerService.readable(a)} listed for ${a.price.startingBid}/${
             a.price.buyNowPrice
           }`
       )
@@ -66,6 +71,7 @@ export class SellXPlayers extends Job {
         const sellResult = await tradeService.sellPlayerCheap(player);
         if (sellResult) {
           this.soldPlayers.push(sellResult);
+          this.soldPlayers = uniqBy(this.soldPlayers, p => p.id);
         }
       } catch (e) {
         const response = e.response || {};

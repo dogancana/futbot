@@ -1,14 +1,13 @@
 import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { ApiError, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
 
 export const futApi = Axios.create({
-  baseURL:
-    process.env.FUTBOT_FUT_API_ENDPOINT_OVERWRITE ||
-    'https://utas.external.s2.fut.ea.com/ut/game/fifa20',
+  baseURL: envConfig().FUTBOT_FUT_API_ENDPOINT_OVERWRITE,
   timeout: 30000,
   headers: {
     'User-Agent':
@@ -16,10 +15,7 @@ export const futApi = Axios.create({
   }
 });
 
-const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC);
-if (!requestsPerSec) {
-  throw new Error('Invalid request-speed limit');
-}
+const requestsPerSec = envConfig().FUTBOT_FUT_REQUESTS_PER_SEC;
 logger.info(`[FUT]: There will be maximum ${requestsPerSec} requests per sec`);
 
 const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
@@ -72,8 +68,9 @@ futApi.interceptors.response.use(
 
     if ([401, 403, 458, 512, 521].indexOf(status) > -1) {
       logger.error(
-        '[FUT] stopped all jobs: Temporary ban or just too many requests. Status: ' +
-          status
+        '[FUT] stopped all jobs: Session expired or verification required or temporary ban. Status: ' +
+          status +
+          '. Refresh fut web app and login to continue'
       );
 
       queue.clear();
