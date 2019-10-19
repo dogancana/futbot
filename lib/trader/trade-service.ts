@@ -11,6 +11,7 @@ export namespace tradeService {
   export interface SellingReport {
     cleared: number;
   }
+
   export function startSelling(maxRating?: number) {
     if (!clearPileJob) {
       clearPileJob = new ClearPile();
@@ -52,7 +53,7 @@ export namespace tradeService {
   export async function sellPlayerCheap(
     player: fut.ItemData
   ): Promise<fut.ItemData & { price: SellPrice }> {
-    const price: SellPrice = await getOptimalSellPrice(player.resourceId);
+    const price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
     if (!price) {
       logger.error(
         `No price information for ${playerService.readable(player)}`
@@ -71,6 +72,47 @@ export namespace tradeService {
         price
       };
     }
+  }
+
+  export async function relistExpired(): Promise<string[]> {
+    let players = await fut.getTradePile();
+    const response = [];
+
+    players = players.filter(p => p.tradeId === 0 || p.tradeState !== 'active');
+    const expired = players.filter(p => p.tradeState === 'expired');
+
+    for (const player of expired) {
+      const playerString = `${playerService.readable({
+        assetId: player.itemData.assetId
+      })} (bought: ${player.itemData.lastSalePrice})`;
+
+      const sellPrice = await getOptimalSellPrice(
+        player.itemData.resourceId,
+        true
+      );
+      if (!sellPrice.buyNowPrice || !sellPrice.startingBid) {
+        logger.info(`No price for ${playerString}`);
+        continue;
+      }
+
+      if (sellPrice.startingBid <= player.itemData.lastSalePrice) {
+        logger.info(
+          `Re-listing of ${playerString} skipped. Sell-Price too low: ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`
+        );
+        continue;
+      }
+
+      response.push(
+        `${playerString} for ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`
+      );
+      await fut.sellPlayer({
+        ...sellPrice,
+        duration: 3600,
+        itemData: { id: player.itemData.id, assetId: player.itemData.assetId }
+      });
+    }
+
+    return response;
   }
 
   export async function clearPile(): Promise<string[]> {

@@ -12,6 +12,15 @@ tradeBotApp.get('/stop-selling', async (req, res) => {
   res.send(tradeService.stopSelling());
 });
 
+tradeBotApp.get('/relist-expired', async (req, res) => {
+  try {
+    const resp = await tradeService.relistExpired();
+    res.send(resp);
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
 tradeBotApp.get('/clear-pile', async (req, res) => {
   try {
     const resp = await tradeService.clearPile();

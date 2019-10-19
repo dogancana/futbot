@@ -16,11 +16,17 @@ export namespace investService {
     futbinId: number;
     assetId: number;
   }
+
   export async function getTargets(
     query: futbin.PlayersQuery
   ): Promise<TargetInfo[]> {
+    const platform = await fut.getPlatform();
+    const priceKey = `${platform.toLowerCase()}_price`;
+    const prpKey = `${platform.toLowerCase()}_prp`;
     const defaultQuery = {
       page: 1,
+      [priceKey]: '1000-2500',
+      [prpKey]: '20,100',
       sort: 'likes',
       order: 'desc'
     };
@@ -39,14 +45,15 @@ export namespace investService {
     return playerInfos;
   }
 
-  export function startLowPlayerInvvest(props: LowPlayerInvestorProps) {
+  export function startLowPlayerInvest(props: LowPlayerInvestorProps) {
     if (!lowPlayerInvestJob) {
       lowPlayerInvestJob = new LowPlayerInvestor(props);
     }
 
     return {
       timesTargetBought: lowPlayerInvestJob.execTime,
-      report: lowPlayerInvestJob.report()
+      report: lowPlayerInvestJob.report(),
+      target: lowPlayerInvestJob.targetCount()
     };
   }
 

@@ -15,8 +15,11 @@ export const futApi = Axios.create({
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14931'
   }
 });
-const requestsPerSec =
-  parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) || 0.5;
+
+const requestsPerSec = parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC);
+if (!requestsPerSec) {
+  throw new Error('Invalid request-speed limit');
+}
 logger.info(`[FUT]: There will be maximum ${requestsPerSec} requests per sec`);
 
 const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
@@ -67,13 +70,18 @@ futApi.interceptors.response.use(
 
     logErrorResponse('FUT', value, queue);
 
-    if ([401, 403, 458].indexOf(status) > -1) {
-      logger.error('[FUT] stopped all jobs for critical auth error');
+    if ([401, 403, 458, 512, 521].indexOf(status) > -1) {
+      logger.error(
+        '[FUT] stopped all jobs: Temporary ban or just too many requests. Status: ' +
+          status
+      );
+
+      queue.clear();
       Job.stopAllJobs();
       queue.clear();
     }
 
-    if (status === 429 && !slowedDownAfterTooManyRequests) {
+    if ([426, 249].indexOf(status) > -1 && !slowedDownAfterTooManyRequests) {
       slowedDownAfterTooManyRequests = true;
       logger.warn('[FUT] will slow down all jobs by 1/3 for next 30 mins');
       Job.changeJobSpeedsBy(1 / 3);
@@ -82,6 +90,7 @@ futApi.interceptors.response.use(
         slowedDownAfterTooManyRequests = false;
       }, 1000 * 60 * 30);
     }
+
     return Promise.reject(new ApiError(status, config, message));
   }
 );

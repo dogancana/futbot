@@ -48,6 +48,7 @@ futbinApi.interceptors.response.use(
       setTimeout(() => (futbinStopped = false), 6 * 60 * 60 * 1000);
       queue.clear();
     }
+
     return Promise.reject(new ApiError(status, config, message));
   }
 );

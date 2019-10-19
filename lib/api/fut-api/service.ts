@@ -158,8 +158,8 @@ export namespace fut {
     return pileResponse.data;
   }
 
-  export async function clearSold() {
-    return await futApi.request({ url: '/trade/sold', method: 'DELETE' });
+  export function clearSold() {
+    return futApi.request({ url: '/trade/sold', method: 'DELETE' });
   }
 
   export async function getTradePile(): Promise<AuctionInfo[]> {

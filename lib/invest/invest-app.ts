@@ -28,8 +28,13 @@ investApp.get('/low-players', async (req, res) => {
   }
 
   res.send(
-    investService.startLowPlayerInvvest({ budget, min, max, maxTargetPool })
+    investService.startLowPlayerInvest({ budget, min, max, maxTargetPool })
   );
+});
+
+investApp.get('/low-players-stop', async (req, res) => {
+  investService.clearLowPlayerInvest();
+  res.send('OK');
 });
 
 investApp.get('/good-auctions', async (req, res) => {

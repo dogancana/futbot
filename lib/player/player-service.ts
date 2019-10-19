@@ -13,19 +13,20 @@ export namespace playerService {
     minStartingBid: number;
     averageBuyNow: number;
     averageStartingBid: number;
-    samplecount: number;
+    sampleCount: number;
   }
+
   export async function getMarketPrice(
     resourceId: number
   ): Promise<MarketPrice> {
+    const invalidSamples = 0;
     const auctions = await getAuctions(resourceId);
-
     const price: MarketPrice = {
       minBuyNow: Number.MAX_VALUE,
       minStartingBid: Number.MAX_VALUE,
       averageBuyNow: 0,
       averageStartingBid: 0,
-      samplecount: 0
+      sampleCount: 0
     };
 
     auctions.forEach(a => {
@@ -41,19 +42,24 @@ export namespace playerService {
       }
       price.averageBuyNow += a.buyNowPrice;
       price.averageStartingBid += a.startingBid;
-      price.samplecount++;
+      price.sampleCount++;
     });
-    price.averageBuyNow /= price.samplecount;
-    price.averageStartingBid /= price.samplecount;
+
+    // prevent division by zero
+    if (price.sampleCount > 0) {
+      price.averageBuyNow /= price.sampleCount;
+      price.averageStartingBid /= price.sampleCount;
+    }
 
     price.minBuyNow =
       price.minBuyNow === Number.MAX_VALUE ? 0 : price.minBuyNow;
-
     return price;
   }
 
   export async function getAuctions(id): Promise<fut.AuctionInfo[]> {
     let auctions = [];
+
+    // this should get 60 active auctions
     for (let i = 0; i < 3; i++) {
       try {
         auctions = auctions.concat(await fut.getPlayerTransferData(id, i));
@@ -61,6 +67,7 @@ export namespace playerService {
         break;
       }
     }
+
     return auctions;
   }
 
