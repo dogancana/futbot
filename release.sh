@@ -1,10 +1,10 @@
 # Clear
-rm -rf ./dist
+rm -rf ./futbot
 
 # Build server
 yarn
 yarn build
-./node_modules/.bin/pkg --out-path=futbot build/server.js
+./node_modules/.bin/pkg --out-path=futbot --targets=node8-macos,node8-win --options max_old_space_size=4096 build/server.js
 cp .env.local futbot/.env
 
 # Build extension
@@ -16,5 +16,5 @@ cp -R build ../futbot/extension
 cd ..
 
 # Zip
-zip -r futbot.zip futbot
-rm -rf ./futbot
+ zip -r futbot.zip futbot
+ rm -rf ./futbot
