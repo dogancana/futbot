@@ -129,7 +129,7 @@ export class LowPlayerInvestor extends Job {
           logger.info(
             `${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`
           );
-          await fut.bid(lowest.tradeId, lowest.buyNowPrice);
+          await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
 
           const sellTarget = await fut.waitAndGetPurchasedItem(
             target.resourceId

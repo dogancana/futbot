@@ -202,11 +202,11 @@ export class GoodAuctionInvestor extends Job {
     calculateResult();
     // use futbin to prices as a filter to avoid requests to fut
     if (goodBuy && !marketSellPrice) {
-      const { minBuyNow, samplecount } = await playerService.getMarketPrice(
+      const { minBuyNow, sampleCount } = await playerService.getMarketPrice(
         a.itemData.resourceId
       );
       sellPrice = minBuyNow;
-      if (samplecount < MIN_MARKET_SAMPLE_COUNT) {
+      if (sampleCount < MIN_MARKET_SAMPLE_COUNT) {
         goodBuy = false;
       }
       calculateResult();
