@@ -2,6 +2,7 @@ import * as express from 'express';
 import { Job } from '../jobs';
 import { logger } from './../logger';
 import { SessionInjector } from './session-injector';
+import { envConfig } from '../config';
 
 export const authApp = express();
 
@@ -10,6 +11,8 @@ async function setAuthSession(
   res: express.Response
 ): Promise<void> {
   const { auth, lastStamp } = req.body;
+
+  validateEndpoint(auth.ipPort);
 
   if (auth) {
     SessionInjector.auth = auth;
@@ -39,6 +42,22 @@ async function getAuthSession(
       lastStamp: SessionInjector.lastStamp
     })
   );
+}
+
+function validateEndpoint(ipPort: string) {
+  const res = /utas\.external\.(s.)\.fut\.ea\.com/g.exec(ipPort);
+  const instance = res ? res[1] : null;
+  const endpoint = 'https://utas.external.<instance>.fut.ea.com/ut/game/fifa20'.replace(
+    '<instance>',
+    instance
+  );
+  if (endpoint !== envConfig().FUTBOT_FUT_API_ENDPOINT_OVERWRITE) {
+    logger.error(
+      `Your endpoint send from extension and .env file are not matching!.\n` +
+        `Change FUTBOT_FUT_API_ENDPOINT_OVERWRITE value to ${endpoint} in .env file, restart the app refresh fut web app and login again.\n`
+    );
+    process.exit(-1);
+  }
 }
 
 authApp.post('', setAuthSession);

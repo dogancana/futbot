@@ -25,6 +25,10 @@ export class AvgStat {
     return samples.reduce((prev, curr) => prev + curr, 0) / samples.length;
   }
 
+  public sampleCounts() {
+    return this.samples.map(s => s.length);
+  }
+
   private clearOldSamples() {
     this.samples.shift();
     this.samples.push([]);

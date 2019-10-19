@@ -1,4 +1,5 @@
 import { createLogger, format, transports } from 'winston';
+import { envConfig } from './config';
 const { combine, timestamp, label, printf } = format;
 
 const myFormat = printf(info => {
@@ -13,5 +14,5 @@ export const logger = createLogger({
     myFormat
   ),
   transports: [new transports.Console()],
-  level: process.env.FUTBOT_LOG_LEVEL || 'debug'
+  level: envConfig().FUTBOT_LOG_LEVEL
 });

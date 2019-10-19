@@ -51,8 +51,20 @@ export class Job {
     this.stop = this.stop.bind(this);
 
     this.id = `${name}_${new Date().getTime()}`;
-
     jobs.push(this);
+
+    setImmediate(() => {
+      if (jobs.length > 1) {
+        const jobSlowDownPerct = 1 / jobs.length;
+        logger.info(
+          `A new job ${name} added. Slowing down all other jobs by ${jobSlowDownPerct}`
+        );
+
+        Job.stopAllJobs();
+        Job.changeJobSpeedsBy(jobSlowDownPerct);
+        Job.resumeAllJobs();
+      }
+    });
   }
 
   public report(): any {
@@ -88,14 +100,14 @@ export class Job {
     this.sub = this.source.subscribe(async () => {
       const start = new Date().getTime();
       this.execTime++;
-      logger.info(`Executing JOB[${this.id}]`);
+      logger.debug(`Executing JOB[${this.id}]`);
       try {
         await this.task();
       } catch (e) {
         logger.error(`JOB[${this.id}] had and execution error: ${e}`);
       }
       const t = new Date().getTime() - start;
-      logger.info(`JOB[${this.id}] execution finished in ${t}`);
+      logger.debug(`JOB[${this.id}] execution finished in ${t}`);
       this.avgExecTimeS =
         ((this.execTime - 1) * this.avgExecTimeS + t) / this.execTime;
     });

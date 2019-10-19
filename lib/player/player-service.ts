@@ -19,7 +19,6 @@ export namespace playerService {
   export async function getMarketPrice(
     resourceId: number
   ): Promise<MarketPrice> {
-    const invalidSamples = 0;
     const auctions = await getAuctions(resourceId);
     const price: MarketPrice = {
       minBuyNow: Number.MAX_VALUE,

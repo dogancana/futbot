@@ -4,13 +4,13 @@ import { Job } from '../jobs';
 import { AvgStat } from '../utils';
 import { logger } from './../logger';
 import { cacheEntry } from './cache-adapter';
+import { envConfig } from '../config';
 
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
 const MAX_OPTIMUM_QUEUE_LENGTH = 10;
 const QUEUE_SIZE_CHECK_FREQUENCY_MS = 60 * 1000;
 const QUEUE_SPEED_UP_THRESHOLD = 5;
-const SPEED_UP_FACTOR =
-  parseFloat(process.env.FUTBOT_API_QUEUE_SPEED_UP_FACTOR) || 0.2;
+const SPEED_UP_FACTOR = envConfig().FUTBOT_API_QUEUE_SPEED_UP_FACTOR;
 
 if (SPEED_UP_FACTOR > 0.4 || SPEED_UP_FACTOR < 0.1) {
   throw new Error(
@@ -33,6 +33,7 @@ export class ApiQueue {
   private queueStart: number;
   private queueCheckOptimalCount: number = 0;
   private averageQueueTimeStat: AvgStat;
+  private requestsPerSecondStat: AvgStat;
 
   constructor(
     requestsPerSec: number,
@@ -48,6 +49,7 @@ export class ApiQueue {
     });
     this.averageQueueTimeStat = new AvgStat(5);
     this.averageRTTimeStat = new AvgStat(5);
+    this.requestsPerSecondStat = new AvgStat(5);
     this.configResolver = configResolver;
     this.queueStart = new Date().getTime();
     this.cacheHitCount = 0;
@@ -76,7 +78,7 @@ export class ApiQueue {
       this.queue.push({
         reject,
         resolve: () => {
-          this.requestCount++;
+          this.requestsPerSecondStat.addSample(1); // value doesn't matter
           const c = !!this.configResolver
             ? this.configResolver(config)
             : config;
@@ -90,16 +92,21 @@ export class ApiQueue {
   }
 
   public stats() {
-    const now = new Date().getTime();
-    const timeSpent = (now - this.queueStart) / 1000;
+    const requestsPerSecond = (
+      this.requestsPerSecondStat
+        .sampleCounts()
+        .reduce((prev, curr) => prev + curr, 0) /
+      (5 * 60)
+    ).toFixed(1);
+
     return {
       name: this.apiName,
+      requestsPerSecond,
       requestCount: this.requestCount,
       cacheHitCount: this.cacheHitCount,
       queueCount: this.queue.length,
       averageQueueTimeMS: this.averageQueueTimeStat.avg().toFixed(0),
-      averageRTTimeMS: this.averageRTTimeStat.avg().toFixed(0),
-      requestsPerSecond: (this.requestCount / timeSpent).toFixed(1)
+      averageRTTimeMS: this.averageRTTimeStat.avg().toFixed(0)
     };
   }
 
@@ -120,7 +127,7 @@ export class ApiQueue {
         Job.resumeAllJobs();
       }, 60 * 1000);
     } else if (
-      this.queue.length >= 2 &&
+      this.queue.length > 1 &&
       ++this.queueCheckOptimalCount > QUEUE_SPEED_UP_THRESHOLD
     ) {
       this.queueCheckOptimalCount = 0;
