@@ -1,5 +1,6 @@
 # Clear
 rm -rf ./futbot
+rm -rf ./futbot.zip
 
 # Build server
 yarn
@@ -15,6 +16,10 @@ yarn build
 cp -R build ../futbot/extension
 cd ..
 
-# Zip
- zip -r futbot.zip futbot
- rm -rf ./futbot
+# Execution Perms
+chmod +x futbot/server-macos
+chmod +x futbot/server-win.exe
+
+# Zip and clear
+zip -r futbot.zip futbot
+rm -rf ./futbot

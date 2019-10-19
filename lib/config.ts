@@ -8,7 +8,6 @@ export interface EnvConfig {
   FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES: number;
   FUTBOT_FUT_REQUESTS_PER_SEC: number;
   FUTBOT_FUTBIN_REQUESTS_PER_SEC: number;
-  FUTBOT_LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug';
   FUTBOT_FAVOURITE_JOBS: string;
   FUTBOT_API_QUEUE_SPEED_UP_FACTOR: number;
   FUTBOT_PROFIT_MARGIN: number;
@@ -20,7 +19,6 @@ const defaultConf: EnvConfig = {
   FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES: 3,
   FUTBOT_FUT_REQUESTS_PER_SEC: 0.5,
   FUTBOT_FUTBIN_REQUESTS_PER_SEC: 1.5,
-  FUTBOT_LOG_LEVEL: 'info',
   FUTBOT_FAVOURITE_JOBS:
     '/trade-bot/start-selling?maxRating=83,/invest/low-players?budget=70000&min=1000&max=10000&maxTargetPool=100,/invest/good-auctions?budget=40000&min=5000&max=20000',
   FUTBOT_API_QUEUE_SPEED_UP_FACTOR: 0.2,
@@ -49,7 +47,6 @@ function setup() {
   ];
   const stringKeys = [
     'FUTBOT_FUT_API_ENDPOINT_OVERWRITE',
-    'FUTBOT_LOG_LEVEL',
     'FUTBOT_FAVOURITE_JOBS'
   ];
   numberKeys.forEach(key => {

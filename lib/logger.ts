@@ -14,5 +14,5 @@ export const logger = createLogger({
     myFormat
   ),
   transports: [new transports.Console()],
-  level: envConfig().FUTBOT_LOG_LEVEL
+  level: process.env.FUTBOT_LOG_LEVEL || 'info'
 });
