@@ -6,7 +6,9 @@ import { playerService } from './player-service';
 export const playerApp = express();
 
 playerApp.get('', async (req, res) => {
-  const { assetId, resourceId } = req.query;
+  let { assetId, resourceId } = req.query;
+  assetId = parseInt(assetId, 10);
+  resourceId = parseInt(resourceId, 10);
 
   if (!resourceId || !assetId) {
     res.status(500).send('Provide assetId and resourceId in query params');
