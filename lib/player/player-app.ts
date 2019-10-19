@@ -19,20 +19,20 @@ playerApp.get('', async (req, res) => {
   let marketPrice: playerService.MarketPrice;
   try {
     futbinPrice = await playerService.getFutbinPrice(resourceId);
-  } catch {
+  } catch (e) {
     logger.error(
       `[Player App] error while retrieving futbin price for ${playerService.readable(
         { resourceId }
-      )}`
+      )}. Reason: ${e}`
     );
   }
   try {
     marketPrice = await playerService.getMarketPrice(resourceId);
-  } catch {
+  } catch (e) {
     logger.error(
       `[Player App] error while retrieving market price for ${playerService.readable(
         { resourceId }
-      )}`
+      )}. Reason: ${e}`
     );
   }
   res.send({

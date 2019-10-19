@@ -11,6 +11,7 @@ export interface EnvConfig {
   FUTBOT_FAVOURITE_JOBS: string;
   FUTBOT_API_QUEUE_SPEED_UP_FACTOR: number;
   FUTBOT_PROFIT_MARGIN: number;
+  FUTBOT_FUT_PLATFORM_OVERWRITE?: 'xbox' | 'pc' | 'ps';
 }
 
 const defaultConf: EnvConfig = {
@@ -47,7 +48,8 @@ function setup() {
   ];
   const stringKeys = [
     'FUTBOT_FUT_API_ENDPOINT_OVERWRITE',
-    'FUTBOT_FAVOURITE_JOBS'
+    'FUTBOT_FAVOURITE_JOBS',
+    'FUTBOT_FUT_PLATFORM_OVERWRITE'
   ];
   numberKeys.forEach(key => {
     conf[key] = parseFloat(env[key]) || defaultConf[key];
@@ -93,6 +95,13 @@ function validateConfig(c: EnvConfig) {
   }
   if (c.FUTBOT_PROFIT_MARGIN < 5 || c.FUTBOT_PROFIT_MARGIN > 20) {
     throw new Error('FUTBOT_PROFIT_MARGIN has to be between 5 and 20');
+  }
+  if (c.FUTBOT_FUT_PLATFORM_OVERWRITE) {
+    if (['xbox', 'pc', 'ps'].indexOf(c.FUTBOT_FUT_PLATFORM_OVERWRITE) === -1) {
+      throw new Error(
+        'FUTBOT_FUT_PLATFORM_OVERWRITE has to be one of pc, ps or xbox. Please fix in .env file.'
+      );
+    }
   }
 }
 

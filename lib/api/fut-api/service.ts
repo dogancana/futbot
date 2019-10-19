@@ -3,6 +3,7 @@ import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { simpleCacheAdapter } from '../cache-adapter';
 import { futApi } from './api';
+import { envConfig } from '../../config';
 
 export namespace fut {
   export interface ItemData {
@@ -179,20 +180,33 @@ export namespace fut {
     return resp.data.stat;
   }
 
-  let platform: Platform = null;
+  let platform: Platform = envConfig().FUTBOT_FUT_PLATFORM_OVERWRITE;
 
   export async function getPlatform(): Promise<Platform> {
     if (platform) {
       return platform;
     }
+    try {
+      const resp = await futApi.get(
+        `/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
+        { adapter: simpleCacheAdapter }
+      );
 
-    const resp = await futApi.get(
-      `/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
-      { adapter: simpleCacheAdapter }
-    );
-    platform = resp.data.userAccountInfo.personas[0].userClubList
-      .filter(c => c.year === '2020')[0]
-      .platform.replace(/\d/gi, '');
+      if (resp.data.userAccountInfo.personas.length > 1) {
+        logger.warn(
+          `Found ${resp.data.userAccountInfo.personas.length} personas on your origin account.` +
+            ` It's better to set FUTBOT_FUT_PLATFORM_OVERWRITE variable in .env file for your platfomr.`
+        );
+      }
+
+      platform = resp.data.userAccountInfo.personas[0].userClubList
+        .filter(c => c.year === '2020')[0]
+        .platform.replace(/\d/gi, '');
+    } catch (e) {
+      logger.error(`Error while getting platform: ${e}`);
+      return null;
+    }
+
     return platform;
   }
 
