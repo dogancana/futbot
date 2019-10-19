@@ -1,3 +1,4 @@
+import { uniqBy } from 'lodash';
 import { fut } from '../api';
 import { club } from '../club/club-service';
 import { Job } from '../jobs';
@@ -6,7 +7,6 @@ import { StaticItems } from '../static';
 import { logger } from './../logger';
 import { tradeService } from './trade-service';
 import { SellPrice } from './trade-utils';
-import { uniqBy } from 'lodash';
 
 const TRADE_PILE_FULL_ERROR_CODES = [461, 403];
 const PASS_THROUGH_SELL_ERROR_CODES = [];

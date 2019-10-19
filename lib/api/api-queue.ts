@@ -1,10 +1,10 @@
 import { AxiosRequestConfig } from 'axios';
 import { interval, Subscription } from 'rxjs';
+import { envConfig } from '../config';
 import { Job } from '../jobs';
 import { AvgStat } from '../utils';
 import { logger } from './../logger';
 import { cacheEntry } from './cache-adapter';
-import { envConfig } from '../config';
 
 type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
 const MAX_OPTIMUM_QUEUE_LENGTH = 10;

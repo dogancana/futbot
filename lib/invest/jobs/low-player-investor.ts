@@ -1,12 +1,12 @@
 import { AxiosError } from 'axios';
 import { uniqBy } from 'lodash';
 import { fut } from '../../api';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { getOptimalSellPrice, tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
-import { envConfig } from '../../config';
 
 const BUY_REFERENCE_PERCT = (100 - envConfig().FUTBOT_PROFIT_MARGIN) / 100;
 const MAX_AUCTION_TRY = envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER;
@@ -187,6 +187,9 @@ async function setupTargets(price: string, maxTargets: number) {
       clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
 
     for (let i = 1; i <= pageLimit; i++) {
+      logger.info(
+        `[${LowPlayerInvestor.jobName}]: Setting up targets ${targets.length}/${maxTargets}`
+      );
       targets = targets.concat(
         await investService.getTargets({
           page: i,

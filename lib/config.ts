@@ -60,7 +60,9 @@ function setup() {
   });
 
   validateConfig(conf);
+  // tslint:disable-next-line
   console.log(`\nApplication config set as below:\n`);
+  // tslint:disable-next-line
   console.log(
     Object.keys(conf)
       .map(key => `${key} = ${conf[key]}`)
@@ -103,6 +105,7 @@ function checkConfigExists() {
       throw new Error();
     }
   } catch (err) {
+    // tslint:disable-next-line
     console.error(
       '.env file not found. Copy .env.local file as .env file and restart.'
     );

@@ -1,11 +1,11 @@
 import { AxiosResponse } from 'axios';
 import { fut } from '../../api';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
-import { envConfig } from '../../config';
 
 const BATCH_START_PAGE = 5; // Better for checking transfer with >1 min remaining
 const BATCH_PAGES_TO_SEE = 1; // Setting it more would result on bloating futbin queue
@@ -117,6 +117,10 @@ export class GoodAuctionInvestor extends Job {
         .filter(p => !p.watched)
         .filter(p => !p.tradeOwner)
         .filter(p => p.expires < EXPIRE_TIME_LIMIT);
+
+      logger.info(
+        `[GoodAuctions]: Checking ${possibleTargets.length} auctions for ${PROFIT_MARGIN_PERCT}% profit margin.`
+      );
 
       for (const possibleTarget of possibleTargets) {
         const {

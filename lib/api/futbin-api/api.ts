@@ -1,8 +1,8 @@
 import Axios from 'axios';
+import { envConfig } from '../../config';
 import { ApiQueue } from '../api-queue';
 import { logger } from './../../logger';
 import { ApiError, logErrorResponse, logResponse } from './../api';
-import { envConfig } from '../../config';
 
 export const futbinApi = Axios.create({
   baseURL: 'https://www.futbin.com/20/',

@@ -1,6 +1,6 @@
 import { fut, futbin } from '../api';
-import { playerService } from '../player';
 import { envConfig } from '../config';
+import { playerService } from '../player';
 
 const HIGHER_PRICE_BOUNDRY = 1.05;
 const LOWER_PRICE_BOUNDRY = 0.95;

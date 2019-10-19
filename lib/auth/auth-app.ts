@@ -1,8 +1,8 @@
 import * as express from 'express';
+import { envConfig } from '../config';
 import { Job } from '../jobs';
 import { logger } from './../logger';
 import { SessionInjector } from './session-injector';
-import { envConfig } from '../config';
 
 export const authApp = express();
 

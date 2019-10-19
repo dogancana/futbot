@@ -1,10 +1,10 @@
 import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { ApiError, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
-import { envConfig } from '../../config';
 
 export const futApi = Axios.create({
   baseURL: envConfig().FUTBOT_FUT_API_ENDPOINT_OVERWRITE,

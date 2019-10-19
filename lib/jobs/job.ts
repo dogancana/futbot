@@ -14,6 +14,7 @@ export class Job {
   }
 
   public static resumeAllJobs() {
+    logger.info('Resuming all running jobs');
     jobs.forEach(j => {
       try {
         j.start();
@@ -52,19 +53,6 @@ export class Job {
 
     this.id = `${name}_${new Date().getTime()}`;
     jobs.push(this);
-
-    setImmediate(() => {
-      if (jobs.length > 1) {
-        const jobSlowDownPerct = 1 / jobs.length;
-        logger.info(
-          `A new job ${name} added. Slowing down all other jobs by ${jobSlowDownPerct}`
-        );
-
-        Job.stopAllJobs();
-        Job.changeJobSpeedsBy(jobSlowDownPerct);
-        Job.resumeAllJobs();
-      }
-    });
   }
 
   public report(): any {
