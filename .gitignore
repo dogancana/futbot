@@ -1,5 +1,8 @@
 node_modules
-.nvm
+*.nvm
 .env
-.log
-local
+*.log
+local/
+dist/
+build/
+*.zip

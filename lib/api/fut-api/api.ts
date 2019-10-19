@@ -1,6 +1,6 @@
 import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
-import { Job } from '../../job';
+import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { ApiError, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
@@ -23,6 +23,7 @@ if (!requestsPerSec) {
 logger.info(`[FUT]: There will be maximum ${requestsPerSec} requests per sec`);
 
 const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
+let slowedDownAfterTooManyRequests = false;
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
   config.headers.Origin = 'https://www.easports.com';
@@ -49,14 +50,17 @@ futApi.interceptors.request.use(async config => {
       'Session not copied!. First load Fut Web App with extension'
     );
   }
-
-  return await queue.addRequestToQueue(config);
+  const c = await queue.addRequestToQueue(config);
+  c.metaData = {
+    startTime: new Date()
+  };
+  return c;
 });
 
 futApi.interceptors.response.use(
   // success
   value => {
-    logResponse('FUT', value);
+    logResponse('FUT', value, queue);
     return value;
   },
   // error
@@ -64,7 +68,7 @@ futApi.interceptors.response.use(
     const { config, response = {}, message } = value;
     const { status = 500 } = response;
 
-    logErrorResponse('FUT', value);
+    logErrorResponse('FUT', value, queue);
 
     if ([401, 403, 458, 512, 521].indexOf(status) > -1) {
       logger.error(
@@ -74,11 +78,17 @@ futApi.interceptors.response.use(
 
       queue.clear();
       Job.stopAllJobs();
+      queue.clear();
     }
 
-    if ([426, 429].indexOf(status) > -1) {
+    if ([426, 249].indexOf(status) > -1 && !slowedDownAfterTooManyRequests) {
+      slowedDownAfterTooManyRequests = true;
       logger.warn('[FUT] will slow down all jobs by 1/3 for next 30 mins');
-      Job.slowDownAllJobsForNextMins(30);
+      Job.changeJobSpeedsBy(1 / 3);
+      setTimeout(() => {
+        Job.changeJobSpeedsBy(3);
+        slowedDownAfterTooManyRequests = false;
+      }, 1000 * 60 * 30);
     }
 
     return Promise.reject(new ApiError(status, config, message));

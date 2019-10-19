@@ -35,6 +35,6 @@ function key(request: AxiosRequestConfig): string {
   } catch {
     logger.debug(`[Cache Adapter]: Coulnt stringfy object ${request.data}`);
   }
-
-  return `${url}${dataStr}`;
+  const params = JSON.stringify(request.params);
+  return `${url}${dataStr}${params}`;
 }

@@ -1,24 +1,18 @@
 import { AxiosError } from 'axios';
 import { uniq } from 'lodash';
 import { fut } from '../../api';
-import { Job } from '../../job';
+import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
 import { getOptimalSellPrice, tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
-const BUY_REFERENCE_PERCT = 0.7;
+const BUY_REFERENCE_PERCT = 0.8;
 const MAX_AUCTION_TRY =
   parseInt(process.env.FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER, 10) || 3;
 const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 4000;
 const MAX_TARGET_POOL = 30;
-
-// calculate the number of jobs per minute: fut-requests per sec / auctions & price-queries
-const TIMES_PER_MIN = Math.floor(
-  (parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) * 60) /
-    (3 + MAX_AUCTION_TRY)
-);
 
 let targets: investService.TargetInfo[] = [];
 let setingUp = false;
@@ -45,7 +39,10 @@ export class LowPlayerInvestor extends Job {
   private maxTargetPool: number = MAX_TARGET_POOL;
 
   constructor({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
-    super(LowPlayerInvestor.jobName, TIMES_PER_MIN);
+    super(
+      LowPlayerInvestor.jobName,
+      1 // per min. Avg ex time 16s
+    );
 
     Object.assign(this, {
       min,
@@ -86,6 +83,8 @@ export class LowPlayerInvestor extends Job {
     }
 
     if (this.budget < this.min) {
+      this.stop();
+      this.finished = true;
       investService.clearLowPlayerInvest();
       return;
     }
