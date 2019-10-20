@@ -10,6 +10,7 @@ import { authApp } from './auth';
 import { autoBuyerApp } from './auto-buyer/auto-buyer-app';
 import { clubApp } from './club/club-app';
 import { startCorsProxy } from './cors-proxy';
+import { feedbackApp } from './feedback';
 import { investApp } from './invest/invest-app';
 import { jobsApp } from './jobs';
 import { logger } from './logger';
@@ -35,6 +36,7 @@ app.use('/stats', statsApp);
 app.use('/invest', investApp);
 app.use('/auto-buyer', autoBuyerApp);
 app.use('/jobs', jobsApp);
+app.use('/feedback', feedbackApp);
 
 app.get('/ping', (req, res) => res.send('pong'));
 

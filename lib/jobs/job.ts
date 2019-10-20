@@ -46,6 +46,7 @@ export class Job {
   private id: string;
   private task: () => Promise<void>;
   private avgExecTimeS: number = 0;
+  private executing = false;
 
   constructor(protected name: string, private timesPerMin: number) {
     this.start = this.start.bind(this);
@@ -86,6 +87,14 @@ export class Job {
 
     this.source = interval(min / this.timesPerMin).pipe(startWith(null));
     this.sub = this.source.subscribe(async () => {
+      if (this.executing) {
+        logger.warn(
+          `${this.id} was to slow to execute on previos run. Skipping this one.`
+        );
+        return;
+      }
+
+      this.executing = true;
       const start = new Date().getTime();
       this.execTime++;
       logger.debug(`Executing JOB[${this.id}]`);
@@ -98,6 +107,7 @@ export class Job {
       logger.debug(`JOB[${this.id}] execution finished in ${t}`);
       this.avgExecTimeS =
         ((this.execTime - 1) * this.avgExecTimeS + t) / this.execTime;
+      this.executing = false;
     });
   }
 }

@@ -1,118 +1,93 @@
 import { fut } from '../api';
 import { logger } from '../logger';
 import { playerService } from '../player';
-import { ClearPile, SellXPlayers } from './trade-jobs';
+import { SellTradePilePlayers, SellUnusedPlayers } from './jobs';
 import { getOptimalSellPrice, SellPrice } from './trade-utils';
 
 export namespace tradeService {
-  let clearPileJob: ClearPile;
-  let sellXPlayersJob: SellXPlayers;
+  let sellUnusedPlayers: SellUnusedPlayers;
+  let sellTradePilePlayers: SellTradePilePlayers;
 
-  export interface SellingReport {
-    cleared: number;
-  }
+  export type PlayerSellConf = fut.ItemData & { price: SellPrice };
 
-  export function startSelling(maxRating?: number) {
-    if (!clearPileJob) {
-      clearPileJob = new ClearPile();
-    }
-    if (!sellXPlayersJob) {
-      sellXPlayersJob = new SellXPlayers(5, maxRating);
+  export function startSellUnusedPlayers(maxRating?: number) {
+    if (!sellUnusedPlayers) {
+      sellUnusedPlayers = new SellUnusedPlayers(maxRating);
     }
 
-    return sellReport();
+    return sellUnusedPlayers.report();
   }
 
-  export function stopSelling() {
-    if (clearPileJob) {
-      clearPileJob.stop();
+  export function stopSellingUnusedPlayers() {
+    if (!sellUnusedPlayers) {
+      return null;
     }
-    clearPileJob = null;
+    const report = sellUnusedPlayers.report();
+    sellUnusedPlayers.stop();
+    sellUnusedPlayers = null;
+    return report;
+  }
 
-    if (sellXPlayersJob) {
-      sellXPlayersJob.stop();
+  export function startSellingTradePile() {
+    if (!sellTradePilePlayers) {
+      sellTradePilePlayers = new SellTradePilePlayers();
     }
-    sellXPlayersJob = null;
 
-    return sellReport();
+    return sellTradePilePlayers.report();
   }
 
-  function sellReport() {
-    return {
-      timesClearedPile: clearPileJob && clearPileJob.execTime,
-      timesSellBatch: sellXPlayersJob && sellXPlayersJob.execTime,
-      soldPlayers:
-        sellXPlayersJob &&
-        sellXPlayersJob.soldPlayers.map(p => ({
-          player: playerService.readable({ assetId: p.assetId }),
-          ...p.price
-        }))
-    };
+  export function stopSellingTradePile() {
+    if (!sellTradePilePlayers) {
+      return null;
+    }
+    const report = sellTradePilePlayers.report();
+    sellTradePilePlayers.stop();
+    sellTradePilePlayers = null;
+    return report;
   }
 
-  export async function sellPlayerCheap(
+  export async function sellPlayerOptimal(
     player: fut.ItemData
-  ): Promise<fut.ItemData & { price: SellPrice }> {
+  ): Promise<PlayerSellConf> {
     const price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
     if (!price) {
       logger.error(
-        `No price information for ${playerService.readable(player)}`
+        `No price information for ${playerService.readable(
+          player
+        )}. Not selling.`
       );
       return null;
     }
+    // TODO this can be configurable
+    // if (sellPrice.startingBid <= player.itemData.lastSalePrice) {
+    //   logger.info(
+    //     `Selling of ${playerString} skipped. Sell-Price too low: ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`
+    //   );
+    //   continue;
+    // }
+
     price.buyNowPrice = Math.min(price.buyNowPrice, player.marketDataMaxPrice);
-    const resp = await fut.sellPlayer({
-      ...price,
-      duration: 3600,
-      itemData: { id: player.id, assetId: player.assetId }
-    });
-    if (resp) {
+    try {
+      await fut.sellPlayer({
+        ...price,
+        duration: 3600,
+        itemData: {
+          id: player.id,
+          assetId: player.assetId
+        }
+      });
       return {
         ...player,
         price
       };
-    }
-  }
-
-  export async function relistExpired(): Promise<string[]> {
-    let players = await fut.getTradePile();
-    const response = [];
-
-    players = players.filter(p => p.tradeId === 0 || p.tradeState !== 'active');
-    const expired = players.filter(p => p.tradeState === 'expired');
-
-    for (const player of expired) {
-      const playerString = `${playerService.readable({
-        assetId: player.itemData.assetId
-      })} (bought: ${player.itemData.lastSalePrice})`;
-
-      const sellPrice = await getOptimalSellPrice(
-        player.itemData.resourceId,
-        true
+    } catch (e) {
+      logger.error(
+        `[sellPlayerOptimal]: Couldn't sell ${playerService.readable(
+          player
+        )}. Reason: ${e}`
       );
-      if (!sellPrice.buyNowPrice || !sellPrice.startingBid) {
-        logger.info(`No price for ${playerString}`);
-        continue;
-      }
-
-      if (sellPrice.startingBid <= player.itemData.lastSalePrice) {
-        logger.info(
-          `Re-listing of ${playerString} skipped. Sell-Price too low: ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`
-        );
-        continue;
-      }
-
-      response.push(
-        `${playerString} for ${sellPrice.startingBid}/${sellPrice.buyNowPrice}`
-      );
-      await fut.sellPlayer({
-        ...sellPrice,
-        duration: 3600,
-        itemData: { id: player.itemData.id, assetId: player.itemData.assetId }
-      });
+      return null;
     }
-
-    return response;
   }
 
   export async function clearPile(): Promise<string[]> {
@@ -146,9 +121,9 @@ export namespace tradeService {
             assetId: player.itemData.assetId
           })} couldnt be moved to club. Reason: ${relatedResult.reason}(${
             relatedResult.errorCode
-          })`
+          }). Selling him.`
         );
-        await sellPlayerCheap(player.itemData);
+        await sellPlayerOptimal(player.itemData);
       } else {
         logger.info(
           `${playerService.readable(player.itemData)} is sent to club`

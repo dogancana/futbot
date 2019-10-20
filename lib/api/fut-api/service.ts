@@ -28,9 +28,12 @@ export namespace fut {
   export type Platform = 'pc' | 'ps' | 'xbox';
   export type Quality = 'bronze' | 'silver' | 'gold' | 'special';
 
-  export async function getClubPlayers(page = 0): Promise<ItemData[]> {
+  export async function getClubPlayers(
+    page = 0,
+    count = 100
+  ): Promise<ItemData[]> {
     const response = await futApi.get(
-      `/club?sort=desc&type=player&start=${page * 100}&count=100`
+      `/club?sort=desc&type=player&start=${page * count}&count=${count}`
     );
     return response.data.itemData;
   }

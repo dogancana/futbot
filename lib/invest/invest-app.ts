@@ -1,24 +1,7 @@
 import * as express from 'express';
-import { fut } from '../api';
 import { investService } from './invest-service';
 
 export const investApp = express();
-
-investApp.get('/players', async (req, res) => {
-  const { budget, min, max } = getBudgetMinMax(req.query);
-  const platform = await fut.getPlatform();
-  const priceKey = `${platform.toLowerCase()}_price`;
-  if (!budgetMinMaxQueryCheck(res, Number.MAX_VALUE, min, max)) {
-    return;
-  }
-
-  res.send(
-    await investService.getTargets({
-      page: 1,
-      [priceKey]: `${min}-${max}`
-    })
-  );
-});
 
 investApp.get('/low-players', async (req, res) => {
   const { maxTargetPool } = req.query;
@@ -44,6 +27,11 @@ investApp.get('/good-auctions', async (req, res) => {
   }
 
   res.send(investService.startGoodAuctionInvest({ budget, min, max }));
+});
+
+investApp.get('/good-auctions-stop', async (req, res) => {
+  investService.clearGoodAuctionInvest();
+  res.send('OK');
 });
 
 function getBudgetMinMax(query: any) {

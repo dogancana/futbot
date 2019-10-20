@@ -1,6 +1,7 @@
-import { fut, futbin } from '../api';
+import { futbin } from '../api';
 import { envConfig } from '../config';
 import { playerService } from '../player';
+import { tradeService } from './trade-service';
 
 const HIGHER_PRICE_BOUNDRY = 1.05;
 const LOWER_PRICE_BOUNDRY = 0.95;
@@ -97,4 +98,15 @@ export async function getOptimalSellPrice(
       buyNowPrice: NaN
     }
   );
+}
+
+export function calculatePossibleRevenue(
+  players: tradeService.PlayerSellConf[]
+): number {
+  const cost = players.reduce((prev, p) => prev + p.lastSalePrice || 0, 0);
+  const revenue = players.reduce(
+    (prev, p) => prev + (p.price.startingBid + p.price.buyNowPrice) / 2,
+    0
+  );
+  return revenue - cost;
 }
