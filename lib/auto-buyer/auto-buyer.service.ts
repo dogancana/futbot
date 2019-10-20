@@ -24,7 +24,7 @@ export namespace AutoBuyerService {
     const duped: Target = targets.filter(
       t => t.resourceId === target.resourceId
     )[0];
-    const playerStr = playerService.readable({id: target.assetId});
+    const playerStr = playerService.readable({ id: target.assetId });
 
     if (!!duped) {
       logger.warn(
@@ -75,10 +75,12 @@ export namespace AutoBuyerService {
 
   export function report() {
     return {
-      targets,
+      targets: targets.map(
+        t => `${playerService.readable(t)} for ${t.maxPrice} max price`
+      ),
       jobs: {
-        autoBuyBidder: autoBuyBidderJob ? autoBuyBidderJob.execTime : null,
-        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.execTime : null
+        autoBuyBidder: autoBuyBidderJob ? autoBuyBidderJob.report() : null,
+        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.report() : null
       }
     };
   }

@@ -7,22 +7,25 @@ import { tradeService } from './trade-service';
 const HIGHER_PRICE_BOUNDRY = 1.05;
 const LOWER_PRICE_BOUNDRY = 0.95;
 
-export function tradePrice(price: number): number {
+export function tradePrice(
+  price: number,
+  roundingFunction: 'ceil' | 'floor' = 'ceil'
+): number {
   // 0-1000 50
   // 1k-10k 100
   // 10k-50k 250
   // 50k-100k 500
   // 100k-    1000
   if (price < 1000) {
-    return Math.ceil(price / 50) * 50;
+    return Math[roundingFunction](price / 50) * 50;
   } else if (price < 10 * 1000) {
-    return Math.ceil(price / 100) * 100;
+    return Math[roundingFunction](price / 100) * 100;
   } else if (price < 50 * 1000) {
-    return Math.ceil(price / 250) * 250;
+    return Math[roundingFunction](price / 250) * 250;
   } else if (price < 100 * 1000) {
-    return Math.ceil(price / 500) * 500;
+    return Math[roundingFunction](price / 500) * 500;
   } else {
-    return Math.ceil(price / 1000) * 1000;
+    return Math[roundingFunction](price / 1000) * 1000;
   }
 }
 

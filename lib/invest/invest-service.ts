@@ -40,7 +40,7 @@ export namespace investService {
       delete q[prpKey];
     }
 
-    const playerIds = await futbin.getPlayerIDs(q);
+    const playerIds = await futbin.getPlayerIDs(q as any);
     logger.debug(`[InvestService]: Target ids: ${playerIds}`);
 
     const playerInfos: TargetInfo[] = [];

@@ -4,13 +4,16 @@ import { AutoBuyerService } from './auto-buyer.service';
 export const autoBuyerApp = express();
 
 autoBuyerApp.get('/add-target', (req, res) => {
-  const { assetId, resourceId, maxPrice } = req.query;
+  let { assetId, resourceId, maxPrice } = req.query;
+  assetId = parseInt(assetId, 10);
+  resourceId = parseInt(resourceId, 10);
+  maxPrice = parseInt(maxPrice, 10);
 
   try {
     AutoBuyerService.addTarget({
-      assetId: parseInt(assetId, 10),
-      resourceId: parseInt(resourceId, 10),
-      maxPrice: maxPrice ? parseInt(maxPrice, 10) : undefined
+      assetId,
+      resourceId,
+      maxPrice
     });
     res.send(AutoBuyerService.targets);
   } catch (e) {

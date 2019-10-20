@@ -18,6 +18,18 @@
             <span>{{ price.marketPrice.sampleCount }}</span>
           </p>
         </div>
+        <div class="actions">
+          <div v-if="!targetAdded">
+            <input v-model="targetPrice" class="target-price" />
+            <button
+              v-on:click="addTarget"
+              class="btn-standard mini call-to-action"
+            >
+              Add Target
+            </button>
+          </div>
+          <div v-if="targetAdded">Added to targets list.</div>
+        </div>
       </div>
     </v-collapsible>
   </div>
@@ -25,6 +37,7 @@
 
 <script>
 import { getPlayerPrice } from './futbot/player.js';
+import { addTargetToAutoBuy } from './futbot/auto-buy';
 
 export default {
   props: ['item'],
@@ -32,7 +45,11 @@ export default {
     return {
       price: null,
       priceLoading: false,
-      priceError: null
+      priceError: null,
+      targetPrice: null,
+      targetAdding: false,
+      targetAddingError: null,
+      targetAdded: null
     };
   },
   methods: {
@@ -41,7 +58,7 @@ export default {
       if (toggled) this.handlePriceLoad();
     },
     handlePriceLoad() {
-      if (!this.price && !this.priceLoading) {
+      if (!this.priceLoading) {
         this.priceLoading = true;
         getPlayerPrice(this.item._metaData.id, this.item.resourceId)
           .then(d => {
@@ -58,9 +75,27 @@ export default {
             this.price = null;
             this.priceLoading = false;
             this.priceError = e.message;
-            console.log('Player price error', e);
           });
       }
+    },
+    addTarget() {
+      if (!this.targetPrice) {
+        alert('Enter a price first!');
+      }
+      try {
+        const price = parseInt(this.targetPrice, 10);
+        if (price < 0) {
+          alert('Wtf is this price?');
+          return;
+        }
+        addTargetToAutoBuy(
+          this.item._metaData.id,
+          this.item.resourceId,
+          this.targetPrice
+        )
+          .then(resp => (this.targetAdded = resp))
+          .catch(e => (this.targetAddingError = e));
+      } catch (e) {}
     }
   }
 };
@@ -70,12 +105,30 @@ export default {
 .root {
   width: 100%;
   z-index: 1;
+  font-size: 1rem;
 }
 
 .info-box {
+  width: 100;
+  display: flex;
   padding: 10px;
   color: slategray;
-  font-size: 1rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-bottom: 1rem;
+}
+
+.actions input {
+  width: 80px;
+  border: 1px solid lightslategrey;
+  min-height: 1.5rem;
+  padding: 2px;
+  padding-left: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 </style>
 
