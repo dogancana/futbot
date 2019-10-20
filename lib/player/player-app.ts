@@ -1,5 +1,6 @@
 import * as express from 'express';
-import { futbin } from '../api';
+import { fut, futbin } from '../api';
+import { tradePrice } from '../trader/trade-utils';
 import { logger } from './../logger';
 import { playerService } from './player-service';
 
@@ -40,4 +41,21 @@ playerApp.get('', async (req, res) => {
     futbinPrice,
     marketPrice
   });
+});
+
+playerApp.get('/bid', async (req, res) => {
+  const { tradeId } = req.query;
+  let { bid } = req.query;
+  bid = parseInt(bid, 10);
+
+  if (!tradeId || !bid) {
+    res.send('Please provide tradeId and bid');
+    return;
+  }
+
+  try {
+    res.send(await fut.bidToTrade(tradeId, tradePrice(bid + 1)));
+  } catch (e) {
+    res.send(e);
+  }
 });

@@ -1,17 +1,21 @@
-import { AxiosResponse } from 'axios';
 import { fut } from '../../api';
 import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
+import { getOptimalFutbinPrice, getOptimalMarketPrice } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
-const BATCH_START_PAGE = 5; // Better for checking transfer with >1 min remaining
-const BATCH_PAGES_TO_SEE = 1; // Setting it more would result on bloating futbin queue
+// Don't touch below 4
+const BATCH_START_PAGE = 5;
+const BATCH_PAGES_TO_SEE = 1;
+const MAX_TARGETS_TO_SEE_ON_PAGE = 6;
+const EXEC_PER_MIN = 1.5;
+
 const PROFIT_MARGIN_PERCT = envConfig().FUTBOT_PROFIT_MARGIN;
 const EXPIRE_TIME_LIMIT = 180; // seconds
-const MIN_MARKET_SAMPLE_COUNT = 10;
+const MAX_BID_TRIES = 3;
 
 export interface GoodAuctionInvestorProps {
   budget: number;
@@ -20,11 +24,17 @@ export interface GoodAuctionInvestorProps {
   profitMargin?: number;
 }
 
-interface AuctionTarget extends fut.AuctionInfo {
-  maxBuyPrice: number;
+interface AuctionAnalysis {
+  goodBuy: boolean;
+  askingPrice?: number;
+  profitMargin?: number;
+  sellPrice?: number;
+  maxBuyPrice?: number;
 }
 
-let auctionsToWatch: AuctionTarget[] = [];
+interface AuctionTarget extends fut.AuctionInfo {
+  analysis?: AuctionAnalysis;
+}
 
 export class GoodAuctionInvestor extends Job {
   private budget: number;
@@ -32,22 +42,20 @@ export class GoodAuctionInvestor extends Job {
   private max: number = 10000;
   private boughtItems: AuctionTarget[] = [];
   private lostItems: AuctionTarget[] = [];
+  private auctionsToWatch: AuctionTarget[] = [];
 
   constructor(p: GoodAuctionInvestorProps) {
-    super(
-      'Invest:GoodAuction',
-      4 // per min. Avg ex time 29s
-    );
+    super('GoodAuctions', EXEC_PER_MIN);
     Object.assign(this, p);
     this.start(this.loop);
   }
 
   public report() {
     return {
-      targets: auctionsToWatch.map(
+      targets: this.auctionsToWatch.map(
         a =>
           `${playerService.readable(a.itemData)} for max ${
-            a.maxBuyPrice
+            a.analysis.maxBuyPrice
           }. Expires in ${a.expires}seconds`
       ),
       bought: this.boughtItems.map(
@@ -63,6 +71,15 @@ export class GoodAuctionInvestor extends Job {
       this.stop();
       this.finished = true;
       investService.clearGoodAuctionInvest();
+      logger.info(
+        `[GoodAuctions] job ran out of budget. Budget: ${this.budget}. ` +
+          `Bought ${
+            this.boughtItems.length
+          } players for ${this.boughtItems.reduce(
+            (prev, p) => prev + p.currentBid,
+            0
+          )} coins in total.`
+      );
       return;
     }
 
@@ -72,38 +89,38 @@ export class GoodAuctionInvestor extends Job {
 
   private async updateAuctionsToWatch() {
     const auctions = await fut.checkAuctionStatus(
-      auctionsToWatch.map(a => a.tradeId)
+      this.auctionsToWatch.map(a => a.tradeId)
     );
 
-    auctionsToWatch = auctionsToWatch.map(a => ({
+    this.auctionsToWatch = this.auctionsToWatch.map(a => ({
       ...a,
       ...auctions.find(b => b.tradeId === a.tradeId),
       itemData: a.itemData // auction status object clears out item data. We put it back
     }));
 
-    const boughtItems = auctionsToWatch.filter(
+    const boughtItems = this.auctionsToWatch.filter(
       a => a.bidState === 'highest' && a.expires < 1
     );
     this.boughtItems = [...this.boughtItems, ...boughtItems];
     boughtItems.forEach(i => (this.budget -= i.currentBid));
-    const lostItems = auctionsToWatch.filter(
+    const lostItems = this.auctionsToWatch.filter(
       a => a.bidState === 'outbid' && a.expires < 1
     );
     this.lostItems = [...this.lostItems, ...lostItems];
 
-    auctionsToWatch = auctionsToWatch.filter(a => a.expires > 0);
+    this.auctionsToWatch = this.auctionsToWatch.filter(a => a.expires > 0);
   }
 
   private async bidTargets() {
-    if (!auctionsToWatch || auctionsToWatch.length === 0) {
+    if (!this.auctionsToWatch || this.auctionsToWatch.length === 0) {
       return;
     }
     await this.updateAuctionsToWatch();
 
-    const targets = auctionsToWatch.filter(a => a.bidState !== 'highest');
+    const targets = this.auctionsToWatch.filter(a => a.bidState !== 'highest');
 
-    // create new event handling point to ignore job task execution
-    targets.forEach(async t => await this.bidAuction(t));
+    // create new event handling point (forEach) to ignore job task execution
+    targets.forEach(t => this.bidAuction(t));
   }
 
   private async loopMarket() {
@@ -112,40 +129,56 @@ export class GoodAuctionInvestor extends Job {
       i < BATCH_START_PAGE + BATCH_PAGES_TO_SEE;
       i++
     ) {
-      const players = await fut.searchTransferMarket(i, this.min, this.max);
+      const players = await fut.searchTransferMarket(
+        i,
+        this.min,
+        this.max / 2,
+        null,
+        this.max
+      );
       const possibleTargets = players
         .filter(p => !p.watched)
         .filter(p => !p.tradeOwner)
-        .filter(p => p.expires < EXPIRE_TIME_LIMIT);
+        .filter(p => p.expires < EXPIRE_TIME_LIMIT)
+        .slice(0, MAX_TARGETS_TO_SEE_ON_PAGE);
 
       logger.info(
         `[GoodAuctions]: Checking ${possibleTargets.length} auctions for ${PROFIT_MARGIN_PERCT}% profit margin.`
       );
 
       for (const possibleTarget of possibleTargets) {
+        const analysis = await this.analyzePrice(possibleTarget);
         const {
           goodBuy,
           sellPrice,
           askingPrice,
-          profitMargin,
-          maxBuyPrice
-        } = await this.analyzePrice(possibleTarget);
+          maxBuyPrice,
+          profitMargin
+        } = analysis;
+        logger.info(
+          `[GoodAuctions]: Analyzed ${playerService.readable(
+            possibleTarget.itemData
+          )}. ` +
+            `Listed for: ${askingPrice}, Can be bought max: ${maxBuyPrice}, can be sold: ${sellPrice}`
+        );
         if (goodBuy) {
           logger.info(
-            `[Invest:GoodAuction]: ${playerService.readable(
+            `[GoodAuctions]: ${playerService.readable(
               possibleTarget.itemData
             )} can be bought for ${askingPrice}, which is less than optimal price ${sellPrice}. Profit margin ${profitMargin}. Budget: ${
               this.budget
             }`
           );
           if (
-            !auctionsToWatch.find(v => v.tradeId === possibleTarget.tradeId)
+            !this.auctionsToWatch.find(
+              v => v.tradeId === possibleTarget.tradeId
+            )
           ) {
             const auction = {
               ...possibleTarget,
-              maxBuyPrice
+              analysis
             };
-            auctionsToWatch.push(auction);
+            this.auctionsToWatch.push(auction);
             this.bidAuction(auction);
           }
         }
@@ -154,78 +187,103 @@ export class GoodAuctionInvestor extends Job {
   }
 
   private async bidAuction(a: fut.AuctionInfo) {
-    const { askingPrice } = await this.analyzePrice(a);
-    const bidPrice = tradePrice(askingPrice + 1);
-    if (bidPrice < this.budget) {
-      logger.info(
-        `[Invest:GoodAuction]: ${playerService.readable(
-          a.itemData
-        )} bidding for ${bidPrice}, Expires ${a.expires}, Buynow ${
-          a.buyNowPrice
-        }`
+    let tries = 0;
+    while (tries < MAX_BID_TRIES) {
+      const { goodBuy, askingPrice, maxBuyPrice } = await this.analyzePrice(
+        a,
+        tries !== 0
       );
-      try {
-        await fut.bidToTrade(a.tradeId, bidPrice);
-      } catch (e) {
-        logger.error(
-          `[Invevst:GoodAuction]: bid failed for ${playerService.readable(
+      tries++;
+      if (!goodBuy) {
+        logger.info(
+          `[GoodAuctions]: ${playerService.readable(
             a.itemData
-          )} with bid amount ${bidPrice}. Reason: ${(e as AxiosResponse).data}`
+          )} is not a good auction anymore, skipping.`
         );
+        return;
+      }
+
+      const bidPrice = tradePrice(askingPrice + 1);
+      if (bidPrice < this.budget && bidPrice <= maxBuyPrice) {
+        logger.info(
+          `[GoodAuctions]: ${playerService.readable(
+            a.itemData
+          )} bidding for ${bidPrice}, Expires ${
+            a.expires
+          }, Currentbid: ${askingPrice}, Buynow ${a.buyNowPrice}`
+        );
+        try {
+          await fut.bidToTrade(a.tradeId, bidPrice);
+        } catch (e) {
+          logger.error(
+            `[GoodAuctions]: bid failed for ${playerService.readable(
+              a.itemData
+            )} with bid amount ${bidPrice}. Reason: ${e}. We'll analyze and bid again.`
+          );
+        }
+      } else {
+        // no budget
+        break;
       }
     }
   }
 
-  private async analyzePrice(a: fut.AuctionInfo) {
+  private async analyzePrice(
+    a: fut.AuctionInfo,
+    forceNewAuctionCheck: boolean = false
+  ): Promise<AuctionAnalysis> {
+    let auction = a;
+    if (forceNewAuctionCheck) {
+      auction = {
+        ...auction,
+        ...(await fut.checkAuctionStatus([a.tradeId]))[0],
+        itemData: auction.itemData // auction status object clears out item data. We put it back
+      };
+      if (auction.expires < 1) {
+        return { goodBuy: false };
+      }
+    }
     let futbinSellPrice: number;
     let marketSellPrice: number;
     let profitMargin: number;
-    let goodBuy: boolean;
-    let sellPrice = futbinSellPrice || marketSellPrice;
+    const askingPrice = auction.currentBid || auction.startingBid;
 
-    try {
-      futbinSellPrice = (await playerService.getFutbinPrice(
-        a.itemData.resourceId
-      )).LCPrice;
-    } catch {
-      futbinSellPrice = 0;
-    }
-    const askingPrice = a.currentBid || a.startingBid;
+    const futbinPrice = await getOptimalFutbinPrice(
+      auction.itemData.resourceId
+    );
+    futbinSellPrice = !!futbinPrice ? futbinPrice.buyNowPrice : null;
 
-    if (!futbinSellPrice) {
-      const marketPrice = await playerService.getMarketPrice(
-        a.itemData.resourceId
-      );
-      if (marketPrice.sampleCount < MIN_MARKET_SAMPLE_COUNT) {
-        goodBuy = false;
-      } else {
-        marketSellPrice = marketPrice.minBuyNow;
+    if (futbinSellPrice) {
+      profitMargin = ((futbinSellPrice - askingPrice) / futbinSellPrice) * 100;
+      if (profitMargin < PROFIT_MARGIN_PERCT) {
+        return result(false);
       }
     }
 
-    const calculateResult = () => {
-      profitMargin = ((sellPrice - askingPrice) / sellPrice) * 100;
-      goodBuy = profitMargin > PROFIT_MARGIN_PERCT;
-    };
-    calculateResult();
-    // use futbin to prices as a filter to avoid requests to fut
-    if (goodBuy && !marketSellPrice) {
-      const { minBuyNow, sampleCount } = await playerService.getMarketPrice(
-        a.itemData.resourceId
-      );
-      sellPrice = minBuyNow;
-      if (sampleCount < MIN_MARKET_SAMPLE_COUNT) {
-        goodBuy = false;
-      }
-      calculateResult();
+    const marketPrice = await getOptimalMarketPrice(
+      auction.itemData.resourceId
+    );
+    marketSellPrice = !!marketPrice ? marketPrice.buyNowPrice : null;
+    if (!marketSellPrice) {
+      return result(false);
     }
 
-    return {
-      goodBuy,
-      askingPrice,
-      sellPrice,
-      profitMargin,
-      maxBuyPrice: sellPrice * ((100 - PROFIT_MARGIN_PERCT) / 100)
-    };
+    profitMargin = ((marketSellPrice - askingPrice) / marketSellPrice) * 100;
+
+    function result(overwriteGoodBuy?: boolean) {
+      const sellPrice = marketSellPrice || futbinSellPrice;
+      return {
+        goodBuy:
+          overwriteGoodBuy !== undefined
+            ? overwriteGoodBuy
+            : profitMargin >= PROFIT_MARGIN_PERCT,
+        askingPrice,
+        profitMargin,
+        sellPrice,
+        maxBuyPrice: sellPrice * ((100 - PROFIT_MARGIN_PERCT) / 100)
+      };
+    }
+
+    return result();
   }
 }

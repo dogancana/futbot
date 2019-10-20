@@ -4,11 +4,13 @@ import { simpleCacheAdapter } from '../cache-adapter';
 import { futbinApi } from './api';
 
 export namespace futbin {
-  export interface Prices {
-    pc: Price;
-    xbox: Price;
-    ps: Price;
+  export interface FutbinPlayerResponse<T> {
+    pc: T;
+    xbox: T;
+    ps: T;
   }
+
+  export type Prices = FutbinPlayerResponse<Price>;
 
   export interface Price {
     LCPrice: number;
@@ -60,14 +62,35 @@ export namespace futbin {
     return result;
   }
 
+  export async function getGraph(
+    id: number
+  ): Promise<FutbinPlayerResponse<number[]>> {
+    const values: FutbinPlayerResponse<number[][]> = (await futbinApi.get(
+      `/playerGraph?type=daily_graph&year=20&player=${id}&set_id`,
+      { adapter: simpleCacheAdapter }
+    )).data;
+
+    // first elm time, second elm price
+    return {
+      pc: values.pc.map(arr => arr[1]),
+      xbox: values.pc.map(arr => arr[1]),
+      ps: values.pc.map(arr => arr[1])
+    };
+  }
+
+  // price separated by -
+  // prp separated by ,
   export interface PlayersQuery {
     page: number;
     pc_price?: string;
     xbox_price?: string;
     ps_price?: string;
+    pc_prp?: string;
+    xbox_prp?: string;
+    ps_prp?: string;
     version?: 'gold' | string;
-    sort?: 'likes' | string;
-    order?: 'desc' | string;
+    sort?: 'likes';
+    order?: 'desc' | 'asc';
   }
 
   export async function getPlayerIDs(query: PlayersQuery): Promise<number[]> {

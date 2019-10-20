@@ -5,7 +5,8 @@ import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
-import { getOptimalSellPrice, tradePrice } from '../../trader/trade-utils';
+import { getOptimalSellPrice } from '../../pricing';
+import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
 const BUY_REFERENCE_PERCT = (100 - envConfig().FUTBOT_PROFIT_MARGIN) / 100;
@@ -96,9 +97,9 @@ export class LowPlayerInvestor extends Job {
     const target = targets.shift();
     const playerStr = playerService.readable({ assetId: target.assetId });
     const sellPrice = await getOptimalSellPrice(target.resourceId);
-    if (!sellPrice.buyNowPrice || !sellPrice.startingBid) {
+    if (!sellPrice) {
       logger.info(
-        `${LowPlayerInvestor.jobName} Skipping ${playerStr}: missing price-samples`
+        `${LowPlayerInvestor.jobName} Skipping ${playerStr}: missing price information`
       );
       return;
     }
@@ -182,6 +183,7 @@ async function setupTargets(price: string, maxTargets: number) {
     const pageLimit = Math.ceil(maxTargets / 30);
     const platform = await fut.getPlatform();
     const priceKey = `${platform.toLowerCase()}_price`;
+    const prpKey = `${platform.toLowerCase()}_prp`;
     const clubPlayers = await fut.getClubPlayers();
     const isInClubPlayers = (resourceId: number) =>
       clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
@@ -193,7 +195,8 @@ async function setupTargets(price: string, maxTargets: number) {
       targets = targets.concat(
         await investService.getTargets({
           page: i,
-          [priceKey]: price
+          [priceKey]: price,
+          [prpKey]: '5,60'
         })
       );
     }

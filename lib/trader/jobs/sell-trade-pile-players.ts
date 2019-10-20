@@ -27,8 +27,8 @@ export class SellTradePilePlayers extends Job {
       ).toFixed(0),
       playersListed: this.playersListed.map(
         p =>
-          `${playerService.readable(p)} listed for ${p.price.startingBid}/${
-            p.price.buyNowPrice
+          `${playerService.readable(p)} listed for ${p.sellPrice.startingBid}/${
+            p.sellPrice.buyNowPrice
           }.` + `${p.lastSalePrice ? 'Bought for ' + p.lastSalePrice : ''}`
       )
     };

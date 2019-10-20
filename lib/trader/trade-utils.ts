@@ -1,6 +1,7 @@
 import { futbin } from '../api';
 import { envConfig } from '../config';
 import { playerService } from '../player';
+import { SellPrice } from '../pricing';
 import { tradeService } from './trade-service';
 
 const HIGHER_PRICE_BOUNDRY = 1.05;
@@ -25,11 +26,6 @@ export function tradePrice(price: number): number {
   }
 }
 
-export interface SellPrice {
-  buyNowPrice: number;
-  startingBid: number;
-}
-
 export function getFutbinSellPrice(price: futbin.Price): SellPrice {
   const prices = price.prices;
 
@@ -39,12 +35,7 @@ export function getFutbinSellPrice(price: futbin.Price): SellPrice {
   }
 
   // ignore old prices
-  if (price.updatedMinsAgo === -1 || price.updatedMinsAgo > 120) {
-    return null;
-  }
-
-  // ignore low price-range percentage (https://www.futbin.com/prp)
-  if (price.prp < 20) {
+  if (price.updatedMinsAgo === -1 || price.updatedMinsAgo > 12 * 60) {
     return null;
   }
 
@@ -74,38 +65,12 @@ export function getMarketSellPrice(
   };
 }
 
-export async function getOptimalSellPrice(
-  resourceId: number,
-  forceMarket = false
-): Promise<SellPrice> {
-  let futbinSellPrice: SellPrice = null;
-  if (false === forceMarket) {
-    const futbinPrice: futbin.Price = await playerService.getFutbinPrice(
-      resourceId
-    );
-    futbinSellPrice = getFutbinSellPrice(futbinPrice);
-  }
-
-  const marketPrice: playerService.MarketPrice = futbinSellPrice
-    ? null
-    : await playerService.getMarketPrice(resourceId);
-  const marketSellPrice: SellPrice = getMarketSellPrice(marketPrice);
-
-  return (
-    futbinSellPrice ||
-    marketSellPrice || {
-      startingBid: NaN,
-      buyNowPrice: NaN
-    }
-  );
-}
-
 export function calculatePossibleRevenue(
   players: tradeService.PlayerSellConf[]
 ): number {
   const cost = players.reduce((prev, p) => prev + p.lastSalePrice || 0, 0);
   const revenue = players.reduce(
-    (prev, p) => prev + (p.price.startingBid + p.price.buyNowPrice) / 2,
+    (prev, p) => prev + (p.sellPrice.startingBid + p.sellPrice.buyNowPrice) / 2,
     0
   );
   return revenue - cost;

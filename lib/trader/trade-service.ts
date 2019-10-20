@@ -1,14 +1,14 @@
 import { fut } from '../api';
 import { logger } from '../logger';
 import { playerService } from '../player';
+import { getOptimalSellPrice, SellPrice } from '../pricing';
 import { SellTradePilePlayers, SellUnusedPlayers } from './jobs';
-import { getOptimalSellPrice, SellPrice } from './trade-utils';
 
 export namespace tradeService {
   let sellUnusedPlayers: SellUnusedPlayers;
   let sellTradePilePlayers: SellTradePilePlayers;
 
-  export type PlayerSellConf = fut.ItemData & { price: SellPrice };
+  export type PlayerSellConf = fut.ItemData & { sellPrice: SellPrice };
 
   export function startSellUnusedPlayers(maxRating?: number) {
     if (!sellUnusedPlayers) {
@@ -78,7 +78,7 @@ export namespace tradeService {
       });
       return {
         ...player,
-        price
+        sellPrice: price
       };
     } catch (e) {
       logger.error(
