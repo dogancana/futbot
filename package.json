@@ -1,6 +1,6 @@
 {
   "name": "futbot",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "Small size tradebot for automating simple tasks",
   "main": "lib/app.ts",
   "scripts": {
