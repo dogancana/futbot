@@ -30,10 +30,17 @@ export namespace investService {
       sort: 'likes',
       order: 'desc'
     };
-    const playerIds = await futbin.getPlayerIDs({
+    const q = {
       ...defaultQuery,
       ...query
-    });
+    };
+
+    // futbin gives 404 with prp
+    if (platform === 'xbox') {
+      delete q[prpKey];
+    }
+
+    const playerIds = await futbin.getPlayerIDs(q);
     logger.debug(`[InvestService]: Target ids: ${playerIds}`);
 
     const playerInfos: TargetInfo[] = [];
