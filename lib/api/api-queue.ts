@@ -68,11 +68,11 @@ export class ApiQueue {
       return Promise.resolve(config);
     }
     // fast-track for bids
-    // if (config.url.match(/\/bid$/gi)) {
-    //   return Promise.resolve(
-    //     !!this.configResolver ? this.configResolver(config) : config
-    //   );
-    // }
+    if (config.url.match(/\/bid$/gi)) {
+      return Promise.resolve(
+        !!this.configResolver ? this.configResolver(config) : config
+      );
+    }
     return new Promise(async (resolve, reject) => {
       const queueTime = new Date().getTime();
       this.queue.push({
