@@ -33,6 +33,11 @@ export namespace playerService {
         return;
       }
 
+      // ignore the default buy-now price
+      if (a.buyNowPrice === a.itemData.marketDataMaxPrice) {
+        return;
+      }
+
       if (a.buyNowPrice < price.minBuyNow) {
         price.minBuyNow = a.buyNowPrice;
       }

@@ -38,7 +38,7 @@ export function getFutbinSellPrice(price: futbin.Price): SellPrice {
   }
 
   // ignore old prices
-  if (price.updatedMinsAgo === -1 || price.updatedMinsAgo > 12 * 60) {
+  if (price.updatedMinsAgo === -1 || price.updatedMinsAgo > 60) {
     return null;
   }
 

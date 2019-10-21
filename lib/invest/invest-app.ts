@@ -3,15 +3,45 @@ import { investService } from './invest-service';
 
 export const investApp = express();
 
+investApp.get('/snipe-player', async (req, res) => {
+  const { player } = req.query;
+  let { budget } = req.query;
+  budget = parseInt(budget, 10);
+
+  const maxTargetPool = 1;
+  const min = 0;
+  const max = budget;
+
+  if (!budgetMinMaxQueryCheck(res, budget, min, max)) {
+    return;
+  }
+
+  res.send(
+    investService.startLowPlayerInvest({
+      budget,
+      min,
+      max,
+      maxTargetPool,
+      player
+    })
+  );
+});
+
 investApp.get('/low-players', async (req, res) => {
-  const { maxTargetPool } = req.query;
+  const { maxTargetPool, player } = req.query;
   const { budget, min, max } = getBudgetMinMax(req.query);
   if (!budgetMinMaxQueryCheck(res, budget, min, max)) {
     return;
   }
 
   res.send(
-    investService.startLowPlayerInvest({ budget, min, max, maxTargetPool })
+    investService.startLowPlayerInvest({
+      budget,
+      min,
+      max,
+      maxTargetPool,
+      player
+    })
   );
 });
 

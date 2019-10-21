@@ -15,6 +15,12 @@ const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 4000;
 const MAX_TARGET_POOL = 30;
 
+// calculate the number of jobs per minute: fut-requests per sec / auctions & price-queries
+const TIMES_PER_MIN = Math.floor(
+  (parseFloat(process.env.FUTBOT_FUT_REQUESTS_PER_SEC) * 60) /
+    (2 + MAX_AUCTION_TRY)
+);
+
 let targets: investService.TargetInfo[] = [];
 let setingUp = false;
 
@@ -23,6 +29,7 @@ export interface LowPlayerInvestorProps {
   min?: number;
   max?: number;
   maxTargetPool?: number;
+  player?: number;
 }
 
 export class LowPlayerInvestor extends Job {
@@ -38,18 +45,23 @@ export class LowPlayerInvestor extends Job {
   private min: number = MIN_TARGET_PRICE;
   private max: number = MAX_TARGET_PRICE;
   private maxTargetPool: number = MAX_TARGET_POOL;
+  private player: number = 0;
 
-  constructor({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
-    super(
-      LowPlayerInvestor.jobName,
-      5 // per min. Avg ex time 16s
-    );
+  constructor({
+    budget,
+    min,
+    max,
+    maxTargetPool,
+    player
+  }: LowPlayerInvestorProps) {
+    super(LowPlayerInvestor.jobName, TIMES_PER_MIN);
 
     Object.assign(this, {
       min,
       max,
       budget,
-      maxTargetPool
+      maxTargetPool,
+      player
     });
 
     this.boughtPlayers = [];
@@ -79,10 +91,10 @@ export class LowPlayerInvestor extends Job {
 
   private async loopOverTargets() {
     if (!targets || targets.length === 0) {
-      // no need to await for setup targets
       setupTargets(
         `${this.min}-${this.max}`,
-        this.maxTargetPool || MAX_TARGET_POOL
+        this.maxTargetPool || MAX_TARGET_POOL,
+        this.player
       );
       return;
     }
@@ -104,11 +116,12 @@ export class LowPlayerInvestor extends Job {
       return;
     }
 
-    const safeBuyValue = sellPrice.startingBid * BUY_REFERENCE_PERCT;
+    const maxAuctionTry = !this.player ? MAX_AUCTION_TRY : MAX_AUCTION_TRY * 2;
+    const safeBuyValue = sellPrice.buyNowPrice * BUY_REFERENCE_PERCT;
 
     let batch = 0;
     while (true) {
-      if (batch >= MAX_AUCTION_TRY) {
+      if (batch >= maxAuctionTry) {
         break;
       }
 
@@ -123,7 +136,9 @@ export class LowPlayerInvestor extends Job {
         maxb: tradePrice(safeBuyValue)
       }))
         .filter(a => !a.watched)
-        .filter(a => !a.tradeOwner);
+        .filter(a => !a.tradeOwner)
+        .filter(a => a.buyNowPrice <= safeBuyValue)
+        .filter(a => a.expires > 1800);
 
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
       if (auctions.length === 0) {
@@ -168,16 +183,20 @@ export class LowPlayerInvestor extends Job {
             `[Invest:LowPlayer]: bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err.response.status}, ${err.response.data}`
           );
         }
-        break;
       }
     }
   }
 }
 
-async function setupTargets(price: string, maxTargets: number) {
+async function setupTargets(
+  price: string,
+  maxTargets: number,
+  player?: number
+) {
   if (setingUp) {
     return;
   }
+
   try {
     setingUp = true;
     const pageLimit = Math.ceil(maxTargets / 30);
@@ -193,11 +212,14 @@ async function setupTargets(price: string, maxTargets: number) {
         `[${LowPlayerInvestor.jobName}]: Setting up targets ${targets.length}/${maxTargets}`
       );
       targets = targets.concat(
-        await investService.getTargets({
-          page: i,
-          [priceKey]: price,
-          [prpKey]: '5,60'
-        })
+        await investService.getTargets(
+          {
+            page: i,
+            [priceKey]: price,
+            [prpKey]: '20,100'
+          },
+          player
+        )
       );
     }
 

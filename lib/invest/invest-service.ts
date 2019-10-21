@@ -18,7 +18,8 @@ export namespace investService {
   }
 
   export async function getTargets(
-    query: futbin.PlayersQuery
+    query: futbin.PlayersQuery,
+    player?: number
   ): Promise<TargetInfo[]> {
     const platform = await fut.getPlatform();
     const priceKey = `${platform.toLowerCase()}_price`;
@@ -40,7 +41,7 @@ export namespace investService {
       delete q[prpKey];
     }
 
-    const playerIds = await futbin.getPlayerIDs(q as any);
+    const playerIds = !!player ? [player] : await futbin.getPlayerIDs(q as any);
     logger.debug(`[InvestService]: Target ids: ${playerIds}`);
 
     const playerInfos: TargetInfo[] = [];
