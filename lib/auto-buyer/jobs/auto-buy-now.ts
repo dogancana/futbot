@@ -59,23 +59,38 @@ export class AutoBuyBuyNow extends Job {
       i < BUY_QUERY_TRIES;
       i++, micr = tradePrice(micr + 1, 'ceil')
     ) {
-      const auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
-        micr: Math.min(micr, target.maxPrice),
-        maxb: target.maxPrice
-      }))
-        .filter(a => !a.tradeOwner)
-        .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
+      let auctions: fut.AuctionInfo[];
+      try {
+        auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
+          micr: Math.min(micr, target.maxPrice),
+          maxb: target.maxPrice
+        }))
+          .filter(a => !a.tradeOwner)
+          .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
+      } catch (e) {
+        logger.error(`[AutoBuyer:BuyNow] Error while searching. Reason: ${e}`);
+        continue;
+      }
 
       const lowest = auctions[0];
       if (!lowest) {
         continue;
       }
+
       if (lowest.buyNowPrice <= target.maxPrice) {
         logger.info(
           `[AutoBuyer:BuyNow] Found ${playerStr} for ${lowest.buyNowPrice}, buying.`
         );
         try {
           await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
+        } catch (e) {
+          logger.error(
+            `[AutoBuyer:BuyNow] Error buying ${playerStr}, Reason: ${e.message}`
+          );
+          continue;
+        }
+
+        try {
           this.spent += lowest.buyNowPrice;
           this.targetsBought.push({ ...target, price: lowest.buyNowPrice });
           const bought = await fut.waitAndGetPurchasedItem(target.resourceId);
@@ -89,12 +104,14 @@ export class AutoBuyBuyNow extends Job {
               logger.error(
                 `[AutoBuyer:BuyNow]: Error sending ${playerStr} to club. Reason: ${e}`
               );
+              continue;
             }
           }
         } catch (e) {
           logger.error(
-            `[AutoBuyer:BuyNow] Error buying ${playerStr}, ${e.message}`
+            `[AutoBuyer:BuyNow] Error handling ${playerStr}, Reason: ${e.message}`
           );
+          continue;
         }
       }
     }
