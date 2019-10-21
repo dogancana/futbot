@@ -65,7 +65,7 @@ export class Job {
       return;
     }
 
-    logger.debug(`Stoping job ${this.id}`);
+    logger.debug(`Stopping job ${this.id}`);
     this.sub.unsubscribe();
     delete this.sub;
   }
@@ -89,7 +89,7 @@ export class Job {
     this.sub = this.source.subscribe(async () => {
       if (this.executing) {
         logger.warn(
-          `${this.id} was to slow to execute on previos run. Skipping this one.`
+          `${this.id} was to slow to execute on previous run. Skipping this one.`
         );
         return;
       }

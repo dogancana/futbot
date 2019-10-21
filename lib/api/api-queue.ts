@@ -88,6 +88,7 @@ export class ApiQueue {
         !!this.configResolver ? this.configResolver(config) : config
       );
     }
+
     return new Promise(async (resolve, reject) => {
       const queueTime = new Date().getTime();
       this.queue.push({
@@ -135,7 +136,7 @@ export class ApiQueue {
     if (this.queue.length > MAX_OPTIMUM_QUEUE_LENGTH) {
       this.queueCheckOptimalCount = 0;
       logger.warn(
-        `Queue for ${this.apiName} is bloated(${this.queue.length} requests waiting). Pausing jobs for a minute and slowing by ${SPEED_UP_FACTOR}`
+        `Queue for ${this.apiName} is bloated (${this.queue.length} requests waiting). Pausing jobs for a minute and slowing by ${SPEED_UP_FACTOR}`
       );
       Job.stopAllJobs();
       Job.changeJobSpeedsBy(1 - SPEED_UP_FACTOR);

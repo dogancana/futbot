@@ -117,8 +117,11 @@ export class LowPlayerInvestor extends Job {
     }
 
     const maxAuctionTry = !this.player ? MAX_AUCTION_TRY : MAX_AUCTION_TRY * 2;
-    const safeBuyValue = sellPrice.buyNowPrice * BUY_REFERENCE_PERCT;
+    const safeBuyValue = tradePrice(
+      sellPrice.buyNowPrice * BUY_REFERENCE_PERCT
+    );
 
+    let triedAuctions = [];
     let batch = 0;
     while (true) {
       if (batch >= maxAuctionTry) {
@@ -126,19 +129,18 @@ export class LowPlayerInvestor extends Job {
       }
 
       logger.info(
-        `Trying to find ${playerService.readable(
-          target
-        )} for cheaper than ${safeBuyValue} buy now price.`
+        `Trying to find ${playerStr} for cheaper than ${safeBuyValue} buy now price.`
       );
 
       batch++;
       let auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
-        maxb: tradePrice(safeBuyValue)
+        maxb: safeBuyValue
       }))
         .filter(a => !a.watched)
         .filter(a => !a.tradeOwner)
         .filter(a => a.buyNowPrice <= safeBuyValue)
-        .filter(a => a.expires > 1800);
+        .filter(a => a.expires > 1800)
+        .filter(a => -1 === triedAuctions.indexOf(a.tradeId));
 
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
       if (auctions.length === 0) {
@@ -151,6 +153,7 @@ export class LowPlayerInvestor extends Job {
           break;
         }
 
+        triedAuctions.push(lowest.tradeId);
         try {
           logger.info(
             `${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`
@@ -180,7 +183,7 @@ export class LowPlayerInvestor extends Job {
         } catch (e) {
           const err: AxiosError = e;
           logger.error(
-            `[Invest:LowPlayer]: bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err.response.status}, ${err.response.data}`
+            `[Invest:LowPlayer]: bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err}`
           );
         }
       }
