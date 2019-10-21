@@ -5,16 +5,11 @@ const authData = {};
 main();
 
 function main() {
-  intercept('fut.ea.com/ut/auth', scrapAuthData);
-  intercept('fut.ea.com/ut/game', getLastStamp);
-
-  window.addEventListener('load', loadEvent => {
-    let window = loadEvent.currentTarget;
-    window.document.title = '(Futbot) FUT Web App!';
-  });
+  interceptXHR('fut.ea.com/ut/auth', scrapAuthData);
+  interceptXHR('fut.ea.com/ut/game', getLastStamp);
 }
 
-function intercept(urlmatch, callback) {
+function interceptXHR(urlmatch, callback) {
   let send = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.send = function() {
     this.addEventListener(

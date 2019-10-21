@@ -11,6 +11,7 @@ const MAX_OPTIMUM_QUEUE_LENGTH = 10;
 const QUEUE_SIZE_CHECK_FREQUENCY_MS = 60 * 1000;
 const QUEUE_SPEED_UP_THRESHOLD = 5;
 const SPEED_UP_FACTOR = envConfig().FUTBOT_API_QUEUE_SPEED_UP_FACTOR;
+const FAST_LINE_REQUEST_PER_MIN_WARNING = 30;
 
 if (SPEED_UP_FACTOR > 0.4 || SPEED_UP_FACTOR < 0.1) {
   throw new Error(
@@ -29,11 +30,12 @@ export class ApiQueue {
   private interval: Subscription;
   private apiName: string;
   private requestCount = 0;
+  private fastLineRequestCount = 0;
   private configResolver: ConfigResolver;
-  private queueStart: number;
   private queueCheckOptimalCount: number = 0;
   private averageQueueTimeStat: AvgStat;
   private requestsPerSecondStat: AvgStat;
+  private fastLineRequestStat: AvgStat;
 
   constructor(
     requestsPerSec: number,
@@ -50,8 +52,8 @@ export class ApiQueue {
     this.averageQueueTimeStat = new AvgStat(5);
     this.averageRTTimeStat = new AvgStat(5);
     this.requestsPerSecondStat = new AvgStat(5);
+    this.fastLineRequestStat = new AvgStat(5);
     this.configResolver = configResolver;
-    this.queueStart = new Date().getTime();
     this.cacheHitCount = 0;
     ApiQueue.apiQueues.push(this);
     // TODO won't be GCed
@@ -69,6 +71,19 @@ export class ApiQueue {
     }
     // fast-track for bids
     if (config.url.match(/\/bid$/gi)) {
+      this.fastLineRequestCount++;
+      this.fastLineRequestStat.addSample(1);
+
+      const counts = this.fastLineRequestStat.sampleCounts();
+      const count = counts.reduce((prev, curr) => prev + curr, 0);
+      const hasTooManyFastLines =
+        counts[counts.length - 1] > FAST_LINE_REQUEST_PER_MIN_WARNING;
+      if (hasTooManyFastLines) {
+        logger.warn(
+          `In last minute you made ${count} bids. You might get banned soon, slow down!`
+        );
+      }
+
       return Promise.resolve(
         !!this.configResolver ? this.configResolver(config) : config
       );
@@ -78,6 +93,7 @@ export class ApiQueue {
       this.queue.push({
         reject,
         resolve: () => {
+          this.requestCount++;
           this.requestsPerSecondStat.addSample(1); // value doesn't matter
           const c = !!this.configResolver
             ? this.configResolver(config)

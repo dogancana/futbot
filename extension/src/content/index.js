@@ -4,7 +4,7 @@ import Collapsible from './collapsible';
 import AutoBuyList from './auto-buy-list';
 
 import './auth';
-import './view-watcher';
+import './drawer';
 import './hijack-player-generation';
 
 Vue.config.productionTip = false;

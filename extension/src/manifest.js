@@ -17,7 +17,8 @@ module.exports = {
     'storage',
     'notifications',
     'identity',
-    'identity.email'
+    'identity.email',
+    'file://*'
   ],
   devtools_page: 'pages/devtools.html',
   options_page: 'pages/options.html',

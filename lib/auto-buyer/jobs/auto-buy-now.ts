@@ -2,6 +2,7 @@ import { fut } from '../../api';
 import { Job } from '../../jobs';
 import { logger } from '../../logger';
 import { playerService } from '../../player';
+import { tradePrice } from '../../trader/trade-utils';
 import { AutoBuyerService } from '../auto-buyer.service';
 
 const TARGET_BATCH_TO_CHECK = 5;
@@ -12,6 +13,8 @@ export class AutoBuyBuyNow extends Job {
   private targetsBought: Array<
     AutoBuyerService.Target & { price: number }
   > = [];
+  private spent: number = 0;
+  private listedFor: number = 0;
 
   constructor() {
     super('AutoBuyer:BuyNow', 2);
@@ -20,10 +23,11 @@ export class AutoBuyBuyNow extends Job {
 
   public report() {
     return {
+      spent: this.spent,
+      listedItemsValue: this.listedFor,
       targetsBought: this.targetsBought.map(
         t => `${playerService.readable(t)} bought for ${t.price}`
-      ),
-      totalMoneySpent: this.targetsBought.reduce((prev, p) => prev + p.price, 0)
+      )
     };
   }
 
@@ -48,11 +52,16 @@ export class AutoBuyBuyNow extends Job {
   }
 
   private async tryToBuy(target: AutoBuyerService.Target): Promise<void> {
-    const playerStr = playerService.readable({ assetId: target.resourceId });
+    const playerStr = playerService.readable(target);
     logger.info(`Checking for ${playerStr} with max price ${target.maxPrice}`);
-    for (let i = 0; i < BUY_QUERY_TRIES; i++) {
+    for (
+      let i = 0, micr = tradePrice(target.discardValue);
+      i < BUY_QUERY_TRIES;
+      i++, micr = tradePrice(micr + 1, 'ceil')
+    ) {
       const auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
-        maxb: target.maxPrice + i
+        micr: Math.min(micr, target.maxPrice),
+        maxb: target.maxPrice
       }))
         .filter(a => !a.tradeOwner)
         .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
@@ -67,13 +76,52 @@ export class AutoBuyBuyNow extends Job {
         );
         try {
           await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
+          this.spent += lowest.buyNowPrice;
           this.targetsBought.push({ ...target, price: lowest.buyNowPrice });
+          const bought = await fut.waitAndGetPurchasedItem(target.resourceId);
+          if (target.sellPrice) {
+            await this.sell(target, bought);
+          } else {
+            logger.info(`[AutoBuyer:BuyNow]: Sending ${playerStr} to club`);
+            try {
+              await fut.sendToClub(bought.id);
+            } catch (e) {
+              logger.error(
+                `[AutoBuyer:BuyNow]: Error sending ${playerStr} to club. Reason: ${e}`
+              );
+            }
+          }
         } catch (e) {
           logger.error(
             `[AutoBuyer:BuyNow] Error buying ${playerStr}, ${e.message}`
           );
         }
       }
+    }
+  }
+
+  private async sell(target: AutoBuyerService.Target, bought: fut.ItemData) {
+    try {
+      logger.info(
+        `Trying to sell ${playerService.readable(target)} for ${
+          target.sellPrice
+        }`
+      );
+      const buyNowPrice = tradePrice(target.sellPrice);
+      const startingBid = tradePrice(buyNowPrice - 1, 'floor');
+      await fut.sellPlayer({
+        buyNowPrice,
+        startingBid,
+        itemData: bought,
+        duration: 3600
+      });
+      this.listedFor += buyNowPrice;
+    } catch (e) {
+      logger.error(
+        `[AutoBuyer:BuyNow]: Couldn't sell ${playerService.readable(
+          target
+        )}. Reason: ${e}`
+      );
     }
   }
 }

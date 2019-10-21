@@ -85,7 +85,19 @@ This will clear transfer list from sold/expired items. It will send everything t
 http://localhost:9999/invest/low-players?budget=50000&min=1000&max=5000&maxTargetPool=150  
 http://localhost:9999/invest/low-players-stop  
 This job targets most liked futbin players in your min-max range. It saves the list of players (max target pool is max limit for this), calculates their prices and searches market for auctions with lower buy now price than optimal price, e.g. buy at 59th min.  
-You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.  
+You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.
+
+http://localhost:9999/auto-buyer/jobs  
+http://localhost:9999/auto-buyer/start-jobs  
+http://localhost:9999/auto-buyer/stop-jobs  
+Endpoints to control auto buyer jobs.
+
+http://localhost:9999/auto-buyer/targets  
+http://localhost:9999/auto-buyer/add-target?assetId=X&resourceId=X&maxPrice=X&sellPrice=X&discardValue=X  
+Endpoints to control your auto buyer targets. You can also access your targets by clicking extension button on chrome.  
+Add target endpoint is not intented to use directly. You can use it via web app. Just search the player you want, click for futbot details and click 'Add Target' button with desired 'Buy Price' and 'Sell Price values'.  
+If sell price value is not defined, the bot won't sell your player but try to send it to club.
+
 `Known bug`: Very rarely futbin has wrong prices with big difference. The bot still buys them, thinking they are cheap. This will be fixed in future releases.
 
 http://localhost:9999/invest/good-auctions?budget=50000&min=5000&max=10000  
@@ -112,8 +124,9 @@ It's usefull when you want to ask a question, report a bug, give a feedback or j
 ## Existing UI Features
 
 `Player prices:`  
-The extension will add small visual components to players. Example below:
-![](doc/gifs/player-price.gif)
+`Add auto buy target:`  
+The extension will add small visual components to players.
+![](doc/gifs/add-targets.gif)
 
 ## What to do on errors
 
