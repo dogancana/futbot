@@ -116,12 +116,12 @@ export class LowPlayerInvestor extends Job {
       return;
     }
 
+    const triedAuctions = [];
     const maxAuctionTry = !this.player ? MAX_AUCTION_TRY : MAX_AUCTION_TRY * 2;
     const safeBuyValue = tradePrice(
       sellPrice.buyNowPrice * BUY_REFERENCE_PERCT
     );
 
-    let triedAuctions = [];
     let batch = 0;
     while (true) {
       if (batch >= maxAuctionTry) {
