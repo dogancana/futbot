@@ -11,7 +11,7 @@
           </p>
           <p>
             <span>Min market buy now:</span>
-            <span>{{ price.marketPrice.minBuyNow }}</span>
+            <span>{{ price.marketPrice.buyNow }}</span>
           </p>
           <p>
             <span>Market samples:</span>
