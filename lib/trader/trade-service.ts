@@ -1,8 +1,11 @@
 import { fut } from '../api';
-import { logger } from '../logger';
+import { envConfig } from '../config';
+import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { getOptimalSellPrice, SellPrice } from '../pricing';
 import { SellTradePilePlayers, SellUnusedPlayers } from './jobs';
+
+const logger = getLogger('TradeService');
 
 export namespace tradeService {
   let sellUnusedPlayers: SellUnusedPlayers;
@@ -50,6 +53,7 @@ export namespace tradeService {
     player: fut.ItemData
   ): Promise<PlayerSellConf> {
     const price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
+    const quickSellPrice = player.discardValue;
     if (!price) {
       logger.error(
         `No price information for ${playerService.readable(
@@ -67,6 +71,30 @@ export namespace tradeService {
     // }
 
     price.buyNowPrice = Math.min(price.buyNowPrice, player.marketDataMaxPrice);
+    if (
+      quickSellPrice + envConfig().FUTBOT_QUICK_SELL_MARGIN >
+      price.buyNowPrice
+    ) {
+      try {
+        logger.info(
+          `Discarding ${playerService.readable(
+            player
+          )} for ${quickSellPrice}. ` +
+            `Better than selling for ${price.buyNowPrice}`
+        );
+        fut.discardPlayer(player.id);
+      } catch (e) {
+        logger.error(`Couldn't be discarded. Reason: ${e}`);
+      }
+      return {
+        ...player,
+        sellPrice: {
+          startingBid: quickSellPrice,
+          buyNowPrice: quickSellPrice
+        }
+      };
+    }
+
     try {
       await fut.sellPlayer({
         ...price,
@@ -82,9 +110,7 @@ export namespace tradeService {
       };
     } catch (e) {
       logger.error(
-        `[sellPlayerOptimal]: Couldn't sell ${playerService.readable(
-          player
-        )}. Reason: ${e}`
+        `Couldn't sell ${playerService.readable(player)}. Reason: ${e}`
       );
       return null;
     }

@@ -13,12 +13,13 @@ import { startCorsProxy } from './cors-proxy';
 import { feedbackApp } from './feedback';
 import { investApp } from './invest/invest-app';
 import { jobsApp } from './jobs';
-import { logger } from './logger';
+import { getLogger } from './logger';
 import { playerApp } from './player/player-app';
 import { staticItemsApp } from './static';
 import { statsApp } from './stats';
 import { tradeBotApp } from './trader/trade-bot-app';
 
+const logger = getLogger('App');
 const app = express();
 startCorsProxy();
 

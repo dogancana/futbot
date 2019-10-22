@@ -1,10 +1,11 @@
-import { logger } from '../logger';
+import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { StaticItems } from './../static/static-items';
-import { AutoBuyBidder, AutoBuyBuyNow } from './jobs';
+import { AutoBuyBuyNow } from './jobs';
+
+const logger = getLogger('AutoBuyerService');
 
 export namespace AutoBuyerService {
-  let autoBuyBidderJob: AutoBuyBidder;
   let autoBuyBuyNowJob: AutoBuyBuyNow;
 
   export interface Target {
@@ -73,18 +74,15 @@ export namespace AutoBuyerService {
       });
     }
 
-    if (!autoBuyBuyNowJob || !autoBuyBidderJob) {
+    if (!autoBuyBuyNowJob) {
       logger.info(
-        `[AutoBuyer] Jobs were not running but you added a target. We are starting auto buy jobs`
+        `Jobs were not running but you added a target. We are starting auto buy jobs`
       );
       startJobs();
     }
   }
 
   export function startJobs() {
-    if (!autoBuyBidderJob) {
-      autoBuyBidderJob = new AutoBuyBidder();
-    }
     if (!autoBuyBuyNowJob) {
       autoBuyBuyNowJob = new AutoBuyBuyNow();
     }
@@ -93,11 +91,6 @@ export namespace AutoBuyerService {
   }
 
   export function stopJobs() {
-    if (autoBuyBidderJob) {
-      autoBuyBidderJob.stop();
-      autoBuyBidderJob = undefined;
-    }
-
     if (autoBuyBuyNowJob) {
       autoBuyBuyNowJob.stop();
       autoBuyBuyNowJob = undefined;
@@ -112,7 +105,6 @@ export namespace AutoBuyerService {
         t => `${playerService.readable(t)} for ${t.maxPrice} max price`
       ),
       jobs: {
-        autoBuyBidder: autoBuyBidderJob ? autoBuyBidderJob.report() : null,
         autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.report() : null
       }
     };

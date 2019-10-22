@@ -1,8 +1,10 @@
 import Axios from 'axios';
 import { envConfig } from '../../config';
 import { ApiQueue } from '../api-queue';
-import { logger } from './../../logger';
+import { getLogger } from './../../logger';
 import { ApiError, logErrorResponse, logResponse } from './../api';
+
+const logger = getLogger('FutbinApi');
 
 export const futbinApi = Axios.create({
   baseURL: 'https://www.futbin.com/20/',
@@ -16,9 +18,7 @@ const requestsPerSec = envConfig().FUTBOT_FUTBIN_REQUESTS_PER_SEC;
 
 const queue = new ApiQueue(requestsPerSec, 'futbin');
 let futbinStopped = false;
-logger.info(
-  `[FUTBIN]: There will be maximum ${requestsPerSec} requests per sec`
-);
+logger.info(`There will be maximum ${requestsPerSec} requests per sec`);
 
 futbinApi.interceptors.request.use(async config => {
   if (futbinStopped) {
@@ -43,7 +43,7 @@ futbinApi.interceptors.response.use(
     if (status === 403) {
       futbinStopped = true;
       logger.warn(
-        `[FUTBIN] Requests stopped for next 6 hours because of 403 error (temporary ban by futbin)`
+        `Requests stopped for next 6 hours because of 403 error (temporary ban by futbin)`
       );
       setTimeout(() => (futbinStopped = false), 6 * 60 * 60 * 1000);
       queue.clear();

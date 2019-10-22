@@ -1,18 +1,19 @@
 import { createLogger, format, transports } from 'winston';
-import { envConfig } from './config';
 const { combine, timestamp, label, printf } = format;
 
 const myFormat = printf(info => {
-  return `${info.timestamp} [${info.label}] ${info.level}: ${info.message}`;
+  return `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`;
 });
 
-export const logger = createLogger({
-  format: combine(
-    format.colorize(),
-    label({ label: 'FUTBOT' }),
-    timestamp(),
-    myFormat
-  ),
-  transports: [new transports.Console()],
-  level: process.env.FUTBOT_LOG_LEVEL || 'info'
-});
+export function getLogger(l: string) {
+  return createLogger({
+    format: combine(
+      format.colorize(),
+      label({ label: l }),
+      timestamp(),
+      myFormat
+    ),
+    transports: [new transports.Console()],
+    level: process.env.FUTBOT_LOG_LEVEL || 'info'
+  });
+}

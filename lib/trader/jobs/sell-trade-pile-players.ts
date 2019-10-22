@@ -1,23 +1,22 @@
 import { uniqBy } from 'lodash';
 import { fut } from '../../api';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
-import { logger } from '../../logger';
+import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { tradeService } from '../trade-service';
 import { calculatePossibleRevenue } from '../trade-utils';
 
+const logger = getLogger('SellTradePileJob');
 const PLAYERS_TO_SELL_AT_ONCE = 5;
 
 export class SellTradePilePlayers extends Job {
   private playersListed: tradeService.PlayerSellConf[];
 
   constructor() {
-    super(
-      'RelistExpiredPlayers',
-      1 // every min
-    );
+    super('SellTradePilePlayers', envConfig().FUTBOT_JOB_IMP_SELL_TRADE_PILE);
     this.playersListed = [];
-    this.start(this.loop);
+    this.setTask(this.loop);
   }
 
   public report() {
@@ -40,11 +39,11 @@ export class SellTradePilePlayers extends Job {
       .slice(0, PLAYERS_TO_SELL_AT_ONCE);
 
     if (players.length === 0) {
-      logger.info(`[SellTradePilePlayers] nothing to sell.`);
+      logger.info(`nothing to sell.`);
       return;
     }
 
-    logger.info(`[SellTradePilePlayers] ${players.length} will be sold.`);
+    logger.info(`${players.length} will be sold.`);
     for (const player of players) {
       const result = await tradeService.sellPlayerOptimal(player.itemData);
       if (result) {

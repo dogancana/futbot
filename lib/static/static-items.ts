@@ -2,8 +2,10 @@ import * as express from 'express';
 import { tmpdir } from 'os';
 import { resolve } from 'path';
 import { readFileIfRecent, writeFileSyncSafe } from '../utils';
-import { logger } from './../logger';
+import { getLogger } from './../logger';
 import { ItemData } from './static-items';
+
+const logger = getLogger('StaticItems');
 
 export interface StaticPlayerData {
   commonName: string;

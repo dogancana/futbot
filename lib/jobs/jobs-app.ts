@@ -6,7 +6,7 @@ import { Job } from './job';
 export const jobsApp = express();
 
 jobsApp.get('/list', (req, res) => {
-  res.send(Job.list());
+  res.send(Job.report());
 });
 
 jobsApp.get('/resume-all', async (req, res) => {
@@ -22,5 +22,5 @@ jobsApp.get('/start-favourites', async (req, res) => {
   const endpointsStr = envConfig().FUTBOT_FAVOURITE_JOBS;
   const endpoints = endpointsStr.split(',');
   endpoints.map(async s => await Axios.get(`${selfAddress}${s}`));
-  res.send(Job.list());
+  res.send(Job.report());
 });

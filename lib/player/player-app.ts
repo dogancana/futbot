@@ -1,9 +1,10 @@
 import * as express from 'express';
 import { fut, futbin } from '../api';
 import { tradePrice } from '../trader/trade-utils';
-import { logger } from './../logger';
+import { getLogger } from './../logger';
 import { playerService } from './player-service';
 
+const logger = getLogger('PlayerApp');
 export const playerApp = express();
 
 playerApp.get('', async (req, res) => {
@@ -22,18 +23,18 @@ playerApp.get('', async (req, res) => {
     futbinPrice = await playerService.getFutbinPrice(resourceId);
   } catch (e) {
     logger.error(
-      `[Player App] error while retrieving futbin price for ${playerService.readable(
-        { resourceId }
-      )}. Reason: ${e}`
+      `error while retrieving futbin price for ${playerService.readable({
+        resourceId
+      })}. Reason: ${e}`
     );
   }
   try {
     marketPrice = await playerService.getMarketPrice(resourceId);
   } catch (e) {
     logger.error(
-      `[Player App] error while retrieving market price for ${playerService.readable(
-        { resourceId }
-      )}. Reason: ${e}`
+      `error while retrieving market price for ${playerService.readable({
+        resourceId
+      })}. Reason: ${e}`
     );
   }
   res.send({

@@ -1,12 +1,14 @@
 import { fut } from '../../api';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
-import { logger } from '../../logger';
+import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { tradePrice } from '../../trader/trade-utils';
 import { AutoBuyerService } from '../auto-buyer.service';
 
+const logger = getLogger('AutoBuyNowJob');
 const TARGET_BATCH_TO_CHECK = 5;
-const BUY_QUERY_TRIES = 3;
+const BUY_QUERY_TRIES = 4;
 
 export class AutoBuyBuyNow extends Job {
   private lastTargetId = 0;
@@ -17,8 +19,8 @@ export class AutoBuyBuyNow extends Job {
   private listedFor: number = 0;
 
   constructor() {
-    super('AutoBuyer:BuyNow', 2);
-    this.start(this.loopOverTargets);
+    super('AutoBuyer:BuyNow', envConfig().FUTBOT_JOB_IMP_AUTO_BUY_NOW);
+    this.setTask(this.loopOverTargets);
   }
 
   public report() {
@@ -38,16 +40,16 @@ export class AutoBuyBuyNow extends Job {
     }
 
     if (!targets || targets.length === 0) {
-      logger.warn(`[AutoBuyer:BuyNow]: No targets to check.`);
+      logger.warn(`No targets to check.`);
       return;
     }
 
     for (
       let i = this.lastTargetId;
-      i < TARGET_BATCH_TO_CHECK && i < targets.length;
-      i++, this.lastTargetId++
+      i < TARGET_BATCH_TO_CHECK;
+      i++, this.lastTargetId = this.lastTargetId % targets.length
     ) {
-      this.tryToBuy(targets[i]);
+      await this.tryToBuy(targets[this.lastTargetId]);
     }
   }
 
@@ -68,52 +70,50 @@ export class AutoBuyBuyNow extends Job {
           .filter(a => !a.tradeOwner)
           .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
       } catch (e) {
-        logger.error(`[AutoBuyer:BuyNow] Error while searching. Reason: ${e}`);
+        logger.error(`Error while searching. Reason: ${e}`);
         continue;
       }
 
-      const lowest = auctions[0];
-      if (!lowest) {
-        continue;
-      }
-
-      if (lowest.buyNowPrice <= target.maxPrice) {
-        logger.info(
-          `[AutoBuyer:BuyNow] Found ${playerStr} for ${lowest.buyNowPrice}, buying.`
-        );
-        try {
-          await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
-        } catch (e) {
-          logger.error(
-            `[AutoBuyer:BuyNow] Error buying ${playerStr}, Reason: ${e.message}`
-          );
-          continue;
-        }
-
-        try {
-          this.spent += lowest.buyNowPrice;
-          this.targetsBought.push({ ...target, price: lowest.buyNowPrice });
-          const bought = await fut.waitAndGetPurchasedItem(target.resourceId);
-          if (target.sellPrice) {
-            await this.sell(target, bought);
-          } else {
-            logger.info(`[AutoBuyer:BuyNow]: Sending ${playerStr} to club`);
-            try {
-              await fut.sendToClub(bought.id);
-            } catch (e) {
-              logger.error(
-                `[AutoBuyer:BuyNow]: Error sending ${playerStr} to club. Reason: ${e}`
-              );
-              continue;
-            }
+      // Found some, go parallel
+      auctions.forEach(async auction => {
+        if (auction.buyNowPrice <= target.maxPrice) {
+          logger.info(`Found ${playerStr} for ${auction.buyNowPrice}, buying.`);
+          try {
+            await fut.bidToTrade(auction.tradeId, auction.buyNowPrice);
+          } catch (e) {
+            logger.error(`Error buying ${playerStr}, Reason: ${e.message}`);
           }
+
+          // Leave the job queue, don't await
+          setTimeout(() => {
+            this.handleBought(target, auction);
+          }, 1000);
+        }
+      });
+    }
+  }
+
+  private async handleBought(
+    target: AutoBuyerService.Target,
+    auction: fut.AuctionInfo
+  ) {
+    const playerStr = playerService.readable(target);
+    try {
+      this.spent += auction.buyNowPrice;
+      this.targetsBought.push({ ...target, price: auction.buyNowPrice });
+      const bought = await fut.waitAndGetPurchasedItem(target.resourceId);
+      if (target.sellPrice) {
+        await this.sell(target, bought);
+      } else {
+        logger.info(`Sending ${playerStr} to club`);
+        try {
+          await fut.sendToClub(bought.id);
         } catch (e) {
-          logger.error(
-            `[AutoBuyer:BuyNow] Error handling ${playerStr}, Reason: ${e.message}`
-          );
-          continue;
+          logger.error(`Error sending ${playerStr} to club. Reason: ${e}`);
         }
       }
+    } catch (e) {
+      logger.error(`Error handling ${playerStr}, Reason: ${e.message}`);
     }
   }
 
@@ -135,9 +135,7 @@ export class AutoBuyBuyNow extends Job {
       this.listedFor += buyNowPrice;
     } catch (e) {
       logger.error(
-        `[AutoBuyer:BuyNow]: Couldn't sell ${playerService.readable(
-          target
-        )}. Reason: ${e}`
+        `Couldn't sell ${playerService.readable(target)}. Reason: ${e}`
       );
     }
   }

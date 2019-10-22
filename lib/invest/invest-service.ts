@@ -1,11 +1,13 @@
 import { fut, futbin } from '../api';
-import { logger } from './../logger';
+import { getLogger } from './../logger';
 import {
   GoodAuctionInvestor,
   LowPlayerInvestor,
   LowPlayerInvestorProps
 } from './jobs';
 import { GoodAuctionInvestorProps } from './jobs/good-auction-investor';
+
+const logger = getLogger('InvestService');
 
 export namespace investService {
   let lowPlayerInvestJob: LowPlayerInvestor;
@@ -41,7 +43,7 @@ export namespace investService {
     }
 
     const playerIds = await futbin.getPlayerIDs(q as any);
-    logger.debug(`[InvestService]: Target ids: ${playerIds}`);
+    logger.debug(`Target ids: ${playerIds}`);
 
     const playerInfos: TargetInfo[] = [];
     for (const playerId of playerIds) {

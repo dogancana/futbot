@@ -1,9 +1,10 @@
 import * as express from 'express';
 import { envConfig } from '../config';
 import { Job } from '../jobs';
-import { logger } from './../logger';
+import { getLogger } from './../logger';
 import { SessionInjector } from './session-injector';
 
+const logger = getLogger('AuthApp');
 export const authApp = express();
 
 async function setAuthSession(

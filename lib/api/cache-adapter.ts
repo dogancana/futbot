@@ -1,6 +1,7 @@
 import Axios, { AxiosAdapter, AxiosRequestConfig } from 'axios';
-import { logger } from './../logger';
+import { getLogger } from '../logger';
 
+const logger = getLogger('CacheAdapter');
 const memory = {};
 
 export const simpleCacheAdapter: AxiosAdapter = async function adapter(
@@ -33,7 +34,7 @@ function key(request: AxiosRequestConfig): string {
   try {
     dataStr = JSON.stringify(request.data);
   } catch {
-    logger.debug(`[Cache Adapter]: Coulnt stringfy object ${request.data}`);
+    logger.debug(`Couldn't stringfy object ${request.data}`);
   }
   const params = JSON.stringify(request.params);
   return `${url}${dataStr}${params}`;

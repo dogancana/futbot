@@ -1,5 +1,6 @@
 import { fut, futbin } from '../api';
 import { StaticItems } from '../static';
+import { mode } from '../utils';
 
 export namespace playerService {
   export async function getFutbinPrice(resourceId: number) {
@@ -9,10 +10,7 @@ export namespace playerService {
   }
 
   export interface MarketPrice {
-    minBuyNow: number;
-    minStartingBid: number;
-    averageBuyNow: number;
-    averageStartingBid: number;
+    buyNow: number;
     sampleCount: number;
   }
 
@@ -20,39 +18,26 @@ export namespace playerService {
     resourceId: number
   ): Promise<MarketPrice> {
     const auctions = await getAuctions(resourceId);
-    const price: MarketPrice = {
-      minBuyNow: Number.MAX_VALUE,
-      minStartingBid: Number.MAX_VALUE,
-      averageBuyNow: 0,
-      averageStartingBid: 0,
-      sampleCount: 0
-    };
+    let buyNowPrices: number[] = [];
 
     auctions.forEach(a => {
       if (a.itemData.resourceId !== resourceId) {
         return;
       }
 
-      if (a.buyNowPrice < price.minBuyNow) {
-        price.minBuyNow = a.buyNowPrice;
-      }
-      if (a.startingBid < price.minStartingBid) {
-        price.minStartingBid = a.startingBid;
-      }
-      price.averageBuyNow += a.buyNowPrice;
-      price.averageStartingBid += a.startingBid;
-      price.sampleCount++;
+      buyNowPrices.push(a.buyNowPrice);
     });
 
-    // prevent division by zero
-    if (price.sampleCount > 0) {
-      price.averageBuyNow /= price.sampleCount;
-      price.averageStartingBid /= price.sampleCount;
-    }
+    buyNowPrices = buyNowPrices.sort((a, b) => a - b);
+    const cheapestValues = buyNowPrices.slice(
+      0,
+      Math.min(10, buyNowPrices.length)
+    );
 
-    price.minBuyNow =
-      price.minBuyNow === Number.MAX_VALUE ? 0 : price.minBuyNow;
-    return price;
+    return {
+      buyNow: mode(cheapestValues),
+      sampleCount: buyNowPrices.length
+    };
   }
 
   export async function getAuctions(id): Promise<fut.AuctionInfo[]> {

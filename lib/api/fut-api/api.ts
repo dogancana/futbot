@@ -2,9 +2,11 @@ import Axios, { AxiosRequestConfig } from 'axios';
 import { SessionInjector } from '../../auth';
 import { envConfig } from '../../config';
 import { Job } from '../../jobs';
-import { logger } from '../../logger';
+import { getLogger } from '../../logger';
 import { ApiError, logErrorResponse, logResponse } from '../api';
 import { ApiQueue } from '../api-queue';
+
+const logger = getLogger('FutApi');
 
 export const futApi = Axios.create({
   baseURL: envConfig().FUTBOT_FUT_API_ENDPOINT_OVERWRITE,
@@ -16,7 +18,7 @@ export const futApi = Axios.create({
 });
 
 const requestsPerSec = envConfig().FUTBOT_FUT_REQUESTS_PER_SEC;
-logger.info(`[FUT]: There will be maximum ${requestsPerSec} requests per sec`);
+logger.info(`There will be maximum ${requestsPerSec} requests per sec`);
 
 const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
 let slowedDownAfterTooManyRequests = false;
@@ -68,7 +70,7 @@ futApi.interceptors.response.use(
 
     if ([401, 403, 458, 512, 521].indexOf(status) > -1) {
       logger.error(
-        '[FUT] stopped all jobs: Session expired or verification required or temporary ban. Status: ' +
+        'stopped all jobs: Session expired or verification required or temporary ban. Status: ' +
           status +
           '. Refresh fut web app and login to continue'
       );
@@ -80,10 +82,10 @@ futApi.interceptors.response.use(
 
     if ([426, 249].indexOf(status) > -1 && !slowedDownAfterTooManyRequests) {
       slowedDownAfterTooManyRequests = true;
-      logger.warn('[FUT] will slow down all jobs by 1/3 for next 30 mins');
-      Job.changeJobSpeedsBy(1 / 3);
+      logger.warn('will slow down all jobs by 1/3 for next 30 mins');
+      queue.changeRequestsPerSec(requestsPerSec / 3);
       setTimeout(() => {
-        Job.changeJobSpeedsBy(3);
+        queue.changeRequestsPerSec(requestsPerSec);
         slowedDownAfterTooManyRequests = false;
       }, 1000 * 60 * 30);
     }

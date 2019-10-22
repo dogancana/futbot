@@ -1,5 +1,7 @@
-import { existsSync, readFileSync, stat, unlinkSync, writeFileSync } from 'fs';
-import { logger } from '../logger';
+import { readFileSync, stat, unlinkSync, writeFileSync } from 'fs';
+import { getLogger } from '../logger';
+
+const logger = getLogger('Utils');
 
 export function whenFileUpdated(fileName: string): Promise<Date> {
   return new Promise((resolve, reject) => {
@@ -19,7 +21,7 @@ export function writeFileSyncSafe<T>(fileName: string, s: T) {
       encoding: 'utf-8'
     });
   } catch (e) {
-    logger.error('[Utils] write error' + e);
+    logger.error('write error' + e);
   }
 }
 
@@ -28,7 +30,7 @@ export function readFileSyncSafe<T>(fileName: string): T {
     const content = readFileSync(fileName, { encoding: 'utf-8' });
     return JSON.parse(content);
   } catch (e) {
-    logger.error('[Utils] read error' + e);
+    logger.error('read error' + e);
     return null;
   }
 }

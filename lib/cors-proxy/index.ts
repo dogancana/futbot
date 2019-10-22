@@ -1,7 +1,8 @@
-import { logger } from './../logger';
+import { getLogger } from './../logger';
 // tslint:disable-next-line: no-var-requires
 const CorsAnywhere = require('cors-anywhere');
 
+const logger = getLogger('CorsProxy');
 const host = process.env.CORS_PROXY_HOST || '0.0.0.0';
 const port = process.env.CORS_PROXY_PORT || 9998;
 let started = false;

@@ -1,9 +1,11 @@
 import * as querystring from 'querystring';
 import { envConfig } from '../../config';
-import { logger } from '../../logger';
+import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { simpleCacheAdapter } from '../cache-adapter';
 import { futApi } from './api';
+
+const logger = getLogger('FutService');
 
 export namespace fut {
   export interface ItemData {
@@ -243,5 +245,9 @@ export namespace fut {
         }
       }, 5000);
     });
+  }
+
+  export async function discardPlayer(id: number) {
+    await futApi.delete('/item/' + id);
   }
 }

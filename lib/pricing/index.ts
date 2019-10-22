@@ -1,10 +1,12 @@
 import * as NodeCache from 'node-cache';
 import { fut, futbin } from '../api';
 import { envConfig } from '../config';
-import { logger } from '../logger';
+import { getLogger } from '../logger';
 import { playerService } from '../player';
-import { getFutbinSellPrice, tradePrice } from '../trader/trade-utils';
+import { tradePrice } from '../trader/trade-utils';
+import { SellPrice } from './index';
 
+const logger = getLogger('Pricing');
 const MINIMUM_MARKET_SAMPLES = envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES;
 const ALLOWED_FUTBIN_PRICE_VOLATALITY = 15;
 const cache = new NodeCache({
@@ -55,34 +57,48 @@ export async function getOptimalFutbinPrice(
   }
 
   try {
-    const futbinPrice: futbin.Price = await playerService.getFutbinPrice(
-      resourceId
-    );
+    const futbinPrices = await futbin.getPrice(resourceId);
     const platform = await fut.getPlatform();
+    const futbinPrice = futbinPrices[platform];
+
+    // ignore price, when data is missing
+    if (futbinPrice.prices.length < 5 || futbinPrice.prices[0] === 0) {
+      return null;
+    }
+
+    // ignore old prices
+    if (futbinPrice.updatedMinsAgo === -1 || futbinPrice.updatedMinsAgo > 60) {
+      return null;
+    }
+
     const graph = await futbin.getGraph(resourceId);
-    const prices = graph[platform];
-    const l = prices.length;
-    const lastPriceChange = Math.abs(prices[l - 1] - prices[l - 2]);
-    if (lastPriceChange / prices[l - 1] > ALLOWED_FUTBIN_PRICE_VOLATALITY) {
+    const graphPrices = graph[platform];
+    const l = graphPrices.length;
+    const lastPriceChange = Math.abs(graphPrices[l - 1] - graphPrices[l - 2]);
+    if (
+      lastPriceChange / graphPrices[l - 1] >
+      ALLOWED_FUTBIN_PRICE_VOLATALITY
+    ) {
       logger.warn(
-        `[Pricing] Futbin price for ${playerService.readable({
+        `Futbin price for ${playerService.readable({
           resourceId
         })} was too volatile, skipping. ` +
-          `Price changed from ${prices[l - 2]} to ${prices[l - 1]}`
+          `Price changed from ${graphPrices[l - 2]} to ${graphPrices[l - 1]}`
       );
       cache.set(cacheKey, null);
       return null;
     }
-    const res = getFutbinSellPrice(futbinPrice);
+    const res: SellPrice = {
+      startingBid: tradePrice(futbinPrice.LCPrice, 'floor'),
+      buyNowPrice: futbinPrice.LCPrice
+    };
     cache.set(cacheKey, res);
     return res;
   } catch (e) {
     logger.error(
-      `[Pricing] Couldn't get optimal futbin price for ${playerService.readable(
-        {
-          resourceId
-        }
-      )}. Reason: ${e}`
+      `Couldn't get optimal futbin price for ${playerService.readable({
+        resourceId
+      })}. Reason: ${e}`
     );
     return null;
   }
@@ -105,7 +121,7 @@ export async function getOptimalMarketPrice(
     const marketPrice = await playerService.getMarketPrice(resourceId);
     if (marketPrice.sampleCount < MINIMUM_MARKET_SAMPLES) {
       logger.warn(
-        `[Pricing] Skipping market price for ${playerService.readable({
+        `Skipping market price for ${playerService.readable({
           resourceId
         })} because of low market samples(${marketPrice.sampleCount})`
       );
@@ -113,18 +129,16 @@ export async function getOptimalMarketPrice(
       return null;
     }
     const res = {
-      startingBid: marketPrice.minBuyNow,
-      buyNowPrice: tradePrice(marketPrice.minBuyNow + 1)
+      startingBid: tradePrice(marketPrice.buyNow - 1, 'floor'),
+      buyNowPrice: marketPrice.buyNow
     };
     cache.set(cacheKey, res);
     return res;
   } catch (e) {
     logger.error(
-      `[Pricing] Couldn't get optimal market price for ${playerService.readable(
-        {
-          resourceId
-        }
-      )}. Reason: ${e}`
+      `Couldn't get optimal market price for ${playerService.readable({
+        resourceId
+      })}. Reason: ${e}`
     );
   }
 }

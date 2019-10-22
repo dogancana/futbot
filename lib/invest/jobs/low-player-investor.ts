@@ -3,11 +3,13 @@ import { uniqBy } from 'lodash';
 import { fut } from '../../api';
 import { envConfig } from '../../config';
 import { Job } from '../../jobs';
-import { logger } from '../../logger';
+import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { getOptimalSellPrice } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
+
+const logger = getLogger('LowPlayersJob');
 
 const BUY_REFERENCE_PERCT = (100 - envConfig().FUTBOT_PROFIT_MARGIN) / 100;
 const MAX_AUCTION_TRY = envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER;
@@ -26,7 +28,6 @@ export interface LowPlayerInvestorProps {
 }
 
 export class LowPlayerInvestor extends Job {
-  public static jobName = 'Invest:LowPlayerInvestor';
   private spent: number = 0;
   private budget: number = 20000;
   private boughtPlayers: Array<{
@@ -40,10 +41,7 @@ export class LowPlayerInvestor extends Job {
   private maxTargetPool: number = MAX_TARGET_POOL;
 
   constructor({ budget, min, max, maxTargetPool }: LowPlayerInvestorProps) {
-    super(
-      LowPlayerInvestor.jobName,
-      5 // per min. Avg ex time 16s
-    );
+    super('LowPlayerInvestor', envConfig().FUTBOT_JOB_IMP_INVEST_LOW_PLAYERS);
 
     Object.assign(this, {
       min,
@@ -53,7 +51,7 @@ export class LowPlayerInvestor extends Job {
     });
 
     this.boughtPlayers = [];
-    this.start(this.loopOverTargets);
+    this.setTask(this.loopOverTargets);
   }
 
   public report() {
@@ -98,9 +96,7 @@ export class LowPlayerInvestor extends Job {
     const playerStr = playerService.readable({ assetId: target.assetId });
     const sellPrice = await getOptimalSellPrice(target.resourceId);
     if (!sellPrice) {
-      logger.info(
-        `${LowPlayerInvestor.jobName} Skipping ${playerStr}: missing price information`
-      );
+      logger.info(`Skipping ${playerStr}: missing price information`);
       return;
     }
 
@@ -137,9 +133,7 @@ export class LowPlayerInvestor extends Job {
         }
 
         try {
-          logger.info(
-            `${LowPlayerInvestor.jobName} bid ${playerStr} with ${lowest.buyNowPrice}`
-          );
+          logger.info(`bid ${playerStr} with ${lowest.buyNowPrice}`);
           await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
 
           const sellTarget = await fut.waitAndGetPurchasedItem(
@@ -165,7 +159,7 @@ export class LowPlayerInvestor extends Job {
         } catch (e) {
           const err: AxiosError = e;
           logger.error(
-            `[Invest:LowPlayer]: bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err.response.status}, ${err.response.data}`
+            `bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err.response.status}, ${err.response.data}`
           );
         }
         break;
@@ -189,9 +183,7 @@ async function setupTargets(price: string, maxTargets: number) {
       clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
 
     for (let i = 1; i <= pageLimit; i++) {
-      logger.info(
-        `[${LowPlayerInvestor.jobName}]: Setting up targets ${targets.length}/${maxTargets}`
-      );
+      logger.info(`Setting up targets ${targets.length}/${maxTargets}`);
       targets = targets.concat(
         await investService.getTargets({
           page: i,
@@ -203,11 +195,9 @@ async function setupTargets(price: string, maxTargets: number) {
 
     targets = uniqBy(targets, t => t.resourceId);
     targets = targets.filter(t => !isInClubPlayers(t.resourceId));
-    logger.info(
-      `${LowPlayerInvestor.jobName} ${targets.length} targets set up`
-    );
+    logger.info(`${targets.length} targets set up`);
     setingUp = false;
   } catch (e) {
-    logger.error(`${LowPlayerInvestor.jobName} setup targets error: ${e}`);
+    logger.error(`setup targets error: ${e}`);
   }
 }

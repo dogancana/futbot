@@ -1,23 +1,13 @@
 import { AxiosRequestConfig } from 'axios';
 import { interval, Subscription } from 'rxjs';
-import { envConfig } from '../config';
-import { Job } from '../jobs';
 import { AvgStat } from '../utils';
-import { logger } from './../logger';
+import { getLogger } from './../logger';
 import { cacheEntry } from './cache-adapter';
 
-type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
-const MAX_OPTIMUM_QUEUE_LENGTH = 10;
-const QUEUE_SIZE_CHECK_FREQUENCY_MS = 60 * 1000;
-const QUEUE_SPEED_UP_THRESHOLD = 5;
-const SPEED_UP_FACTOR = envConfig().FUTBOT_API_QUEUE_SPEED_UP_FACTOR;
-const FAST_LINE_REQUEST_PER_MIN_WARNING = 30;
+const logger = getLogger('ApiQueue');
 
-if (SPEED_UP_FACTOR > 0.4 || SPEED_UP_FACTOR < 0.1) {
-  throw new Error(
-    `Speed up factor cannot be outside of range 0.1 - 0.4. Set as ${SPEED_UP_FACTOR}`
-  );
-}
+type ConfigResolver = (c: AxiosRequestConfig) => AxiosRequestConfig;
+const FAST_LINE_REQUEST_PER_MIN_WARNING = 30;
 
 export class ApiQueue {
   public static getApiQueueStats() {
@@ -38,17 +28,11 @@ export class ApiQueue {
   private fastLineRequestStat: AvgStat;
 
   constructor(
-    requestsPerSec: number,
+    private requestsPerSec: number,
     apiName: string,
     configResolver?: ConfigResolver
   ) {
     this.apiName = apiName;
-    this.interval = interval(Math.ceil(1000 / requestsPerSec)).subscribe(() => {
-      if (this.queue.length > 0) {
-        const { resolve } = this.queue.shift();
-        resolve();
-      }
-    });
     this.averageQueueTimeStat = new AvgStat(5);
     this.averageRTTimeStat = new AvgStat(5);
     this.requestsPerSecondStat = new AvgStat(5);
@@ -56,11 +40,7 @@ export class ApiQueue {
     this.configResolver = configResolver;
     this.cacheHitCount = 0;
     ApiQueue.apiQueues.push(this);
-    // TODO won't be GCed
-    setInterval(
-      () => this.checkHandleQueueBloating(),
-      QUEUE_SIZE_CHECK_FREQUENCY_MS
-    );
+    this.startInterval();
   }
 
   public addRequestToQueue(
@@ -131,30 +111,30 @@ export class ApiQueue {
     this.queue = [];
   }
 
-  private checkHandleQueueBloating() {
-    if (this.queue.length > MAX_OPTIMUM_QUEUE_LENGTH) {
-      this.queueCheckOptimalCount = 0;
-      logger.warn(
-        `Queue for ${this.apiName} is bloated(${this.queue.length} requests waiting). Pausing jobs for a minute and slowing by ${SPEED_UP_FACTOR}`
-      );
-      Job.stopAllJobs();
-      Job.changeJobSpeedsBy(1 - SPEED_UP_FACTOR);
-      setTimeout(() => {
-        Job.resumeAllJobs();
-      }, 60 * 1000);
-    } else if (
-      this.queue.length > 1 &&
-      ++this.queueCheckOptimalCount > QUEUE_SPEED_UP_THRESHOLD
-    ) {
-      this.queueCheckOptimalCount = 0;
-      logger.warn(
-        `Queue for ${this.apiName} was working inefficiently. Speeding up ${SPEED_UP_FACTOR}`
-      );
-      Job.stopAllJobs();
-      Job.changeJobSpeedsBy(1 + SPEED_UP_FACTOR);
-      setTimeout(() => {
-        Job.resumeAllJobs();
-      }, 30 * 1000);
+  public changeRequestsPerSec(requestsPerSec: number) {
+    if (requestsPerSec === this.requestsPerSec) {
+      return;
     }
+
+    logger.info(
+      `Changing requestsPerSec value for ${this.apiName} to ${requestsPerSec}.` +
+        `Old value was ${this.requestsPerSec}`
+    );
+
+    this.interval.unsubscribe();
+    this.interval = undefined;
+    this.requestsPerSec = requestsPerSec;
+    this.startInterval();
+  }
+
+  private startInterval() {
+    this.interval = interval(Math.ceil(1000 / this.requestsPerSec)).subscribe(
+      () => {
+        if (this.queue.length > 0) {
+          const { resolve } = this.queue.shift();
+          resolve();
+        }
+      }
+    );
   }
 }

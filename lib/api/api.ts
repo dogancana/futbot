@@ -1,7 +1,9 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import '../custom-types/'; // this is weird
-import { logger } from '../logger';
+import { getLogger } from '../logger';
 import { ApiQueue } from './api-queue';
+
+const logger = getLogger('ApiUtils');
 
 export class ApiError extends Error {
   constructor(
@@ -30,7 +32,7 @@ export function logResponse(
     handleRTT(apiName, config, queue);
   }
 
-  logger.debug(`[${apiName}]: ${status}${cachedStr} ${config.url}`);
+  logger.debug(`${status}${cachedStr} ${config.url}`);
 }
 
 export function logErrorResponse(apiName: string, v: any, queue: ApiQueue) {
@@ -43,7 +45,7 @@ export function logErrorResponse(apiName: string, v: any, queue: ApiQueue) {
   }
 
   logger.error(
-    `[${apiName}]: ${status} ${config.method} ${config.url} ${
+    `${status} ${config.method} ${config.url} ${
       config.data
     } ${message} ${JSON.stringify(data)}`
   );
@@ -57,9 +59,7 @@ function handleRTT(
   const rtt = calculateRTT(config);
   queue.averageRTTimeStat.addSample(rtt);
   if (rtt > 15000) {
-    logger.debug(
-      `[${apiName}] request to ${config.url} took ${rtt}ms to complete`
-    );
+    logger.debug(`request to ${config.url} took ${rtt}ms to complete`);
   }
 }
 

@@ -1,11 +1,4 @@
-import { futbin } from '../api';
-import { envConfig } from '../config';
-import { playerService } from '../player';
-import { SellPrice } from '../pricing';
 import { tradeService } from './trade-service';
-
-const HIGHER_PRICE_BOUNDRY = 1.05;
-const LOWER_PRICE_BOUNDRY = 0.95;
 
 export function tradePrice(
   price: number,
@@ -27,45 +20,6 @@ export function tradePrice(
   } else {
     return Math[roundingFunction](price / 1000) * 1000;
   }
-}
-
-export function getFutbinSellPrice(price: futbin.Price): SellPrice {
-  const prices = price.prices;
-
-  // ignore price, when data is missing
-  if (prices.length < 5 || prices[0] === 0) {
-    return null;
-  }
-
-  // ignore old prices
-  if (price.updatedMinsAgo === -1 || price.updatedMinsAgo > 12 * 60) {
-    return null;
-  }
-
-  const referencePrice = prices[0] * 1.05;
-  return {
-    buyNowPrice: tradePrice(referencePrice * HIGHER_PRICE_BOUNDRY),
-    startingBid: tradePrice(referencePrice * LOWER_PRICE_BOUNDRY)
-  };
-}
-
-export function getMarketSellPrice(
-  price: playerService.MarketPrice
-): SellPrice {
-  if (!price) {
-    return null;
-  }
-
-  // if there are less then x active auctions, skip the player
-  const auctionCount = envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES;
-  if (price.sampleCount <= auctionCount) {
-    return null;
-  }
-
-  return {
-    buyNowPrice: tradePrice(price.minBuyNow * HIGHER_PRICE_BOUNDRY),
-    startingBid: tradePrice(price.minBuyNow * LOWER_PRICE_BOUNDRY)
-  };
 }
 
 export function calculatePossibleRevenue(

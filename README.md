@@ -5,6 +5,9 @@ The main purpose is to automate simple activities. There is no intention to crea
 To inject your session into node server, there is a chrome extension in the project. This extension is also drawing on fut web app, so that you can access features easily.
 It's tested with FIFA 20
 
+**IMPORTANT**
+I will change this repository to private in 2 days. For future releases or to get a collaborator role, join the Discord server.
+
 ## Table of contents
 
 **[Use Latest stable version](#use-latest-stable-version)**<br>
@@ -24,9 +27,9 @@ It's tested with FIFA 20
 
 ## Use Latest stable version
 
-Go to [releases page](https://github.com/dogancana/futbot/releases) and select 'futbot.zip' under assest of latest version.  
+Go to [releases page](https://github.com/dogancana/futbot/releases) and select 'futbot.zip' under assest of **latest stable version**.  
 In this file you'll find executable version for server and ready to use chrome extension.  
-Activate developer mode in chrome://extensions page and click 'Load Unpacked' to load Futbot extension. Once it's loaded, go to fut web app and you should see title changed to '(FUTBOT) Fut Web App'. The extension is there to read your session data and send it to server, so it's essential. If you get new version of the extension, you need to load it again. There is no automatic update because I cannot put this extension to chrome market.  
+Activate developer mode in chrome://extensions page and click 'Load Unpacked' to load Futbot extension. The extension is there to read your session data and send it to server, so it's essential. If you get new version of the extension, you need to load it again. There is no automatic update because I cannot put this extension to chrome market.  
 When you are done with the extension, you can start the server. Server needs .env file to be present in the same directory, so that you can configure necessary parameters (In future this will be moved to UI). Note, whenever you need to change something in .env file, you need to restart the server.  
 Now you are all set to use existing features described later in this documentation.  
 **Note for people outside of Europe**: You need to change 'FUTBOT_FUT_API_ENDPOINT_OVERWRITE' value in .env file. Once you load the extension, go to fut web app and click to Futbot extension. It should tell you the endpoint. Just use that value and restart your server.
@@ -66,9 +69,13 @@ Since this server is not intented to be deployed somewhere, there is no session 
 
 ## Existing features:
 
+### Club
+
 http://localhost:9999/club/non-squad-players  
 This just returns your players in club which are not in your actice squad and not in trade pile.  
 The list would be used for /trade-bot/start-selling job.
+
+### Trade Bot
 
 http://localhost:9999/trade-bot/start-selling-unused?maxRating=83  
 http://localhost:9999/trade-bot/stop-selling-unused  
@@ -82,10 +89,20 @@ Relisting job is pretty similar to selling unused players. Only difference is, t
 http://localhost:9999/trade-bot/clear-pile  
 This will clear transfer list from sold/expired items. It will send everything to club. If there are duplicates, it'll sell them.
 
+### Investor
+
 http://localhost:9999/invest/low-players?budget=50000&min=1000&max=5000&maxTargetPool=150  
 http://localhost:9999/invest/low-players-stop  
 This job targets most liked futbin players in your min-max range. It saves the list of players (max target pool is max limit for this), calculates their prices and searches market for auctions with lower buy now price than optimal price, e.g. buy at 59th min.  
 You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.
+
+http://localhost:9999/invest/good-auctions?budget=50000&min=5000&max=10000  
+http://localhost:9999/invest/good-auctions-stop  
+This is similar to low players investor job. Only difference is, this job is focused on expensive players with low current bid amounts, e.g. trades with 1min remaining.  
+You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.  
+`Known issue`: Currently this job takes a bit long time to put an offer and it rarely buy players. You can use low-player invest job till this is fixed in future releases.
+
+### Auto Buyer
 
 http://localhost:9999/auto-buyer/jobs  
 http://localhost:9999/auto-buyer/start-jobs  
@@ -98,13 +115,7 @@ Endpoints to control your auto buyer targets. You can also access your targets b
 Add target endpoint is not intented to use directly. You can use it via web app. Just search the player you want, click for futbot details and click 'Add Target' button with desired 'Buy Price' and 'Sell Price values'.  
 If sell price value is not defined, the bot won't sell your player but try to send it to club.
 
-`Known bug`: Very rarely futbin has wrong prices with big difference. The bot still buys them, thinking they are cheap. This will be fixed in future releases.
-
-http://localhost:9999/invest/good-auctions?budget=50000&min=5000&max=10000  
-http://localhost:9999/invest/good-auctions-stop  
-This is similar to low players investor job. Only difference is, this job is focused on expensive players with low current bid amounts, e.g. trades with 1min remaining.  
-You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.  
-`Known issue`: Currently this job takes a bit long time to put an offer and it rarely buy players. You can use low-player invest job till this is fixed in future releases.
+### General
 
 http://localhost:9999/jobs/start-favourites  
 You can start a set of jobs from one endpoint. You can configure this in .env file. Look for FUTBOT_FAVOURITE_JOBS value in there and configure for your own needs.
@@ -120,6 +131,28 @@ Shows statistics about api usage for fut & futbin.
 http://localhost:9999/feedback  
 Feedback combines /stats, /jobs/list and .env file values to show state of your application.  
 It's usefull when you want to ask a question, report a bug, give a feedback or just share big profits!
+
+### Pricing
+
+Futbot calculates pricing from two sources: Market and Futbin.  
+`Futbin pricing`: Futbin price will be ignored in below conditions
+
+- Price updated more than 1 hour ago
+- Last price change was too much according to price graph (15%).
+- There is not enough price information (Less than 5).
+
+`Market Pricing`: Market price is calculated as follows:
+
+- Get 60 auctions of related player (if applicable)
+- If there are less than FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES prices, ignore market price. Default limit is 3. You can change this value in .env file.
+- Sort the prices.
+- Find most recurring minimum buy now price in lowest 10 price samples.
+
+### Quick Selling
+
+Futbot can sell a player in many different jobs. Whenever it's trying to sell a player, quick sell price of the relevant player will be checked. If optimal selling price is too close to quick sell price, player will be discarded.  
+The value is controlled with FUTBOT_QUICK_SELL_MARGIN value defined in .env file. Default value is 200. Set to 0 to disable.  
+**Example:** One player has optimal sell price of 750. But it can be quick sold for 603. Futbot will choose to discard player with FUTBOT_QUICK_SELL_MARGIN=200 value. If you set FUTBOT_QUICK_SELL_MARGIN=100, Futbot will send the player to transfer list.
 
 ## Existing UI Features
 

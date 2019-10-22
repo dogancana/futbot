@@ -1,17 +1,18 @@
 import { fut } from '../../api';
 import { envConfig } from '../../config';
 import { Job } from '../../jobs';
-import { logger } from '../../logger';
+import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { getOptimalFutbinPrice, getOptimalMarketPrice } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
+const logger = getLogger('GoodAuctionsJob');
+
 // Don't touch below 4
 const BATCH_START_PAGE = 5;
 const BATCH_PAGES_TO_SEE = 1;
 const MAX_TARGETS_TO_SEE_ON_PAGE = 6;
-const EXEC_PER_MIN = 1.5;
 
 const PROFIT_MARGIN_PERCT = envConfig().FUTBOT_PROFIT_MARGIN;
 const EXPIRE_TIME_LIMIT = 180; // seconds
@@ -45,9 +46,9 @@ export class GoodAuctionInvestor extends Job {
   private auctionsToWatch: AuctionTarget[] = [];
 
   constructor(p: GoodAuctionInvestorProps) {
-    super('GoodAuctions', EXEC_PER_MIN);
+    super('GoodAuctions', envConfig().FUTBOT_JOB_IMP_INVEST_GOOD_AUCTIONS);
     Object.assign(this, p);
-    this.start(this.loop);
+    this.setTask(this.loop);
   }
 
   public report() {
@@ -72,7 +73,7 @@ export class GoodAuctionInvestor extends Job {
       this.finished = true;
       investService.clearGoodAuctionInvest();
       logger.info(
-        `[GoodAuctions] job ran out of budget. Budget: ${this.budget}. ` +
+        `job ran out of budget. Budget: ${this.budget}. ` +
           `Bought ${
             this.boughtItems.length
           } players for ${this.boughtItems.reduce(
@@ -143,7 +144,7 @@ export class GoodAuctionInvestor extends Job {
         .slice(0, MAX_TARGETS_TO_SEE_ON_PAGE);
 
       logger.info(
-        `[GoodAuctions]: Checking ${possibleTargets.length} auctions for ${PROFIT_MARGIN_PERCT}% profit margin.`
+        `Checking ${possibleTargets.length} auctions for ${PROFIT_MARGIN_PERCT}% profit margin.`
       );
 
       for (const possibleTarget of possibleTargets) {
@@ -156,14 +157,12 @@ export class GoodAuctionInvestor extends Job {
           profitMargin
         } = analysis;
         logger.info(
-          `[GoodAuctions]: Analyzed ${playerService.readable(
-            possibleTarget.itemData
-          )}. ` +
+          `Analyzed ${playerService.readable(possibleTarget.itemData)}. ` +
             `Listed for: ${askingPrice}, Can be bought max: ${maxBuyPrice}, can be sold: ${sellPrice}`
         );
         if (goodBuy) {
           logger.info(
-            `[GoodAuctions]: ${playerService.readable(
+            `${playerService.readable(
               possibleTarget.itemData
             )} can be bought for ${askingPrice}, which is less than optimal price ${sellPrice}. Profit margin ${profitMargin}. Budget: ${
               this.budget
@@ -196,7 +195,7 @@ export class GoodAuctionInvestor extends Job {
       tries++;
       if (!goodBuy) {
         logger.info(
-          `[GoodAuctions]: ${playerService.readable(
+          `${playerService.readable(
             a.itemData
           )} is not a good auction anymore, skipping.`
         );
@@ -206,7 +205,7 @@ export class GoodAuctionInvestor extends Job {
       const bidPrice = tradePrice(askingPrice + 1);
       if (bidPrice < this.budget && bidPrice <= maxBuyPrice) {
         logger.info(
-          `[GoodAuctions]: ${playerService.readable(
+          `${playerService.readable(
             a.itemData
           )} bidding for ${bidPrice}, Expires ${
             a.expires
@@ -216,7 +215,7 @@ export class GoodAuctionInvestor extends Job {
           await fut.bidToTrade(a.tradeId, bidPrice);
         } catch (e) {
           logger.error(
-            `[GoodAuctions]: bid failed for ${playerService.readable(
+            `bid failed for ${playerService.readable(
               a.itemData
             )} with bid amount ${bidPrice}. Reason: ${e}. We'll analyze and bid again.`
           );
