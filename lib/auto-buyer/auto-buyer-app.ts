@@ -41,6 +41,12 @@ autoBuyerApp.get('/start-jobs', (req, res) => {
   res.send(AutoBuyerService.startJobs());
 });
 
+autoBuyerApp.get('/start-query', async (req, res) => {
+  const { q, sellPrice } = req.query;
+
+  res.send(AutoBuyerService.startQuery(q, parseInt(sellPrice, 10)));
+});
+
 autoBuyerApp.get('/jobs', (req, res) => {
   res.send(AutoBuyerService.report());
 });

@@ -22,4 +22,4 @@ chmod +x futbot/server-win.exe
 
 # Zip and clear
 zip -r futbot.zip futbot
-rm -rf ./futbot
+#rm -rf ./futbot

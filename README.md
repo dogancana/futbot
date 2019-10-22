@@ -146,7 +146,7 @@ Futbot calculates pricing from two sources: Market and Futbin.
 - Get 60 auctions of related player (if applicable)
 - If there are less than FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES prices, ignore market price. Default limit is 3. You can change this value in .env file.
 - Sort the prices.
-- Find most recurring minimum buy now price in lowest 10 price samples.
+- Find most recurring minimum buy now price in lowest 3 price samples.
 
 ### Quick Selling
 

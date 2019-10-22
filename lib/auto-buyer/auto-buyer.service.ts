@@ -1,12 +1,13 @@
 import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { StaticItems } from './../static/static-items';
-import { AutoBuyBuyNow } from './jobs';
+import { AutoBuyBuyNow, AutoBuyQuery } from './jobs';
 
 const logger = getLogger('AutoBuyerService');
 
 export namespace AutoBuyerService {
   let autoBuyBuyNowJob: AutoBuyBuyNow;
+  let autoBuyQueryJob: AutoBuyQuery;
 
   export interface Target {
     assetId: number;
@@ -88,6 +89,17 @@ export namespace AutoBuyerService {
     }
 
     return report();
+  }
+
+  export function startQuery(q: string, sellPrice?: number) {
+    if (!autoBuyQueryJob) {
+      autoBuyQueryJob = new AutoBuyQuery(
+        'start=0&num=21&type=player&rare=SP&maxb=6000',
+        8300
+      );
+    }
+
+    return autoBuyQueryJob.report();
   }
 
   export function stopJobs() {

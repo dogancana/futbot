@@ -101,6 +101,13 @@ export namespace fut {
     return response.data.auctionInfo;
   }
 
+  export async function searchTransferMarketByQuery(
+    q: string
+  ): Promise<AuctionInfo[]> {
+    const response = await futApi.get(`/transfermarket?${q}`);
+    return response.data.auctionInfo;
+  }
+
   export async function checkAuctionStatus(
     transferIds: ReadonlyArray<number>
   ): Promise<ReadonlyArray<AuctionInfo>> {
