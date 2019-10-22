@@ -82,6 +82,8 @@ export class LowPlayerInvestor extends Job {
         `${this.min}-${this.max}`,
         this.maxTargetPool || MAX_TARGET_POOL
       );
+      // dummy execution time
+      await new Promise(resolve => setTimeout(resolve, 5000));
       return;
     }
 
