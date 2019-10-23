@@ -1,8 +1,8 @@
+import e = require('express');
 import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { StaticItems } from './../static/static-items';
 import { AutoBuyBuyNow, AutoBuyQuery } from './jobs';
-import e = require('express');
 
 const logger = getLogger('AutoBuyerService');
 
@@ -149,7 +149,7 @@ export namespace AutoBuyerService {
       targets: targets.map(
         t => `${playerService.readable(t)} for ${t.maxPrice} max price`
       ),
-      targetQueries: targetQueries,
+      targetQueries,
       jobs: {
         autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.report() : null,
         autoBuyQueryJob: autoBuyQueryJob ? autoBuyQueryJob.report() : null
