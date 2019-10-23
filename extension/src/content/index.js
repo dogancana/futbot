@@ -5,7 +5,7 @@ import AutoBuyList from './auto-buy-list';
 
 import './auth';
 import './drawer';
-import './hijack-player-generation';
+import './overwrite-fut-classes';
 
 Vue.config.productionTip = false;
 Vue.use(VueCollapse);

@@ -1,12 +1,14 @@
 import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { StaticItems } from './../static/static-items';
-import { AutoBuyBuyNow } from './jobs';
+import { AutoBuyBuyNow, AutoBuyQuery } from './jobs';
+import e = require('express');
 
 const logger = getLogger('AutoBuyerService');
 
 export namespace AutoBuyerService {
   let autoBuyBuyNowJob: AutoBuyBuyNow;
+  let autoBuyQueryJob: AutoBuyQuery;
 
   export interface Target {
     assetId: number;
@@ -17,7 +19,13 @@ export namespace AutoBuyerService {
     readable?: string;
   }
 
+  export interface TargetQuery {
+    query: string;
+    sellPrice?: number;
+  }
+
   export const targets: Target[] = [];
+  export const targetQueries: TargetQuery[] = [];
 
   export function addTarget(target: Target) {
     if (
@@ -78,11 +86,35 @@ export namespace AutoBuyerService {
       logger.info(
         `Jobs were not running but you added a target. We are starting auto buy jobs`
       );
-      startJobs();
+      startAutoBuyNow();
     }
   }
 
-  export function startJobs() {
+  export function addQueryTarget(q: string, sellPrice?: number) {
+    if (!q) {
+      throw new Error('You should pass a query');
+    }
+
+    const duped = targetQueries.find(v => v.query === q);
+    if (duped) {
+      logger.info(
+        `Query ${q} was already in your targets. Updating sell price as ${sellPrice}`
+      );
+      duped.sellPrice = sellPrice;
+    } else {
+      logger.info(`Adding ${q} to your targets with ${sellPrice}`);
+      targetQueries.push({ query: q, sellPrice });
+    }
+
+    if (!autoBuyQueryJob) {
+      logger.info(`AutoBuyQuery job was not running, starting now.`);
+      startQueryJob();
+    }
+
+    return targetQueries;
+  }
+
+  export function startAutoBuyNow() {
     if (!autoBuyBuyNowJob) {
       autoBuyBuyNowJob = new AutoBuyBuyNow();
     }
@@ -90,10 +122,23 @@ export namespace AutoBuyerService {
     return report();
   }
 
+  export function startQueryJob() {
+    if (!autoBuyQueryJob) {
+      autoBuyQueryJob = new AutoBuyQuery();
+    }
+
+    return autoBuyQueryJob.report();
+  }
+
   export function stopJobs() {
     if (autoBuyBuyNowJob) {
       autoBuyBuyNowJob.stop();
       autoBuyBuyNowJob = undefined;
+    }
+
+    if (autoBuyQueryJob) {
+      autoBuyQueryJob.stop();
+      autoBuyQueryJob = undefined;
     }
 
     return report();
@@ -104,8 +149,10 @@ export namespace AutoBuyerService {
       targets: targets.map(
         t => `${playerService.readable(t)} for ${t.maxPrice} max price`
       ),
+      targetQueries: targetQueries,
       jobs: {
-        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.report() : null
+        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.report() : null,
+        autoBuyQueryJob: autoBuyQueryJob ? autoBuyQueryJob.report() : null
       }
     };
   }

@@ -84,6 +84,7 @@ futApi.interceptors.response.use(
       slowedDownAfterTooManyRequests = true;
       logger.warn('will slow down all jobs by 1/3 for next 30 mins');
       queue.changeRequestsPerSec(requestsPerSec / 3);
+      queue.clear();
       setTimeout(() => {
         queue.changeRequestsPerSec(requestsPerSec);
         slowedDownAfterTooManyRequests = false;

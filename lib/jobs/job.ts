@@ -5,6 +5,7 @@ const jobs: Job[] = [];
 
 const MAX_JOB_FREQUENCY = 20;
 const MIN_JOB_FREQUENCY = 1;
+const sleep = () => new Promise(resolve => setTimeout(resolve, 1500));
 
 export class Job {
   public static stopAllJobs() {
@@ -60,7 +61,11 @@ export class Job {
   }
 
   private static addJobToQueue(job: Job): void {
-    if (Job.jobQueue.find(j => j.name === job.name)) {
+    if (
+      Job.jobQueue.find(j => j.name === job.name) ||
+      job.stopped ||
+      job.finished
+    ) {
       return;
     }
 
@@ -86,6 +91,9 @@ export class Job {
     }
     const t = new Date().getTime() - start;
     logger.debug(`${job.name} execution finished in ${t}`);
+    if (t < 500) {
+      await sleep();
+    }
     job.avgExecTimeS =
       ((job.execTime - 1) * job.avgExecTimeS + t) / job.execTime;
   }

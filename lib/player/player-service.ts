@@ -20,18 +20,18 @@ export namespace playerService {
     const auctions = await getAuctions(resourceId);
     let buyNowPrices: number[] = [];
 
-    auctions.forEach(a => {
-      if (a.itemData.resourceId !== resourceId) {
-        return;
+    for (const auction of auctions) {
+      if (auction.itemData.resourceId !== resourceId) {
+        continue;
       }
 
-      buyNowPrices.push(a.buyNowPrice);
-    });
+      buyNowPrices.push(auction.buyNowPrice);
+    }
 
     buyNowPrices = buyNowPrices.sort((a, b) => a - b);
     const cheapestValues = buyNowPrices.slice(
       0,
-      Math.min(10, buyNowPrices.length)
+      Math.min(3, buyNowPrices.length)
     );
 
     return {
