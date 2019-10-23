@@ -69,6 +69,9 @@ export class Job {
       return;
     }
 
+    for (const j of Job.jobQueue) {
+      j.effectiveImportanceOrder--;
+    }
     job.effectiveImportanceOrder--;
     Job.jobQueue.push(job);
     Job.jobQueue = Job.jobQueue.sort(
