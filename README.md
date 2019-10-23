@@ -105,15 +105,30 @@ You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.
 ### Auto Buyer
 
 http://localhost:9999/auto-buyer/jobs  
-http://localhost:9999/auto-buyer/start-jobs  
+http://localhost:9999/auto-buyer/start-auto-buy-now  
+http://localhost:9999/auto-buyer/start-query  
 http://localhost:9999/auto-buyer/stop-jobs  
-Endpoints to control auto buyer jobs.
+Endpoints to control auto buyer jobs. You don't need to start these as they will be automatically started once you add a target player or target query.
 
 http://localhost:9999/auto-buyer/targets  
-http://localhost:9999/auto-buyer/add-target?assetId=X&resourceId=X&maxPrice=X&sellPrice=X&discardValue=X  
-Endpoints to control your auto buyer targets. You can also access your targets by clicking extension button on chrome.  
-Add target endpoint is not intented to use directly. You can use it via web app. Just search the player you want, click for futbot details and click 'Add Target' button with desired 'Buy Price' and 'Sell Price values'.  
-If sell price value is not defined, the bot won't sell your player but try to send it to club.
+It'll list your target players and target queries if any.
+
+**Sniping Players** (Auto Buy Now):  
+Auto buyer feature is activated from futbot additions to UI.  
+Whenever you see a player, there will be a triangle icon to show player details and add target options. You can specify a buy value for this target and auto buyer will try to buy him for less than the price you provided.  
+You can optionaly provide a sell price. If a sell price is present, targets will be immediately sold.  
+If you wish to change buy value or sell value, just search the same target and add him again with new values.
+
+**Sniping search results** (Auto Query):  
+You can also search your last transfer search from transfer results page. This feature is really similar to sniping players. Only difference is, auto buy query will buy whatever pops up for your query. So, you don't need to specify a price limit, as you can already specify it in your search criteria.  
+However you can still specify a sell price, which works exactly as in players.
+
+Here is an example of auto buy query, which tries to buy any special player under 3000 coins. They will be sold for 4400.
+![](doc/gifs/auto-query.gif)
+
+**NOTE:** In order to bypass EA caches, min current bid and min buy now filters are automatically set. Don't use min current bid and min buy now values, otherwise you'll get an error (460);
+
+**DISCLAIMER:** This feature will buy whatever pops up after your query. Which means, it can buy more than 50 player in less than 10 seconds. Use really carefully!
 
 ### General
 

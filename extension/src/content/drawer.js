@@ -1,5 +1,6 @@
 import { addVueApp } from '.';
 import Player from './player.vue';
+import SearchResults from './search-results.vue';
 import { uid } from './utils/uid';
 
 const vueAppQueue = [];
@@ -16,16 +17,16 @@ setInterval(() => {
 }, 100);
 
 export function addPlayerApp(playerNode) {
-  if (isElementPlayer(playerNode)) {
-    if (playerNode.getElementsByClassName('vue-marker').length === 0) {
-      const playerInfo = playerNode.self ? playerNode.self.data : {};
-      addVueChildToElm(playerNode, Player, { item: playerInfo });
-    }
+  if (playerNode.getElementsByClassName('player').length > 0) {
+    const playerInfo = playerNode.self ? playerNode.self.data : {};
+    addVueChildToElm(playerNode, Player, { item: playerInfo });
   }
 }
 
-function isElementPlayer(elm) {
-  return elm.getElementsByClassName('player').length > 0;
+export function addSearchResultsApp(searchResultsNode) {
+  if (!!searchResultsNode.closest('.SearchResults')) {
+    addVueChildToElm(searchResultsNode, SearchResults);
+  }
 }
 
 function addVueChildToElm(elm, comp, data, insertBefore) {

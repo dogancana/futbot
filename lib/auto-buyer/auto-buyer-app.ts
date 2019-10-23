@@ -5,14 +5,15 @@ import { AutoBuyerService } from './auto-buyer.service';
 export const autoBuyerApp = express();
 
 autoBuyerApp.get('/targets', (req, res) => {
-  res.send(
-    AutoBuyerService.targets.map(
+  res.send({
+    autoBuy: AutoBuyerService.targets.map(
       t =>
         `${playerService.readable(t)}, max buy: ${t.maxPrice}, sell: ${
           t.sellPrice
         }`
-    )
-  );
+    ),
+    autoBuyQuery: AutoBuyerService.targetQueries
+  });
 });
 
 autoBuyerApp.get('/add-target', (req, res) => {
@@ -33,18 +34,28 @@ autoBuyerApp.get('/add-target', (req, res) => {
     });
     res.send(AutoBuyerService.targets);
   } catch (e) {
-    res.status(500).send(e.message);
+    res.status(500).send(e);
   }
 });
 
-autoBuyerApp.get('/start-jobs', (req, res) => {
-  res.send(AutoBuyerService.startJobs());
+autoBuyerApp.get('/add-query-target', (req, res) => {
+  const { query } = req.query;
+  let { sellPrice } = req.query;
+  sellPrice = parseInt(sellPrice, 10);
+  sellPrice = !isNaN(sellPrice) ? sellPrice : null;
+  try {
+    res.send(AutoBuyerService.addQueryTarget(decodeURI(query), sellPrice));
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+
+autoBuyerApp.get('/start-auto-buy-now', (req, res) => {
+  res.send(AutoBuyerService.startAutoBuyNow());
 });
 
 autoBuyerApp.get('/start-query', async (req, res) => {
-  const { q, sellPrice } = req.query;
-
-  res.send(AutoBuyerService.startQuery(q, parseInt(sellPrice, 10)));
+  res.send(AutoBuyerService.startQueryJob());
 });
 
 autoBuyerApp.get('/jobs', (req, res) => {
