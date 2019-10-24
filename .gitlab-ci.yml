@@ -8,12 +8,15 @@ stages:
   - release
 
 .yarn_job_template:
+  tags:
+    - gitlab-org
   before_script:
     - curl -o- -L https://yarnpkg.com/install.sh | bash
-    - export PATH=$HOME/.yarn/bin:$PATH
 
 trigger:
   stage: trigger
+  tags:
+    - gitlab-org
   when: manual
   allow_failure: false
   script:
@@ -23,7 +26,7 @@ install-server-dependencies:
   extends: .yarn_job_template
   stage: setup
   script:
-    - yarn install --frozen-lockfile --cache-folder .yarn
+    - yarn install --cache-folder .yarn
   cache:
     key: 'yarn-server-cache_$CI_PROJECT_ID'
     paths:
@@ -39,7 +42,7 @@ install-extension-dependencies:
   stage: setup
   script:
     - cd extension
-    - yarn install --frozen-lockfile --cache-folder .yarn
+    - yarn install --cache-folder .yarn
   cache:
     key: 'yarn-extension-cache_$CI_PROJECT_ID'
     paths:
@@ -88,16 +91,20 @@ package:
     - cp -R extension/build futbot/extension
     - chmod +x futbot/server-macos
     - chmod +x futbot/server-win.exe
+    - apt-get update
+    - apt-get install zip
     - zip -r futbot.zip futbot
   artifacts:
     expire_in: 1 week
     paths:
       - 'futbot.zip'
 release:
-   stage: release
-   dependencies: package
-   when: manual
-   variables:
-    GITLAB_CI_RELEASER_NAME: Dogancan Arabaci
-    GITLAB_CI_RELEASER_EMAIL: dogancan.arabaci@gmail.com
-    GITLAB_CI_RELEASER_TOKEN: $GITLAB_CI_RELEASER_TOKEN
+  stage: release
+  tags:
+    - gitlab-org
+  dependencies:
+    - install-server-dependencies
+    - package
+  when: manual
+  script:
+    - npx semantic-release
