@@ -45,7 +45,7 @@ export class AutoBuyBuyNow extends Job {
     }
 
     for (
-      let i = this.lastTargetId;
+      let i = 0;
       i < TARGET_BATCH_TO_CHECK;
       i++, this.lastTargetId = (this.lastTargetId + 1) % targets.length
     ) {

@@ -53,7 +53,7 @@ export class Job {
     while (Job.jobQueue.length > 0) {
       const jobToExecute = Job.jobQueue.shift();
       await Job.executeJob(jobToExecute);
-      if (!jobToExecute.stopped) {
+      if (!jobToExecute.stopped || !jobToExecute.finished) {
         this.addJobToQueue(jobToExecute);
       }
     }
@@ -72,7 +72,6 @@ export class Job {
     for (const j of Job.jobQueue) {
       j.effectiveImportanceOrder--;
     }
-    job.effectiveImportanceOrder--;
     Job.jobQueue.push(job);
     Job.jobQueue = Job.jobQueue.sort(
       (a, b) => a.effectiveImportanceOrder - b.effectiveImportanceOrder
@@ -97,6 +96,7 @@ export class Job {
     if (t < 500) {
       await sleep();
     }
+    job.effectiveImportanceOrder = job.importanceOrder;
     job.avgExecTimeS =
       ((job.execTime - 1) * job.avgExecTimeS + t) / job.execTime;
   }
@@ -136,9 +136,19 @@ export class Job {
   }
 
   public start() {
+    if (this.finished) {
+      return;
+    }
     this.stopped = false;
     Job.addJobToQueue(this);
     Job.loop();
+  }
+
+  public finish() {
+    this.stop();
+    const i = jobs.findIndex(j => j.name === this.name);
+    jobs.splice(i, 1);
+    this.finished = true;
   }
 
   public isFinished(): boolean {

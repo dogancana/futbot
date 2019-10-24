@@ -1,4 +1,5 @@
 import { fut } from '../../api';
+import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
@@ -16,7 +17,7 @@ export class AutoBuyQuery extends Job {
   private lastTargetIndex = 0;
 
   constructor() {
-    super('AutoBuyQuery', 1);
+    super('AutoBuyQuery', envConfig().FUTBOT_JOB_IMP_AUTO_BUY_QUERY);
     this.setTask(this.loop);
   }
 
@@ -42,7 +43,7 @@ export class AutoBuyQuery extends Job {
       return;
     }
     for (
-      let i = this.lastTargetIndex;
+      let i = 0;
       i < TARGET_BATCH_TO_CHECK;
       i++, this.lastTargetIndex = (this.lastTargetIndex + 1) % targets.length
     ) {

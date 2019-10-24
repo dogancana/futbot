@@ -31,6 +31,17 @@ interceptXHR('fifa20/transfermarket', req => {
   lastSearch = req.responseURL;
 });
 
+function queryToParams(search) {
+  return JSON.parse(
+    '{"' +
+      decodeURI(search)
+        .replace(/"/g, '\\"')
+        .replace(/&/g, '","')
+        .replace(/=/g, '":"') +
+      '"}'
+  );
+}
+
 export default {
   data: () => ({
     lastSearch,
@@ -46,8 +57,36 @@ export default {
         return;
       }
 
+      const params = queryToParams(q);
       let sellPrice = parseInt(this.sellPrice, 10);
       sellPrice = !isNaN(sellPrice) ? sellPrice : null;
+
+      if (params.micr || params.minb) {
+        alert(
+          'Min bid price and min buy now price values are used to bypass cache.\n' +
+            'You cannot set them in this feature.\n' +
+            'Please search again'
+        );
+        return;
+      }
+
+      if (!params.maxb) {
+        alert(
+          'This feature would be really unpredictable without setting a max buy now price.\n' +
+            'To prevent any losses, set a max buy now value.'
+        );
+        return;
+      }
+
+      if (parseInt(params.maxb, 10) < 800) {
+        alert(params.maxb + ' is too low for this kind of feature.');
+        return;
+      }
+
+      if (sellPrice && parseInt(sellPrice, 10) <= parseInt(params.maxb, 10)) {
+        alert('Sell price cannot be equal or lower than max buy now price');
+        return;
+      }
 
       if (
         confirm(

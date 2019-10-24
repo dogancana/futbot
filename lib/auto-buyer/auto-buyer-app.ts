@@ -17,12 +17,15 @@ autoBuyerApp.get('/targets', (req, res) => {
 });
 
 autoBuyerApp.get('/add-target', (req, res) => {
-  let { assetId, resourceId, maxPrice, sellPrice, discardValue } = req.query;
+  let { assetId, resourceId, maxPrice, discardValue } = req.query;
   assetId = parseInt(assetId, 10);
   resourceId = parseInt(resourceId, 10);
   maxPrice = parseInt(maxPrice, 10);
-  sellPrice = parseInt(sellPrice, 10);
   discardValue = parseInt(discardValue, 10);
+
+  let { sellPrice } = req.query;
+  sellPrice = parseInt(sellPrice, 10);
+  sellPrice = !isNaN(sellPrice) ? sellPrice : null;
 
   try {
     AutoBuyerService.addTarget({
@@ -34,7 +37,7 @@ autoBuyerApp.get('/add-target', (req, res) => {
     });
     res.send(AutoBuyerService.targets);
   } catch (e) {
-    res.status(500).send(e);
+    res.status(500).send(e.message);
   }
 });
 
@@ -46,7 +49,7 @@ autoBuyerApp.get('/add-query-target', (req, res) => {
   try {
     res.send(AutoBuyerService.addQueryTarget(decodeURI(query), sellPrice));
   } catch (e) {
-    res.status(500).send(e);
+    res.status(500).send(e.message);
   }
 });
 

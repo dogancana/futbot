@@ -49,15 +49,13 @@ export namespace AutoBuyerService {
       );
     }
 
-    if (target.sellPrice < target.maxPrice) {
+    if (target.sellPrice && target.sellPrice < target.maxPrice) {
       throw new Error(
         `Sell price (${target.sellPrice}) cannot be smaller than target buy price ${target.maxPrice}`
       );
     }
 
-    const duped: Target = targets.filter(
-      t => t.resourceId === target.resourceId
-    )[0];
+    const duped: Target = targets.find(t => t.resourceId === target.resourceId);
     const playerStr = playerService.readable(target);
 
     if (!!duped) {
@@ -119,7 +117,7 @@ export namespace AutoBuyerService {
       autoBuyBuyNowJob = new AutoBuyBuyNow();
     }
 
-    return report();
+    return autoBuyBuyNowJob.report();
   }
 
   export function startQueryJob() {
