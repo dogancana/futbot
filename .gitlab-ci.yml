@@ -107,4 +107,4 @@ release:
     - package
   when: manual
   script:
-    - npx semantic-release
+    - yarn semantic-release

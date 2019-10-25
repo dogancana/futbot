@@ -1,0 +1,12 @@
+{
+  "repositoryUrl": "https://gitlab.com/futbot-community/futbot",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    ["@semantic-release/gitlab", {
+      "assets": [
+        {"path": "futbot.zip", "label": "Futbot"},
+      ]
+    }]
+  ]
+}
