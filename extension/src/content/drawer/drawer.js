@@ -1,6 +1,6 @@
 import Vue from 'vue';
-import Item from '../components/item';
-import SearchResults from '../components/search-results';
+import Item from '../components/item.vue';
+import SearchResults from '../components/search-results.vue';
 import { uid } from '../utils';
 
 const vueAppQueue = [];

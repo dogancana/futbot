@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import VueCollapse from 'vue2-collapse';
-import Collapsible from './components/Collapsible';
+import Collapsible from './components/collapsible.vue';
 import { watchSessionData } from './auth';
 import { overwriteFutClasses, handleVueAppQueue } from './drawer';
 import { setupXMLInterceptors } from './utils';
