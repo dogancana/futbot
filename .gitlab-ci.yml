@@ -18,7 +18,8 @@ trigger:
   tags:
     - gitlab-org
   only:
-    - master
+    refs:
+      - master
   allow_failure: false
   script:
     - echo Starting pipeline
@@ -101,8 +102,7 @@ package:
       - 'futbot.zip'
 release:
   stage: release
-  when:
-    - manual
+  when: manual
   tags:
     - gitlab-org
   dependencies:
