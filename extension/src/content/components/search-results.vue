@@ -23,8 +23,8 @@
 </template>
 
 <script>
-import { interceptXHR } from './auth.js';
-import { addTargetQueryToAutoBuy } from './futbot/auto-buy.js';
+import { interceptXHR } from '../utils';
+import { addTargetQueryToAutoBuy } from '../futbot/auto-buy.js';
 let lastSearch = null;
 
 interceptXHR('fifa20/transfermarket', req => {

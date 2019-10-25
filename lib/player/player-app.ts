@@ -2,6 +2,7 @@ import * as express from 'express';
 import { fut, futbin } from '../api';
 import { tradePrice } from '../trader/trade-utils';
 import { getLogger } from './../logger';
+import { getOptimalSellPrice, SellPrice } from './../pricing/index';
 import { playerService } from './player-service';
 
 const logger = getLogger('PlayerApp');
@@ -17,19 +18,9 @@ playerApp.get('', async (req, res) => {
     return;
   }
 
-  let futbinPrice: futbin.Price;
-  let marketPrice: playerService.MarketPrice;
+  let price: SellPrice;
   try {
-    futbinPrice = await playerService.getFutbinPrice(resourceId);
-  } catch (e) {
-    logger.error(
-      `error while retrieving futbin price for ${playerService.readable({
-        resourceId
-      })}. Reason: ${e}`
-    );
-  }
-  try {
-    marketPrice = await playerService.getMarketPrice(resourceId);
+    price = await getOptimalSellPrice(resourceId);
   } catch (e) {
     logger.error(
       `error while retrieving market price for ${playerService.readable({
@@ -38,9 +29,8 @@ playerApp.get('', async (req, res) => {
     );
   }
   res.send({
-    name: playerService.readable({ assetId }),
-    futbinPrice,
-    marketPrice
+    price,
+    name: playerService.readable({ assetId })
   });
 });
 

@@ -6,16 +6,8 @@
         <p v-if="priceError">{{ priceError }}</p>
         <div class="price" v-if="price">
           <p>
-            <span>Futbin:</span>
-            <span>{{ price.futbinPrice }}</span>
-          </p>
-          <p>
-            <span>Min market buy now:</span>
-            <span>{{ price.marketPrice.buyNow }}</span>
-          </p>
-          <p>
-            <span>Market samples:</span>
-            <span>{{ price.marketPrice.sampleCount }}</span>
+            <span>Price:</span>
+            <span>{{ price.buyNowPrice }}</span>
           </p>
         </div>
         <div class="actions">
@@ -53,8 +45,8 @@
 </template>
 
 <script>
-import { getPlayerPrice } from './futbot/player.js';
-import { addTargetToAutoBuy } from './futbot/auto-buy';
+import { getPlayerPrice } from '../futbot/player.js';
+import { addTargetToAutoBuy } from '../futbot/auto-buy';
 import { isNumber } from 'util';
 
 const initialProps = () => ({
@@ -64,7 +56,8 @@ const initialProps = () => ({
   targetPrice: null,
   sellPrice: null,
   targetAdding: false,
-  targetAddingResult: null
+  targetAddingResult: null,
+  itemType: null
 });
 
 export default {
@@ -72,6 +65,7 @@ export default {
   data: function() {
     return initialProps();
   },
+  mounted() {},
   methods: {
     clear() {
       Object.assign(this, initialProps());
@@ -86,12 +80,7 @@ export default {
         this.priceLoading = true;
         getPlayerPrice(this.item._metaData.id, this.item.resourceId)
           .then(d => {
-            this.price = {
-              ...d,
-              futbinPrice: d.futbinPrice
-                ? d.futbinPrice.prices.slice(0, 2).join()
-                : 'Error'
-            };
+            this.price = d.price;
             this.priceLoading = false;
             this.priceError = null;
           })

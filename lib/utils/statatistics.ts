@@ -1,4 +1,8 @@
 export function mode(numbers: number[]): number {
+  if (!numbers || numbers.length === 0) {
+    return null;
+  }
+
   const counts: { [key: number]: number } = {};
 
   for (const num of numbers) {

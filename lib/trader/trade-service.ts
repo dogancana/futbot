@@ -52,7 +52,7 @@ export namespace tradeService {
   export async function sellPlayerOptimal(
     player: fut.ItemData
   ): Promise<PlayerSellConf> {
-    const price: SellPrice = await getOptimalSellPrice(player.resourceId, true);
+    const price: SellPrice = await getOptimalSellPrice(player.resourceId);
     const quickSellPrice = player.discardValue;
     if (!price) {
       logger.error(

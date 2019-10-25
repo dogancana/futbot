@@ -3,7 +3,7 @@ import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
-import { getOptimalFutbinPrice, getOptimalMarketPrice } from '../../pricing';
+import { getOptimalSellPrice } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
@@ -242,47 +242,19 @@ export class GoodAuctionInvestor extends Job {
         return { goodBuy: false };
       }
     }
-    let futbinSellPrice: number;
-    let marketSellPrice: number;
     let profitMargin: number;
+    const sellPrice = (await getOptimalSellPrice(auction.itemData.resourceId))
+      .buyNowPrice;
     const askingPrice = auction.currentBid || auction.startingBid;
 
-    const futbinPrice = await getOptimalFutbinPrice(
-      auction.itemData.resourceId
-    );
-    futbinSellPrice = !!futbinPrice ? futbinPrice.buyNowPrice : null;
+    profitMargin = ((sellPrice - askingPrice) / sellPrice) * 100;
 
-    if (futbinSellPrice) {
-      profitMargin = ((futbinSellPrice - askingPrice) / futbinSellPrice) * 100;
-      if (profitMargin < PROFIT_MARGIN_PERCT) {
-        return result(false);
-      }
-    }
-
-    const marketPrice = await getOptimalMarketPrice(
-      auction.itemData.resourceId
-    );
-    marketSellPrice = !!marketPrice ? marketPrice.buyNowPrice : null;
-    if (!marketSellPrice) {
-      return result(false);
-    }
-
-    profitMargin = ((marketSellPrice - askingPrice) / marketSellPrice) * 100;
-
-    function result(overwriteGoodBuy?: boolean) {
-      const sellPrice = marketSellPrice || futbinSellPrice;
-      return {
-        goodBuy:
-          overwriteGoodBuy !== undefined
-            ? overwriteGoodBuy
-            : profitMargin >= PROFIT_MARGIN_PERCT,
-        askingPrice,
-        profitMargin,
-        sellPrice,
-        maxBuyPrice: sellPrice * ((100 - PROFIT_MARGIN_PERCT) / 100)
-      };
-    }
-
-    return result();
+    return {
+      goodBuy: profitMargin >= PROFIT_MARGIN_PERCT,
+      askingPrice,
+      profitMargin,
+      sellPrice,
+      maxBuyPrice: sellPrice * ((100 - PROFIT_MARGIN_PERCT) / 100)
+    };
   }
 }

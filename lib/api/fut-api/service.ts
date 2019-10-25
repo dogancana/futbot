@@ -88,7 +88,7 @@ export namespace fut {
       `/transfermarket?${querystring.stringify({
         ...defaultQuery,
         ...query
-      })}${marketSearchQueryExtra()}`
+      })}`
     );
     return response.data.auctionInfo;
   }

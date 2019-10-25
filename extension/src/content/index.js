@@ -1,21 +1,15 @@
 import Vue from 'vue';
 import VueCollapse from 'vue2-collapse';
-import Collapsible from './collapsible';
-import AutoBuyList from './auto-buy-list';
+import Collapsible from './components/Collapsible';
+import { watchSessionData } from './auth';
+import { overwriteFutClasses, handleVueAppQueue } from './drawer';
+import { setupXMLInterceptors } from './utils';
 
-import './auth';
-import './drawer';
-import './overwrite-fut-classes';
+setupXMLInterceptors();
+watchSessionData();
+handleVueAppQueue();
+overwriteFutClasses();
 
 Vue.config.productionTip = false;
 Vue.use(VueCollapse);
 Vue.use(Collapsible);
-Vue.use(AutoBuyList);
-
-export function addVueApp(elementSelector, component, data) {
-  /* eslint-disable no-new */
-  return new Vue({
-    el: elementSelector,
-    render: h => h(component, { props: data })
-  });
-}

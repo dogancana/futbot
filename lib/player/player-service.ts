@@ -56,11 +56,10 @@ export namespace playerService {
   }
 
   export function readable(player: {
-    id?: number;
     assetId?: number;
     resourceId?: number;
   }): string {
-    const id = player.assetId || player.id || -1;
+    const id = player.assetId || player.resourceId || -1;
     const data = StaticItems.itemData[id] || {
       name: '?????',
       rating: 0
