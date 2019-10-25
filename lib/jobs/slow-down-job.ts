@@ -11,9 +11,10 @@ export class SlowDownJob extends Job {
   }
 
   private async sleep(): Promise<void> {
-    logger.info('Sleeping for 30 seconds');
+    const duration = envConfig().FUTBOT_SLOW_DOWN_JOB_DURATION * 1000;
+    logger.info(`Sleeping for ${duration} seconds`);
     await new Promise(resolve => {
-      setTimeout(() => resolve(), 30000);
+      setTimeout(() => resolve(), duration);
     });
   }
 }

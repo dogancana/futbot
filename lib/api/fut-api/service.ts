@@ -145,9 +145,7 @@ export namespace fut {
   }
 
   export async function getSquadPlayerIds(): Promise<fut.ItemData[]> {
-    const response = await futApi.get(`/squad/active`, {
-      adapter: simpleCacheAdapter
-    });
+    const response = await futApi.get(`/squad/active`);
     const players: any[] = response.data.players;
     return players.map(p => p.itemData);
   }

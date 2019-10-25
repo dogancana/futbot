@@ -140,6 +140,10 @@ http://localhost:9999/jobs/stop-all
 http://localhost:9999/jobs/resume-all  
 These endpoints are pretty straitghforward. They show an overall look of currently running tasks/jobs. They also include their individual reports.
 
+http://localhost:9999/jobs/start-slow-down
+This is a job which will be sleeping for FUTBOT_SLOW_DOWN_JOB_DURATION of time (.env file).  
+You can also configure how frequent this will be by setting FUTBOT_JOB_IMP_SLOW_DOWN value in .env file.
+
 http://localhost:9999/stats  
 Shows statistics about api usage for fut & futbin.
 
