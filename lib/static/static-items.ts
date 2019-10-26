@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { tmpdir } from 'os';
 import { resolve } from 'path';
-import { readFileIfRecent, writeFileSyncSafe, deleteFile } from '../utils';
+import { deleteFile, readFileIfRecent, writeFileSyncSafe } from '../utils';
 import { getLogger } from './../logger';
 import { ItemData } from './static-items';
 
