@@ -48,3 +48,7 @@ export async function readFileIfRecent<T>(fileName: string): Promise<T> {
     return null;
   }
 }
+
+export function deleteFile(fileName: string) {
+  unlinkSync(fileName);
+}

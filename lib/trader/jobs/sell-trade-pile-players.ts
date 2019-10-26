@@ -1,4 +1,4 @@
-import { uniqBy } from 'lodash';
+import { uniq, uniqBy } from 'lodash';
 import { fut } from '../../api';
 import { envConfig } from '../../config';
 import { Job } from '../../jobs';
@@ -12,6 +12,7 @@ const PLAYERS_TO_SELL_AT_ONCE = 5;
 
 export class SellTradePilePlayers extends Job {
   private playersListed: tradeService.PlayerSellConf[];
+  private skipPlayers: number[] = [];
 
   constructor() {
     super('SellTradePilePlayers', envConfig().FUTBOT_JOB_IMP_SELL_TRADE_PILE);
@@ -34,8 +35,11 @@ export class SellTradePilePlayers extends Job {
   }
 
   private async loop() {
+    this.skipPlayers = uniq(this.skipPlayers);
+
     const players = (await fut.getTradePile())
       .filter(p => p.tradeState !== 'active')
+      .filter(p => this.skipPlayers.indexOf(p.itemData.resourceId) === -1)
       .slice(0, PLAYERS_TO_SELL_AT_ONCE);
 
     if (players.length === 0) {
@@ -48,6 +52,8 @@ export class SellTradePilePlayers extends Job {
       const result = await tradeService.sellPlayerOptimal(player.itemData);
       if (result) {
         this.playersListed.push(result);
+      } else {
+        this.skipPlayers.push(player.itemData.resourceId);
       }
     }
 

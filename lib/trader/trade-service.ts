@@ -96,6 +96,11 @@ export namespace tradeService {
     }
 
     try {
+      logger.info(
+        `Selling ${playerService.readable(player)} for ${price.startingBid}/${
+          price.buyNowPrice
+        }`
+      );
       await fut.sellPlayer({
         ...price,
         duration: 3600,

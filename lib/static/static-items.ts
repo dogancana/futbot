@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { tmpdir } from 'os';
 import { resolve } from 'path';
-import { readFileIfRecent, writeFileSyncSafe } from '../utils';
+import { readFileIfRecent, writeFileSyncSafe, deleteFile } from '../utils';
 import { getLogger } from './../logger';
 import { ItemData } from './static-items';
 
@@ -40,6 +40,16 @@ staticItemsApp.get('/need-data', (req, res) => {
     res.status(500).send('NO');
   } else {
     res.status(200).send('YES');
+  }
+});
+
+staticItemsApp.get('/delete-data', (req, res) => {
+  try {
+    itemData = {};
+    deleteFile(fileName);
+    res.send('OK');
+  } catch (e) {
+    res.send(e);
   }
 });
 

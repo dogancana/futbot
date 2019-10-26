@@ -2,7 +2,9 @@ import { fut } from '../api';
 import { filterPlayers } from '../player/player-utils';
 
 export namespace club {
-  export async function getNonSquadPlayers() {
+  export async function getNonSquadPlayers(
+    maxAmount?: number
+  ): Promise<fut.ItemData[]> {
     const batch = 100;
     const squadPlayerIDs = (await fut.getSquadPlayerIds()).map(p => p.id);
     const playerCount = (await fut.getClubItemMeta()).filter(
@@ -10,6 +12,9 @@ export namespace club {
     )[0].typeValue;
     let players: fut.ItemData[] = [];
     for (let i = 0; i < playerCount / batch; i++) {
+      if (maxAmount && players.length >= maxAmount) {
+        break;
+      }
       players = players.concat(await fut.getClubPlayers(i, batch));
     }
 
@@ -20,8 +25,10 @@ export namespace club {
     return players.filter(p => squadPlayerIDs.indexOf(p.id) === -1);
   }
 
-  export async function getNonSquadTradeablePlayers() {
-    const players = await getNonSquadPlayers();
+  export async function getNonSquadTradeablePlayers(
+    maxAmount?: number
+  ): Promise<fut.ItemData[]> {
+    const players = await getNonSquadPlayers(maxAmount);
     return filterPlayers(players, { tradeableOnly: true }).filter(
       p => p.itemState === 'free'
     );
