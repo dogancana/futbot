@@ -1,6 +1,8 @@
 import * as express from 'express';
+import { defineJobEndpoints } from '../jobs';
 import { playerService } from '../player';
 import { AutoBuyerService } from './auto-buyer.service';
+import { AutoBuyBuyNow, AutoBuyQuery } from './jobs';
 
 export const autoBuyerApp = express();
 
@@ -53,18 +55,5 @@ autoBuyerApp.get('/add-query-target', (req, res) => {
   }
 });
 
-autoBuyerApp.get('/start-auto-buy-now', (req, res) => {
-  res.send(AutoBuyerService.startAutoBuyNow());
-});
-
-autoBuyerApp.get('/start-query', async (req, res) => {
-  res.send(AutoBuyerService.startQueryJob());
-});
-
-autoBuyerApp.get('/jobs', (req, res) => {
-  res.send(AutoBuyerService.report());
-});
-
-autoBuyerApp.get('/stop-jobs', (req, res) => {
-  res.send(AutoBuyerService.stopJobs());
-});
+defineJobEndpoints(autoBuyerApp, 'buy-now', () => new AutoBuyBuyNow());
+defineJobEndpoints(autoBuyerApp, 'buy-query', () => new AutoBuyQuery());

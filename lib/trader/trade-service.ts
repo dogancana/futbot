@@ -3,51 +3,11 @@ import { envConfig } from '../config';
 import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { getOptimalSellPrice, SellPrice } from '../pricing';
-import { SellTradePilePlayers, SellUnusedPlayers } from './jobs';
 
 const logger = getLogger('TradeService');
 
 export namespace tradeService {
-  let sellUnusedPlayers: SellUnusedPlayers;
-  let sellTradePilePlayers: SellTradePilePlayers;
-
   export type PlayerSellConf = fut.ItemData & { sellPrice: SellPrice };
-
-  export function startSellUnusedPlayers(maxRating?: number) {
-    if (!sellUnusedPlayers) {
-      sellUnusedPlayers = new SellUnusedPlayers(maxRating);
-    }
-
-    return sellUnusedPlayers.report();
-  }
-
-  export function stopSellingUnusedPlayers() {
-    if (!sellUnusedPlayers) {
-      return null;
-    }
-    const report = sellUnusedPlayers.report();
-    sellUnusedPlayers.stop();
-    sellUnusedPlayers = null;
-    return report;
-  }
-
-  export function startSellingTradePile() {
-    if (!sellTradePilePlayers) {
-      sellTradePilePlayers = new SellTradePilePlayers();
-    }
-
-    return sellTradePilePlayers.report();
-  }
-
-  export function stopSellingTradePile() {
-    if (!sellTradePilePlayers) {
-      return null;
-    }
-    const report = sellTradePilePlayers.report();
-    sellTradePilePlayers.stop();
-    sellTradePilePlayers = null;
-    return report;
-  }
 
   export async function sellPlayerOptimal(
     player: fut.ItemData

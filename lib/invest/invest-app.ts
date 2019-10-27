@@ -1,37 +1,20 @@
 import * as express from 'express';
-import { investService } from './invest-service';
+import { defineJobEndpoints } from '../jobs';
+import { GoodAuctionInvestor, LowPlayerInvestor } from './jobs';
 
 export const investApp = express();
 
-investApp.get('/low-players', async (req, res) => {
-  const { maxTargetPool } = req.query;
-  const { budget, min, max } = getBudgetMinMax(req.query);
-  if (!budgetMinMaxQueryCheck(res, budget, min, max)) {
-    return;
-  }
-
-  res.send(
-    investService.startLowPlayerInvest({ budget, min, max, maxTargetPool })
-  );
+defineJobEndpoints<GoodAuctionInvestor>(investApp, 'good-auctions', q => {
+  const { budget, min, max } = getBudgetMinMax(q);
+  budgetMinMaxQueryCheck(budget, min, max);
+  return new GoodAuctionInvestor({ budget, min, max });
 });
 
-investApp.get('/low-players-stop', async (req, res) => {
-  investService.clearLowPlayerInvest();
-  res.send('OK');
-});
-
-investApp.get('/good-auctions', async (req, res) => {
-  const { budget, min, max } = getBudgetMinMax(req.query);
-  if (!budgetMinMaxQueryCheck(res, budget, min, max)) {
-    return;
-  }
-
-  res.send(investService.startGoodAuctionInvest({ budget, min, max }));
-});
-
-investApp.get('/good-auctions-stop', async (req, res) => {
-  investService.clearGoodAuctionInvest();
-  res.send('OK');
+defineJobEndpoints<LowPlayerInvestor>(investApp, 'low-players', q => {
+  const { maxTargetPool } = q;
+  const { budget, min, max } = getBudgetMinMax(q);
+  budgetMinMaxQueryCheck(budget, min, max);
+  return new LowPlayerInvestor({ budget, min, max, maxTargetPool });
 });
 
 function getBudgetMinMax(query: any) {
@@ -43,28 +26,18 @@ function getBudgetMinMax(query: any) {
   };
 }
 
-function budgetMinMaxQueryCheck(
-  res: express.Response,
-  budget: number,
-  min: number,
-  max: number
-): boolean {
+function budgetMinMaxQueryCheck(budget: number, min: number, max: number) {
   if (!budget) {
-    res.status(500).send('Send budget in query');
-    return false;
+    throw new Error('Send budget in query');
   }
 
   if ((min && budget < min) || budget < max) {
-    res
-      .status(500)
-      .send(`Budget ${budget} is lower then min/max limit (${min}-${max})`);
-    return false;
+    throw new Error(
+      `Budget ${budget} is lower then min/max limit (${min}-${max})`
+    );
   }
 
   if (min && max && min > max) {
-    res.status(500).send(`Min is greater than max. ${min} > ${max}`);
-    return false;
+    throw new Error(`Min is greater than max. ${min} > ${max}`);
   }
-
-  return true;
 }

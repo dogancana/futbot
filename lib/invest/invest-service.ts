@@ -1,18 +1,9 @@
 import { fut, futbin } from '../api';
 import { getLogger } from './../logger';
-import {
-  GoodAuctionInvestor,
-  LowPlayerInvestor,
-  LowPlayerInvestorProps
-} from './jobs';
-import { GoodAuctionInvestorProps } from './jobs/good-auction-investor';
 
 const logger = getLogger('InvestService');
 
 export namespace investService {
-  let lowPlayerInvestJob: LowPlayerInvestor;
-  let goodAuctionInvestor: GoodAuctionInvestor;
-
   export interface TargetInfo {
     resourceId: number;
     futbinId: number;
@@ -53,42 +44,5 @@ export namespace investService {
     }
 
     return playerInfos;
-  }
-
-  export function startLowPlayerInvest(props: LowPlayerInvestorProps) {
-    if (!lowPlayerInvestJob) {
-      lowPlayerInvestJob = new LowPlayerInvestor(props);
-    }
-
-    return {
-      timesTargetBought: lowPlayerInvestJob.execTime,
-      report: lowPlayerInvestJob.report(),
-      target: lowPlayerInvestJob.targetCount()
-    };
-  }
-
-  export function clearLowPlayerInvest() {
-    if (lowPlayerInvestJob) {
-      lowPlayerInvestJob.stop();
-    }
-    lowPlayerInvestJob = null;
-  }
-
-  export function startGoodAuctionInvest(props: GoodAuctionInvestorProps) {
-    if (!goodAuctionInvestor) {
-      goodAuctionInvestor = new GoodAuctionInvestor(props);
-    }
-
-    return {
-      timesMarketChecked: goodAuctionInvestor.execTime,
-      report: goodAuctionInvestor.report()
-    };
-  }
-
-  export function clearGoodAuctionInvest() {
-    if (goodAuctionInvestor) {
-      goodAuctionInvestor.stop();
-    }
-    goodAuctionInvestor = null;
   }
 }

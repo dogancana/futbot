@@ -70,8 +70,7 @@ export class GoodAuctionInvestor extends Job {
   private async loop() {
     if (this.budget < this.min) {
       this.stop();
-      this.finished = true;
-      investService.clearGoodAuctionInvest();
+      this.finish();
       logger.info(
         `job ran out of budget. Budget: ${this.budget}. ` +
           `Bought ${

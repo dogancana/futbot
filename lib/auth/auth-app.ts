@@ -11,7 +11,7 @@ async function setAuthSession(
   req: express.Request,
   res: express.Response
 ): Promise<void> {
-  const { auth, lastStamp } = req.body;
+  const { auth } = req.body;
 
   validateEndpoint(auth.ipPort);
 
@@ -19,7 +19,6 @@ async function setAuthSession(
     SessionInjector.auth = auth;
     if (auth.sid) {
       logger.info(`Received auth token fron extension!`);
-      SessionInjector.lastStamp = parseInt(lastStamp, 10);
       logger.info(
         `New auth token received. Will resume all stopped jobs if any`
       );
@@ -39,8 +38,7 @@ async function getAuthSession(
 ): Promise<void> {
   res.send(
     JSON.stringify({
-      auth: SessionInjector.auth,
-      lastStamp: SessionInjector.lastStamp
+      auth: SessionInjector.auth
     })
   );
 }
