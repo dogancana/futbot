@@ -30,7 +30,12 @@ export class Job {
     return {
       jobQueue: Job.jobQueue.map(j => j.name),
       jobs: jobs.map(job => ({
-        ...job,
+        name: job.name,
+        execTime: job.execTime,
+        finished: job.isFinished(),
+        stopped: job.stopped,
+        userStopped: job.userStopped,
+        averageExecTimeS: job.avgExecTimeS,
         report: job.report()
       }))
     };
