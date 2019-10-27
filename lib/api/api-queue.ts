@@ -68,6 +68,7 @@ export class ApiQueue {
         !!this.configResolver ? this.configResolver(config) : config
       );
     }
+
     return new Promise(async (resolve, reject) => {
       const queueTime = new Date().getTime();
       this.queue.push({

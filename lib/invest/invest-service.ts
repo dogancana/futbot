@@ -30,6 +30,7 @@ export namespace investService {
       [priceKey]: '1000-2500',
       [prpKey]: '20,100',
       sort: 'likes',
+      // version: 'gold',
       order: 'desc'
     };
     const q = {
