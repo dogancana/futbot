@@ -3,20 +3,20 @@ import * as express from 'express';
 import { envConfig } from '../config';
 import { Job } from './job';
 import { SlowDownJob } from './slow-down-job';
+import { defineJobEndpoints } from './utils';
 
 export const jobsApp = express();
-let slowDownJob: SlowDownJob;
 
 jobsApp.get('/list', (req, res) => {
   res.send(Job.report());
 });
 
 jobsApp.get('/resume-all', async (req, res) => {
-  res.send(Job.resumeAllJobs());
+  res.send(Job.resumeAllJobs(true));
 });
 
 jobsApp.get('/stop-all', async (req, res) => {
-  res.send(Job.stopAllJobs());
+  res.send(Job.stopAllJobs(true));
 });
 
 jobsApp.get('/start-favourites', async (req, res) => {
@@ -27,20 +27,10 @@ jobsApp.get('/start-favourites', async (req, res) => {
   res.send(Job.report());
 });
 
-jobsApp.get('/start-slow-down', (req, res) => {
-  if (!slowDownJob) {
-    slowDownJob = new SlowDownJob();
-  }
+defineJobEndpoints(jobsApp, 'slow-down', q => {
+  const { min, max } = q;
+  const props =
+    min && max ? { min: parseInt(min, 10), max: parseInt(max, 10) } : null;
 
-  res.send('OK');
-});
-
-jobsApp.get('/finish-slow-down', (req, res) => {
-  if (!slowDownJob) {
-    return;
-  }
-
-  slowDownJob.finish();
-  slowDownJob = null;
-  res.send('OK');
+  return new SlowDownJob(props);
 });

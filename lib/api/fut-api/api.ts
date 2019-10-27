@@ -29,14 +29,6 @@ function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
     'https://www.easports.com/fifa/ultimate-team/web-app/';
   config.headers['X-UT-SID'] = SessionInjector.auth.sid;
 
-  // const url = new URL(config.url);
-  // let next = SessionInjector.lastStamp + 1;
-  // if (!next || next === NaN) next = new Date().getTime();
-
-  // url.searchParams.set("_", `${next}`);
-  // SessionInjector.lastStamp = next;
-  // config.url = url.href;
-
   return config;
 }
 

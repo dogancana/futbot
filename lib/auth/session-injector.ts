@@ -13,7 +13,6 @@ export interface Auth {
 
 export interface Session {
   auth?: Auth;
-  lastStamp?: number;
 }
 
 const fileName = resolve(tmpdir(), 'futbot-session.json');
@@ -29,15 +28,6 @@ export class SessionInjector {
 
   static set auth(auth: Auth) {
     apiSession.auth = auth;
-    write(apiSession);
-  }
-
-  static get lastStamp(): number {
-    return apiSession.lastStamp;
-  }
-
-  static set lastStamp(lastStamp: number) {
-    apiSession.lastStamp = lastStamp;
     write(apiSession);
   }
 }

@@ -69,6 +69,24 @@ Since this server is not intented to be deployed somewhere, there is no session 
 
 ## Existing features:
 
+### How Jobs Work
+
+In futbot, there are different apps such as '/trade-bot', '/invest' and 'auto-buyer'.  
+Each app comes with it's own different jobs.
+
+To start a job, you can simply call  
+ `/<app-name>/start-<job-name>?<parameters-if-any>`
+
+To stop a job till you start/restart again  
+ `/<app-name>/stop-<job-name>?<parameters-if-any>`
+
+If you want to restart a job with new parameters:  
+ `/<app-name>/restart-<job-name>?<parameters-if-any>`  
+Note: this will clear your report for that job.
+
+If you want to finish a job:  
+ `/<app-name>/finish-<job-name>?<parameters-if-any>`
+
 ### Club
 
 http://localhost:9999/club/non-squad-players  
@@ -77,13 +95,11 @@ The list would be used for /trade-bot/start-selling job.
 
 ### Trade Bot
 
-http://localhost:9999/trade-bot/start-selling-unused?maxRating=83  
-http://localhost:9999/trade-bot/stop-selling-unused  
+http://localhost:9999/trade-bot/start-sell-unused?maxRating=83  
 These will control selling players who are not in your active squad.
 Once in a while it gets your players from club, figures a good price according to futbin/fut market data. And sells them if prices are trustable enough.
 
-http://localhost:9999/trade-bot/start-selling-trade-pile  
-http://localhost:9999/trade-bot/stop-selling-trade-pile  
+http://localhost:9999/trade-bot/start-sell-trade-pile  
 Relisting job is pretty similar to selling unused players. Only difference is, this job will only focus on players in your trade pile. It can relist an item or you can send players to transfer list and start this job to start selling them.
 
 http://localhost:9999/trade-bot/clear-pile  
@@ -91,23 +107,19 @@ This will clear transfer list from sold/expired items. It will send everything t
 
 ### Investor
 
-http://localhost:9999/invest/low-players?budget=50000&min=1000&max=5000&maxTargetPool=150  
-http://localhost:9999/invest/low-players-stop  
+http://localhost:9999/invest/start-low-players?budget=50000&min=1000&max=5000&maxTargetPool=150  
 This job targets most liked futbin players in your min-max range. It saves the list of players (max target pool is max limit for this), calculates their prices and searches market for auctions with lower buy now price than optimal price, e.g. buy at 59th min.  
 You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.
 
-http://localhost:9999/invest/good-auctions?budget=50000&min=5000&max=10000  
-http://localhost:9999/invest/good-auctions-stop  
+http://localhost:9999/invest/start-good-auctions?budget=50000&min=5000&max=10000  
 This is similar to low players investor job. Only difference is, this job is focused on expensive players with low current bid amounts, e.g. trades with 1min remaining.  
 You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.  
 `Known issue`: Currently this job takes a bit long time to put an offer and it rarely buy players. You can use low-player invest job till this is fixed in future releases.
 
 ### Auto Buyer
 
-http://localhost:9999/auto-buyer/jobs  
-http://localhost:9999/auto-buyer/start-auto-buy-now  
-http://localhost:9999/auto-buyer/start-query  
-http://localhost:9999/auto-buyer/stop-jobs  
+http://localhost:9999/auto-buyer/start-buy-now  
+http://localhost:9999/auto-buyer/start-buy-query  
 Endpoints to control auto buyer jobs. You don't need to start these as they will be automatically started once you add a target player or target query.
 
 http://localhost:9999/auto-buyer/targets  
@@ -140,7 +152,7 @@ http://localhost:9999/jobs/stop-all
 http://localhost:9999/jobs/resume-all  
 These endpoints are pretty straitghforward. They show an overall look of currently running tasks/jobs. They also include their individual reports.
 
-http://localhost:9999/jobs/start-slow-down
+http://localhost:9999/jobs/start-slow-down?min=15&max=45
 This is a job which will be sleeping for FUTBOT_SLOW_DOWN_JOB_DURATION of time (.env file).  
 You can also configure how frequent this will be by setting FUTBOT_JOB_IMP_SLOW_DOWN value in .env file.
 
@@ -177,7 +189,7 @@ The value is controlled with FUTBOT_QUICK_SELL_MARGIN value defined in .env file
 
 `Player prices:`  
 `Add auto buy target:`  
-The extension will add small visual components to players.
+The extension will add small visual components to players.  
 ![](doc/gifs/add-targets.gif)
 
 ## What to do on errors

@@ -90,7 +90,7 @@ export class LowPlayerInvestor extends Job {
     if (this.budget < this.min) {
       this.stop();
       this.finished = true;
-      investService.clearLowPlayerInvest();
+      this.finish();
       return;
     }
 

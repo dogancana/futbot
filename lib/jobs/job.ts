@@ -8,17 +8,17 @@ const MIN_JOB_FREQUENCY = 1;
 const sleep = () => new Promise(resolve => setTimeout(resolve, 1500));
 
 export class Job {
-  public static stopAllJobs() {
+  public static stopAllJobs(userStopped?: boolean) {
     logger.info('Stopping all running jobs');
-    jobs.forEach(j => j.stop());
+    jobs.forEach(j => j.stop(userStopped));
     return Job.report();
   }
 
-  public static resumeAllJobs() {
+  public static resumeAllJobs(userStarted?: boolean) {
     logger.info('Resuming all running jobs');
     jobs.forEach(j => {
       try {
-        j.start();
+        j.start(userStarted);
       } catch (e) {
         logger.error(`${j.name} couldn't be resumed because of error: ${e}`);
       }
@@ -30,13 +30,7 @@ export class Job {
     return {
       jobQueue: Job.jobQueue.map(j => j.name),
       jobs: jobs.map(job => ({
-        name: job.name,
-        execTime: job.execTime,
-        avgExecTimeS: job.avgExecTimeS,
-        importanceOrder: job.importanceOrder,
-        effectiveImportanceOrder: job.effectiveImportanceOrder,
-        finished: job.finished,
-        stopped: job.stopped,
+        ...job,
         report: job.report()
       }))
     };
@@ -53,7 +47,11 @@ export class Job {
     while (Job.jobQueue.length > 0) {
       const jobToExecute = Job.jobQueue.shift();
       await Job.executeJob(jobToExecute);
-      if (!jobToExecute.stopped || !jobToExecute.finished) {
+      if (
+        !jobToExecute.stopped &&
+        !jobToExecute.userStopped &&
+        !jobToExecute.finished
+      ) {
         this.addJobToQueue(jobToExecute);
       }
     }
@@ -104,6 +102,7 @@ export class Job {
   public execTime = 0;
   protected finished: boolean;
   private stopped = false;
+  private userStopped = false;
   private avgExecTimeS: number = 0;
   private effectiveImportanceOrder: number;
   private task: () => Promise<void>;
@@ -128,17 +127,27 @@ export class Job {
     return `Reporting not implemented for ${this.name}`;
   }
 
-  public stop(): void {
+  public stop(userStopped?: boolean): void {
     logger.debug(`Stoping job ${this.name}`);
+    if (userStopped) {
+      this.userStopped = true;
+    }
     this.stopped = true;
     const i = Job.jobQueue.findIndex(j => j.name === this.name);
     Job.jobQueue.splice(i, 1);
   }
 
-  public start() {
+  public start(userStarted?: boolean) {
     if (this.finished) {
       return;
     }
+    if (!userStarted && this.userStopped) {
+      return;
+    }
+    if (userStarted && this.stopped) {
+      return;
+    }
+    this.userStopped = false;
     this.stopped = false;
     Job.addJobToQueue(this);
     Job.loop();
