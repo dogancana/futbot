@@ -26,7 +26,7 @@ export namespace playerService {
       }
 
       // ignore the default buy-now price
-      if (a.buyNowPrice === a.itemData.marketDataMaxPrice) {
+      if (auction.buyNowPrice === auction.itemData.marketDataMaxPrice) {
         continue;
       }
 
