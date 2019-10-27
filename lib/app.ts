@@ -38,7 +38,6 @@ app.use('/invest', investApp);
 app.use('/auto-buyer', autoBuyerApp);
 app.use('/jobs', jobsApp);
 app.use('/feedback', feedbackApp);
-
 app.get('/ping', (req, res) => res.send('pong'));
 
 const server = http.createServer(app);
