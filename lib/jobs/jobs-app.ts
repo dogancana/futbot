@@ -1,7 +1,5 @@
-import Axios from 'axios';
 import * as express from 'express';
 import { isArray } from 'util';
-import { envConfig } from '../config';
 import { getLogger } from '../logger';
 import { Job } from './job';
 import { loadJobs, saveJobs } from './jobs-service';
@@ -49,14 +47,6 @@ jobsApp.get('/load-jobs', async (req, res) => {
     logger.error(`Error loading jobs: ${e}`);
     res.status(500).send(e.message);
   }
-});
-
-jobsApp.get('/start-favourites', async (req, res) => {
-  const selfAddress = `http://localhost:${process.env.PORT || 9999}`;
-  const endpointsStr = envConfig().FUTBOT_FAVOURITE_JOBS;
-  const endpoints = endpointsStr.split(',');
-  endpoints.map(async s => await Axios.get(`${selfAddress}${s}`));
-  res.send(Job.report());
 });
 
 defineJobEndpoints(jobsApp, 'slow-down', q => {

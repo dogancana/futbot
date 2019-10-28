@@ -144,9 +144,6 @@ Here is an example of auto buy query, which tries to buy any special player unde
 
 ### General
 
-http://localhost:9999/jobs/start-favourites  
-You can start a set of jobs from one endpoint. You can configure this in .env file. Look for FUTBOT_FAVOURITE_JOBS value in there and configure for your own needs.
-
 http://localhost:9999/jobs/list  
 http://localhost:9999/jobs/stop-all  
 http://localhost:9999/jobs/resume-all  

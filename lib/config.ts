@@ -10,7 +10,6 @@ export interface EnvConfig {
   FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES: number;
   FUTBOT_FUT_REQUESTS_PER_SEC: number;
   FUTBOT_FUTBIN_REQUESTS_PER_SEC: number;
-  FUTBOT_FAVOURITE_JOBS: string;
   FUTBOT_PROFIT_MARGIN: number;
   FUTBOT_MAX_PRICING_SEARCH_TRY: number;
   FUTBOT_FUT_PLATFORM_OVERWRITE?: 'xbox' | 'pc' | 'ps';
@@ -32,8 +31,6 @@ const defaultConf: EnvConfig = {
   FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES: 3,
   FUTBOT_FUT_REQUESTS_PER_SEC: 0.5,
   FUTBOT_FUTBIN_REQUESTS_PER_SEC: 1.5,
-  FUTBOT_FAVOURITE_JOBS:
-    '/trade-bot/start-selling?maxRating=83,/invest/low-players?budget=70000&min=1000&max=10000&maxTargetPool=100,/invest/good-auctions?budget=40000&min=5000&max=20000',
   FUTBOT_PROFIT_MARGIN: 15,
   FUTBOT_MAX_PRICING_SEARCH_TRY: 3,
   FUTBOT_QUICK_SELL_MARGIN: 200,
@@ -61,7 +58,6 @@ const numberKeys = [
 ];
 const stringKeys = [
   'FUTBOT_FUT_API_ENDPOINT_OVERWRITE',
-  'FUTBOT_FAVOURITE_JOBS',
   'FUTBOT_FUT_PLATFORM_OVERWRITE'
 ];
 const impOrderKeys = [
