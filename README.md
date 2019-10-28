@@ -152,7 +152,13 @@ http://localhost:9999/jobs/stop-all
 http://localhost:9999/jobs/resume-all  
 These endpoints are pretty straitghforward. They show an overall look of currently running tasks/jobs. They also include their individual reports.
 
-http://localhost:9999/jobs/start-slow-down?min=15&max=45
+http://localhost:9999/jobs/save-jobs  
+http://localhost:9999/jobs/load-jobs  
+You can save & load the jobs through these endpoints.  
+Saving jobs will only save currently running jobs into a file called jobs.json. Feel free to modify this file without breaking the formatting.  
+Once you saved current jobs, you can load them in your next run.
+
+http://localhost:9999/jobs/start-slow-down?min=15&max=45  
 This is a job which will be sleeping for FUTBOT_SLOW_DOWN_JOB_DURATION of time (.env file).  
 You can also configure how frequent this will be by setting FUTBOT_JOB_IMP_SLOW_DOWN value in .env file.
 
@@ -165,19 +171,15 @@ It's usefull when you want to ask a question, report a bug, give a feedback or j
 
 ### Pricing
 
-Futbot calculates pricing from two sources: Market and Futbin.  
-`Futbin pricing`: Futbin price will be ignored in below conditions
+Futbot calculates pricing always from actual market. While doing the caculation, it uses futbin as a filter.  
+Checking price information of a player follows below steps:
 
-- Price updated more than 1 hour ago
-- Last price change was too much according to price graph (15%).
-- There is not enough price information (Less than 5).
-
-`Market Pricing`: Market price is calculated as follows:
-
-- Get 60 auctions of related player (if applicable)
-- If there are less than FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES prices, ignore market price. Default limit is 3. You can change this value in .env file.
-- Sort the prices.
-- Find most recurring minimum buy now price in lowest 3 price samples.
+- Get futbin price of the player
+- Search market with max bay value as 130% of futbin price.
+- If there are less than 2 results, increase max buy price by 5% and continue searching.
+- If there are more than 10 results, get lowest buy now value in the results and search again with that value.
+- Stop after FUTBOT_MAX_PRICING_SEARCH_TRY tries (defined in .env).
+- If a price cannot be found in FUTBOT_MAX_PRICING_SEARCH_TRY tries but we already checked more than 10 samples, calculate price depending on those samples.
 
 ### Quick Selling
 
