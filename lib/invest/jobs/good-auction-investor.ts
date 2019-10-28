@@ -5,7 +5,6 @@ import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { getOptimalSellPrice } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
-import { investService } from '../invest-service';
 
 const logger = getLogger('GoodAuctionsJob');
 
@@ -129,14 +128,13 @@ export class GoodAuctionInvestor extends Job {
       i < BATCH_START_PAGE + BATCH_PAGES_TO_SEE;
       i++
     ) {
-      const players = await fut.searchTransferMarket(
-        i,
-        this.min,
-        this.max / 2,
-        null,
-        this.max
-      );
-      const possibleTargets = players
+      const possibleTargets = (await fut.queryMarket(
+        {
+          micr: this.min,
+          macr: this.max
+        },
+        i
+      ))
         .filter(p => !p.watched)
         .filter(p => !p.tradeOwner)
         .filter(p => p.expires < EXPIRE_TIME_LIMIT)

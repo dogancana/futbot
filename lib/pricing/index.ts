@@ -45,7 +45,8 @@ export async function getOptimalSellPrice(
   let maxb = tradePrice(futbinPrice * 1.3, 'ceil');
 
   for (let i = 0; i < envConfig().FUTBOT_MAX_PRICING_SEARCH_TRY; i++) {
-    const auctions = (await fut.getPlayerTransferData(resourceId, 0, {
+    const auctions = (await fut.queryMarket({
+      resourceId,
       maxb
     })).filter(a => a.buyNowPrice !== a.itemData.marketDataMaxPrice);
     let newMaxb: number;
