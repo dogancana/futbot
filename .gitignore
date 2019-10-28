@@ -6,3 +6,4 @@ local/
 dist/
 build/
 *.zip
+jobs.json

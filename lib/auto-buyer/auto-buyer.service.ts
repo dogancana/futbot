@@ -2,14 +2,10 @@ import e = require('express');
 import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { StaticItems } from './../static/static-items';
-import { AutoBuyBuyNow, AutoBuyQuery } from './jobs';
 
 const logger = getLogger('AutoBuyerService');
 
 export namespace AutoBuyerService {
-  let autoBuyBuyNowJob: AutoBuyBuyNow;
-  let autoBuyQueryJob: AutoBuyQuery;
-
   export interface Target {
     assetId: number;
     resourceId: number;
@@ -79,13 +75,6 @@ export namespace AutoBuyerService {
         readable: playerStr
       });
     }
-
-    if (!autoBuyBuyNowJob) {
-      logger.info(
-        `Jobs were not running but you added a target. We are starting auto buy jobs`
-      );
-      startAutoBuyNow();
-    }
   }
 
   export function addQueryTarget(q: string, sellPrice?: number) {
@@ -104,54 +93,6 @@ export namespace AutoBuyerService {
       targetQueries.push({ query: q, sellPrice });
     }
 
-    if (!autoBuyQueryJob) {
-      logger.info(`AutoBuyQuery job was not running, starting now.`);
-      startQueryJob();
-    }
-
     return targetQueries;
-  }
-
-  export function startAutoBuyNow() {
-    if (!autoBuyBuyNowJob) {
-      autoBuyBuyNowJob = new AutoBuyBuyNow();
-    }
-
-    return autoBuyBuyNowJob.report();
-  }
-
-  export function startQueryJob() {
-    if (!autoBuyQueryJob) {
-      autoBuyQueryJob = new AutoBuyQuery();
-    }
-
-    return autoBuyQueryJob.report();
-  }
-
-  export function stopJobs() {
-    if (autoBuyBuyNowJob) {
-      autoBuyBuyNowJob.stop();
-      autoBuyBuyNowJob = undefined;
-    }
-
-    if (autoBuyQueryJob) {
-      autoBuyQueryJob.stop();
-      autoBuyQueryJob = undefined;
-    }
-
-    return report();
-  }
-
-  export function report() {
-    return {
-      targets: targets.map(
-        t => `${playerService.readable(t)} for ${t.maxPrice} max price`
-      ),
-      targetQueries,
-      jobs: {
-        autoBuyBuyNow: autoBuyBuyNowJob ? autoBuyBuyNowJob.report() : null,
-        autoBuyQueryJob: autoBuyQueryJob ? autoBuyQueryJob.report() : null
-      }
-    };
   }
 }

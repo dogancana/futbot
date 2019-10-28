@@ -1,6 +1,6 @@
 import { fut } from '../../api';
 import { envConfig } from '../../config';
-import { Job } from '../../jobs';
+import { Job, registerSaveableQuery } from '../../jobs';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { tradePrice } from '../../trader/trade-utils';
