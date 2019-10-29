@@ -36,9 +36,7 @@ export async function getOptimalSellPrice(
     // noop
   }
 
-  const playerStr = await playerService.readable({
-    resourceId: resourceId
-  });
+  const playerStr = await playerService.readable({ resourceId });
   const futbinPrice = await playerService.getFutbinPrice(resourceId);
 
   let maxb = null;
