@@ -113,13 +113,10 @@ export class LowPlayerInvestor extends Job {
       );
 
       batch++;
-      let auctions = (await fut.queryMarket(
-        {
-          maskedDefId: target.resourceId,
-          maxb: queryPrice
-        },
-        batch
-      ))
+      let auctions = (await fut.queryMarket({
+        maskedDefId: target.resourceId,
+        maxb: queryPrice
+      }))
         .filter(a => !a.watched)
         .filter(a => !a.tradeOwner)
         .filter(a => a.buyNowPrice <= safeBuyValue)
