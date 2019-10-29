@@ -56,7 +56,7 @@ export class LowPlayerInvestor extends Job {
       budget: this.budget,
       spent: this.spent,
       boughtAuctions: this.boughtAuctions.map(
-        a => `${playerService.readable} bought for ${a.buyNowPrice}`
+        a => `${playerService.readable(a.itemData)} bought for ${a.buyNowPrice}`
       )
     };
   }
