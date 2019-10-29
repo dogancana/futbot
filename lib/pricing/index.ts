@@ -48,6 +48,7 @@ export async function getOptimalSellPrice(
       maskedDefId: resourceId,
       maxb
     });
+
     let newMaxb: number;
     auctionSamples = [...auctionSamples, ...auctions];
 
@@ -86,12 +87,15 @@ export async function getOptimalSellPrice(
     arr: fut.AuctionInfo[],
     sampleCount: number = AUCTION_MAX_SAMPLES_FOR_PRICE
   ): SellPrice {
-    const res = mode(
-      arr
-        .sort((a, b) => a.buyNowPrice - b.buyNowPrice)
-        .slice(0, sampleCount)
-        .map(a => a.buyNowPrice)
-    );
+    let res: number;
+
+    const sorted = arr.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
+    if (sorted[0].expires < 45 * 60) {
+      res = sorted[0].buyNowPrice;
+    } else {
+      res = mode(sorted.slice(0, sampleCount).map(a => a.buyNowPrice));
+    }
+
     if (!res) {
       logger.error(
         `Couldn't determine price for ${playerService.readable({ resourceId })}`
