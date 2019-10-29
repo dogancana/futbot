@@ -48,7 +48,7 @@ export async function getOptimalSellPrice(
   const lastSearches: number[] = [];
 
   for (let i = 0; i < envConfig().FUTBOT_MAX_PRICING_SEARCH_TRY; i++) {
-    const auctions = (await fut.getPlayerTransferData(resourceId, i, {
+    const auctions = (await fut.getPlayerTransferData(resourceId, 0, {
       maxb
     })).filter(a => a.buyNowPrice !== a.itemData.marketDataMaxPrice);
 
