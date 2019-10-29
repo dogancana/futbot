@@ -10,7 +10,6 @@ export namespace playerService {
       name: '?????',
       rating: 0
     };
-    // if (data.name === "?????") console.log("readable", { player, StaticItems });
 
     return `${data.name}, (${data.rating})`;
   }

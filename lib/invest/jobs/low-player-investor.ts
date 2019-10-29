@@ -102,7 +102,10 @@ export class LowPlayerInvestor extends Job {
       return;
     }
 
-    const safeBuyValue = sellPrice.startingBid * BUY_REFERENCE_PERCT;
+    const triedAuctions = [];
+    const safeBuyValue = tradePrice(
+      sellPrice.startingBid * BUY_REFERENCE_PERCT
+    );
 
     let batch = 0;
     while (true) {
@@ -111,9 +114,7 @@ export class LowPlayerInvestor extends Job {
       }
 
       logger.info(
-        `Trying to find ${playerService.readable(
-          target
-        )} for cheaper than ${safeBuyValue} buy now price.`
+        `Trying to find ${playerStr} for cheaper than ${safeBuyValue} buy now price.`
       );
 
       batch++;
@@ -125,7 +126,10 @@ export class LowPlayerInvestor extends Job {
         batch
       ))
         .filter(a => !a.watched)
-        .filter(a => !a.tradeOwner);
+        .filter(a => !a.tradeOwner)
+        .filter(a => a.buyNowPrice <= safeBuyValue)
+        .filter(a => a.expires > 1800)
+        .filter(a => -1 === triedAuctions.indexOf(a.tradeId));
 
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
       if (auctions.length === 0) {
@@ -138,6 +142,7 @@ export class LowPlayerInvestor extends Job {
           break;
         }
 
+        triedAuctions.push(lowest.tradeId);
         try {
           logger.info(`bid ${playerStr} with ${lowest.buyNowPrice}`);
           await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
@@ -165,10 +170,9 @@ export class LowPlayerInvestor extends Job {
         } catch (e) {
           const err: AxiosError = e;
           logger.error(
-            `bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err.response.status}, ${err.response.data}`
+            `bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err}`
           );
         }
-        break;
       }
     }
   }
@@ -178,6 +182,7 @@ async function setupTargets(price: string, maxTargets: number) {
   if (setingUp) {
     return;
   }
+
   try {
     setingUp = true;
     const pageLimit = Math.ceil(maxTargets / 30);
@@ -194,7 +199,7 @@ async function setupTargets(price: string, maxTargets: number) {
         await investService.getTargets({
           page: i,
           [priceKey]: price,
-          [prpKey]: '5,60'
+          [prpKey]: '20,100'
         })
       );
     }
