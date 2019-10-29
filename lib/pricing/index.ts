@@ -11,8 +11,8 @@ const logger = getLogger('Pricing');
 const AUCTION_MAX_SAMPLES_FOR_PRICE = 5;
 const PRICE_CHANGE_FACTOR = 0.05;
 const cache = new NodeCache({
-  stdTTL: 10 * 60,
-  checkperiod: 10 * 10,
+  stdTTL: 5 * 60,
+  checkperiod: 60,
   useClones: true,
   deleteOnExpire: true
 });
@@ -22,7 +22,6 @@ export interface SellPrice {
   startingBid: number;
 }
 
-// TODO cache this for 30 mins
 export async function getOptimalSellPrice(
   resourceId: number
 ): Promise<SellPrice> {
@@ -45,10 +44,10 @@ export async function getOptimalSellPrice(
   let maxb = tradePrice(futbinPrice * 1.3, 'ceil');
 
   for (let i = 0; i < envConfig().FUTBOT_MAX_PRICING_SEARCH_TRY; i++) {
-    const auctions = (await fut.queryMarket({
-      resourceId,
+    const auctions = await fut.queryMarket({
+      maskedDefId: resourceId,
       maxb
-    })).filter(a => a.buyNowPrice !== a.itemData.marketDataMaxPrice);
+    });
     let newMaxb: number;
     auctionSamples = [...auctionSamples, ...auctions];
 

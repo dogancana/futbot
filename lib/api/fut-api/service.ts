@@ -55,8 +55,8 @@ export namespace fut {
   }
 
   export interface MarketQueryFilter {
-    assetId?: number;
-    resourceId?: number;
+    type?: 'player';
+    maskedDefId?: number;
     start?: number;
     num?: number;
     micr?: number;
@@ -75,7 +75,7 @@ export namespace fut {
       ...filter
     };
     for (const key of Object.keys(q)) {
-      if (!q[key]) {
+      if (q[key] === undefined) {
         delete q[key];
       }
     }
