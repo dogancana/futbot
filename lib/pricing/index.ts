@@ -36,11 +36,13 @@ export async function getOptimalSellPrice(
   }
 
   const playerStr = await playerService.readable({ resourceId });
-  const futbinPrice = await playerService.getFutbinPrice(resourceId);
+  const futbinPrices = await futbin.getPrice(resourceId);
+  const platform = await fut.getPlatform();
+  const futbinPrice = futbinPrices ? futbinPrices[platform].LCPrice : null;
 
   let maxb = null;
-  if (futbinPrice.LCPrice) {
-    maxb = tradePrice(futbinPrice.LCPrice * 1.3, 'ceil');
+  if (futbinPrice) {
+    maxb = tradePrice(futbinPrice * 1.3, 'ceil');
   }
 
   let auctionSamples: fut.AuctionInfo[] = [];

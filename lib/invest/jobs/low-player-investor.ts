@@ -101,7 +101,6 @@ export class LowPlayerInvestor extends Job {
       sellPrice.startingBid * BUY_REFERENCE_PERCT
     );
 
-    let queryPrice = safeBuyValue;
     let batch = 0;
     while (true) {
       if (batch >= envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER) {
@@ -115,16 +114,13 @@ export class LowPlayerInvestor extends Job {
       batch++;
       let auctions = (await fut.queryMarket({
         maskedDefId: target.resourceId,
-        maxb: queryPrice
+        maxb: safeBuyValue
       }))
         .filter(a => !a.watched)
         .filter(a => !a.tradeOwner)
         .filter(a => a.buyNowPrice <= safeBuyValue)
         .filter(a => a.expires > 1800)
         .filter(a => -1 === triedAuctions.indexOf(a.tradeId));
-
-      // increase query-price to bypass caching
-      queryPrice = tradePrice(queryPrice + 1);
 
       // sort an evaluate auctions
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);

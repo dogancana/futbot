@@ -1,13 +1,6 @@
-import { fut, futbin } from '../api';
 import { StaticItems } from '../static';
 
 export namespace playerService {
-  export async function getFutbinPrice(resourceId: number) {
-    const prices = await futbin.getPrice(resourceId);
-    const platform = await fut.getPlatform();
-    return prices[platform];
-  }
-
   export function readable(player: {
     assetId?: number;
     resourceId?: number;
