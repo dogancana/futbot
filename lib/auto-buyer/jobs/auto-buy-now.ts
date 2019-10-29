@@ -64,7 +64,7 @@ export class AutoBuyBuyNow extends Job {
       let auctions: fut.AuctionInfo[];
       try {
         auctions = (await fut.queryMarket({
-          resourceId: target.resourceId,
+          maskedDefId: target.resourceId,
           maxb: target.maxPrice
         }))
           .filter(a => !a.tradeOwner)

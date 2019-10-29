@@ -120,7 +120,7 @@ export class LowPlayerInvestor extends Job {
       batch++;
       let auctions = (await fut.queryMarket(
         {
-          resourceId: target.resourceId,
+          maskedDefId: target.resourceId,
           maxb: tradePrice(safeBuyValue, 'floor')
         },
         batch
