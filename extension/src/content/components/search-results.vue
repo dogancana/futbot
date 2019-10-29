@@ -61,15 +61,6 @@ export default {
       let sellPrice = parseInt(this.sellPrice, 10);
       sellPrice = !isNaN(sellPrice) ? sellPrice : null;
 
-      if (params.micr || params.minb) {
-        alert(
-          'Min bid price and min buy now price values are used to bypass cache.\n' +
-            'You cannot set them in this feature.\n' +
-            'Please search again'
-        );
-        return;
-      }
-
       if (!params.maxb) {
         alert(
           'This feature would be really unpredictable without setting a max buy now price.\n' +
@@ -78,8 +69,11 @@ export default {
         return;
       }
 
-      if (parseInt(params.maxb, 10) < 800) {
-        alert(params.maxb + ' is too low for this kind of feature.');
+      if (parseInt(params.maxb, 10) < 400) {
+        alert(
+          params.maxb +
+            ' is too low. Might not bypass market cache with this. Try changing it'
+        );
         return;
       }
 
