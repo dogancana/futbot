@@ -1,6 +1,6 @@
 import { fut } from '../../api';
 import { envConfig } from '../../config';
-import { Job, registerSaveableQuery } from '../../jobs';
+import { Job } from '../../jobs';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { tradePrice } from '../../trader/trade-utils';
@@ -63,8 +63,8 @@ export class AutoBuyBuyNow extends Job {
     ) {
       let auctions: fut.AuctionInfo[];
       try {
-        auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
-          micr: Math.min(micr, target.maxPrice),
+        auctions = (await fut.queryMarket({
+          maskedDefId: target.resourceId,
           maxb: target.maxPrice
         }))
           .filter(a => !a.tradeOwner)

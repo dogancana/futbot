@@ -4,6 +4,7 @@ import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { simpleCacheAdapter } from '../cache-adapter';
 import { futApi } from './api';
+import { mapMarketQueryToBypassCache } from './bypass-market-cache';
 
 const logger = getLogger('FutService');
 
@@ -53,82 +54,34 @@ export namespace fut {
     tradeOwner: boolean;
   }
 
-  function* marketSearchQueryGenerator() {
-    let i = 0;
-
-    while (true) {
-      const extra = {
-        micr: i < 7 ? 200 + 100 * i : null,
-        minb: i >= 7 ? 200 + 100 * (i % 7) : null
-      };
-      const extraStr = Object.keys(extra)
-        .filter(e => !!extra[e])
-        .map(k => `&${k}=${extra[k]}`);
-
-      yield extraStr;
-      i = (i + 1) % 15;
-    }
-  }
-  const marketSearchQueryIterator = marketSearchQueryGenerator();
-  const marketSearchQueryExtra = () =>
-    marketSearchQueryIterator.next().value[0];
-
-  export async function getPlayerTransferData(
-    assetId: number,
-    batch: number,
-    query?: any
-  ): Promise<AuctionInfo[]> {
-    const defaultQuery = {
-      start: batch * 20,
-      num: 21,
-      type: 'player',
-      maskedDefId: assetId
-    };
-    const response = await futApi.get(
-      `/transfermarket?${querystring.stringify({
-        ...defaultQuery,
-        ...query
-      })}`
-    );
-    return response.data.auctionInfo;
+  export interface MarketQueryFilter {
+    type?: 'player';
+    maskedDefId?: number;
+    start?: number;
+    num?: number;
+    micr?: number;
+    macr?: number;
+    minb?: number;
+    maxb?: number;
   }
 
-  export async function searchTransferMarket(
-    batch: number,
-    minBid?: number,
-    maxBid?: number,
-    minBnow?: number,
-    maxBnow?: number
-  ): Promise<AuctionInfo[]> {
-    const q = {
-      start: batch * 20,
+  export async function queryMarket(
+    filter: MarketQueryFilter,
+    batch: number = 0
+  ) {
+    const q: MarketQueryFilter = {
+      start: batch * 21,
       num: 21,
-      type: 'player',
-      lev: 'gold',
-      macr: maxBid,
-      maxb: maxBnow
+      ...filter
     };
-    Object.keys(q).forEach(key => {
-      if (!q[key]) {
+    for (const key of Object.keys(q)) {
+      if (q[key] === undefined) {
         delete q[key];
       }
-    });
-    const extra = !minBid && minBnow ? marketSearchQueryExtra() : '';
-    const response = await futApi.get(
-      `/transfermarket?${querystring.stringify({
-        ...q
-      })}${extra}`
-    );
-    return response.data.auctionInfo;
-  }
-
-  export async function searchTransferMarketByQuery(
-    q: string
-  ): Promise<AuctionInfo[]> {
-    const response = await futApi.get(
-      `/transfermarket?${q}${marketSearchQueryExtra()}`
-    );
-    return response.data.auctionInfo;
+    }
+    return (await futApi.get(
+      `/transfermarket?${querystring.stringify(mapMarketQueryToBypassCache(q))}`
+    )).data.auctionInfo;
   }
 
   export async function checkAuctionStatus(

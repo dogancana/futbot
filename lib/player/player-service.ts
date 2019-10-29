@@ -1,6 +1,5 @@
 import { fut, futbin } from '../api';
 import { StaticItems } from '../static';
-import { mode } from '../utils';
 
 export namespace playerService {
   export async function getFutbinPrice(resourceId: number) {
@@ -18,7 +17,6 @@ export namespace playerService {
       name: '?????',
       rating: 0
     };
-    // if (data.name === "?????") console.log("readable", { player, StaticItems });
 
     return `${data.name}, (${data.rating})`;
   }

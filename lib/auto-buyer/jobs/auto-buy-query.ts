@@ -1,3 +1,4 @@
+import * as querystring from 'querystring';
 import { fut } from '../../api';
 import { envConfig } from '../../config';
 import { Job } from '../../jobs';
@@ -59,7 +60,7 @@ export class AutoBuyQuery extends Job {
 
   private async execQuery(target: AutoBuyerService.TargetQuery) {
     const { query } = target;
-    const auctions = await fut.searchTransferMarketByQuery(query);
+    const auctions = await fut.queryMarket(querystring.parse(query));
 
     // Found some, go parallel
     auctions.forEach(async auction => {

@@ -10,8 +10,8 @@ const logger = getLogger('Pricing');
 const AUCTION_MAX_SAMPLES_FOR_PRICE = 5;
 const PRICE_CHANGE_FACTOR = 0.05;
 const cache = new NodeCache({
-  stdTTL: 10 * 60,
-  checkperiod: 10 * 10,
+  stdTTL: 5 * 60,
+  checkperiod: 60,
   useClones: true,
   deleteOnExpire: true
 });
@@ -21,7 +21,6 @@ export interface SellPrice {
   startingBid: number;
 }
 
-// TODO cache this for 30 mins
 export async function getOptimalSellPrice(
   resourceId: number
 ): Promise<SellPrice> {
@@ -48,9 +47,10 @@ export async function getOptimalSellPrice(
   const lastSearches: number[] = [];
 
   for (let i = 0; i < envConfig().FUTBOT_MAX_PRICING_SEARCH_TRY; i++) {
-    const auctions = (await fut.getPlayerTransferData(resourceId, 0, {
+    const auctions = await fut.queryMarket({
+      maskedDefId: resourceId,
       maxb
-    })).filter(a => a.buyNowPrice !== a.itemData.marketDataMaxPrice);
+    });
 
     let newMaxb: number;
     auctionSamples = [...auctionSamples, ...auctions];
@@ -88,12 +88,15 @@ export async function getOptimalSellPrice(
     arr: fut.AuctionInfo[],
     sampleCount: number = AUCTION_MAX_SAMPLES_FOR_PRICE
   ): SellPrice {
-    const res = mode(
-      arr
-        .sort((a, b) => a.buyNowPrice - b.buyNowPrice)
-        .slice(0, sampleCount)
-        .map(a => a.buyNowPrice)
-    );
+    let res: number;
+
+    const sorted = arr.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
+    if (sorted[0].expires < 45 * 60) {
+      res = sorted[0].buyNowPrice;
+    } else {
+      res = mode(sorted.slice(0, sampleCount).map(a => a.buyNowPrice));
+    }
+
     if (!res) {
       logger.error(`Couldn't determine price for ${playerStr}`);
       return null;
