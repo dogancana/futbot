@@ -68,7 +68,7 @@ export namespace fut {
   export async function queryMarket(
     filter: MarketQueryFilter,
     batch: number = 0
-  ) {
+  ): Promise<fut.AuctionInfo[]> {
     const q: MarketQueryFilter = {
       start: batch * 21,
       num: 21,
@@ -105,6 +105,12 @@ export namespace fut {
     return players.map(p => p.itemData);
   }
 
+  export async function sendToTradePile(id: number) {
+    return await futApi.put(`/item`, {
+      itemData: [{ id, pile: 'trade' }]
+    });
+  }
+
   interface AuctionRequest {
     buyNowPrice: number;
     duration: number;
@@ -117,14 +123,11 @@ export namespace fut {
     logger.info(
       `${playerStr} will be sold for ${req.startingBid}/${req.buyNowPrice}`
     );
-    const pileResponse = await futApi.put(`/item`, {
-      itemData: [{ id: req.itemData.id, pile: 'trade' }]
-    });
-    if (pileResponse) {
-      const response = await futApi.post(`/auctionhouse`, req);
-      return response.data;
-    } else {
-      throw new Error('couldnt move to trade pile');
+    try {
+      await sendToTradePile(req.itemData.id);
+      await futApi.post(`/auctionhouse`, req);
+    } catch (e) {
+      logger.error(`Couldn't sell player ${playerStr}. Reason: ${e}`);
     }
   }
 
@@ -212,17 +215,15 @@ export namespace fut {
     return resp.data.itemData;
   }
 
-  export async function waitAndGetPurchasedItem(
+  export async function waitAndGetPurchasedItems(
     resourceId: number
-  ): Promise<ItemData> {
-    return new Promise<ItemData>((resolve, reject) => {
+  ): Promise<ItemData[]> {
+    return new Promise<ItemData[]>((resolve, reject) => {
       setTimeout(async () => {
         try {
           const purchased = await getPurchasedItems();
-          const sellTarget = purchased.filter(
-            p => p.resourceId === resourceId
-          )[0];
-          resolve(sellTarget);
+          const newPlayers = purchased.filter(p => p.resourceId === resourceId);
+          resolve(newPlayers);
         } catch (e) {
           reject(e);
         }

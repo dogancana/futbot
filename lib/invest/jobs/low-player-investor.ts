@@ -1,4 +1,3 @@
-import { AxiosError } from 'axios';
 import { uniqBy } from 'lodash';
 import { fut } from '../../api';
 import { envConfig } from '../../config';
@@ -12,10 +11,11 @@ import { investService } from '../invest-service';
 const logger = getLogger('LowPlayersJob');
 
 const BUY_REFERENCE_PERCT = (100 - envConfig().FUTBOT_PROFIT_MARGIN) / 100;
-const MAX_AUCTION_TRY = envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER;
 const MIN_TARGET_PRICE = 1000;
-const MAX_TARGET_PRICE = 4000;
-const MAX_TARGET_POOL = 30;
+const MAX_TARGET_PRICE = 5000;
+const MAX_TARGET_POOL = 150;
+const TARGETS_TO_CHECK = 5;
+const MAX_TRY_PER_TARGET = 4;
 
 let targets: investService.TargetInfo[] = [];
 let setingUp = false;
@@ -29,13 +29,8 @@ export interface LowPlayerInvestorProps {
 
 export class LowPlayerInvestor extends Job {
   private spent: number = 0;
-  private budget: number = 20000;
-  private boughtPlayers: Array<{
-    price: number;
-    assetId: number;
-    buyNowPrice: number;
-    startingBid: number;
-  }>;
+  private budget: number = 50000;
+  private boughtAuctions: fut.AuctionInfo[] = [];
   private min: number = MIN_TARGET_PRICE;
   private max: number = MAX_TARGET_PRICE;
   private maxTargetPool: number = MAX_TARGET_POOL;
@@ -50,7 +45,6 @@ export class LowPlayerInvestor extends Job {
       maxTargetPool
     });
 
-    this.boughtPlayers = [];
     this.setTask(this.loopOverTargets);
   }
 
@@ -61,11 +55,9 @@ export class LowPlayerInvestor extends Job {
       profitMargin: envConfig().FUTBOT_PROFIT_MARGIN,
       budget: this.budget,
       spent: this.spent,
-      boughtPlayers: this.boughtPlayers.map(p => ({
-        price: p.price,
-        sell: `${p.startingBid}/${p.buyNowPrice}`,
-        name: playerService.readable({ assetId: p.assetId })
-      }))
+      boughtAuctions: this.boughtAuctions.map(
+        a => `${playerService.readable} bought for ${a.buyNowPrice}`
+      )
     };
   }
 
@@ -82,8 +74,6 @@ export class LowPlayerInvestor extends Job {
         `${this.min}-${this.max}`,
         this.maxTargetPool || MAX_TARGET_POOL
       );
-      // dummy execution time
-      await new Promise(resolve => setTimeout(resolve, 5000));
       return;
     }
 
@@ -94,84 +84,43 @@ export class LowPlayerInvestor extends Job {
       return;
     }
 
-    const target = targets.shift();
-    const playerStr = playerService.readable({ assetId: target.assetId });
-    const sellPrice = await getOptimalSellPrice(target.resourceId);
-    if (!sellPrice) {
-      logger.info(`Skipping ${playerStr}: missing price information`);
-      return;
-    }
-
-    const triedAuctions = [];
-    const safeBuyValue = tradePrice(
-      sellPrice.startingBid * BUY_REFERENCE_PERCT
-    );
-
-    let batch = 0;
-    while (true) {
-      if (batch >= MAX_AUCTION_TRY) {
-        break;
+    for (let i = 0; i < TARGETS_TO_CHECK; i++) {
+      const target = targets.shift();
+      const playerStr = playerService.readable({ assetId: target.assetId });
+      const sellPrice = await getOptimalSellPrice(target.resourceId);
+      if (!sellPrice) {
+        logger.info(`Skipping ${playerStr}: missing price information`);
+        return;
       }
+
+      const safeBuyValue = tradePrice(
+        sellPrice.startingBid * BUY_REFERENCE_PERCT,
+        'floor'
+      );
 
       logger.info(
         `Trying to find ${playerStr} for cheaper than ${safeBuyValue} buy now price.`
       );
 
-      batch++;
-      let auctions = (await fut.queryMarket(
-        {
-          maskedDefId: target.resourceId,
-          maxb: tradePrice(safeBuyValue, 'floor')
-        },
-        batch
-      ))
-        .filter(a => !a.watched)
-        .filter(a => !a.tradeOwner)
-        .filter(a => a.buyNowPrice <= safeBuyValue)
-        .filter(a => a.expires > 1800)
-        .filter(a => -1 === triedAuctions.indexOf(a.tradeId));
+      for (let j = 0; j < MAX_TRY_PER_TARGET; j++) {
+        const auctions = await playerService.searchBuyableItem(
+          target.resourceId,
+          safeBuyValue
+        );
 
-      auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
-      if (auctions.length === 0) {
-        continue;
-      }
-
-      const lowest = auctions[0];
-      if (lowest.buyNowPrice <= safeBuyValue) {
-        if (this.budget <= lowest.buyNowPrice) {
-          break;
+        if (auctions.length === 0) {
+          continue;
         }
 
-        triedAuctions.push(lowest.tradeId);
-        try {
-          logger.info(`bid ${playerStr} with ${lowest.buyNowPrice}`);
-          await fut.bidToTrade(lowest.tradeId, lowest.buyNowPrice);
+        const boughtItems = await playerService.buyNowAndHandleAuctions(
+          auctions,
+          sellPrice.buyNowPrice
+        );
 
-          const sellTarget = await fut.waitAndGetPurchasedItem(
-            target.resourceId
-          );
-          if (sellTarget) {
-            this.boughtPlayers.push({
-              ...sellPrice,
-              price: lowest.buyNowPrice,
-              assetId: target.assetId
-            });
-            this.spent += lowest.buyNowPrice;
-            this.budget -= lowest.buyNowPrice;
-
-            await fut.sellPlayer({
-              ...sellPrice,
-              duration: 3600,
-              itemData: { id: sellTarget.id, assetId: sellTarget.assetId }
-            });
-          } else {
-            logger.info(`${playerStr} was not found in purchased list`);
-          }
-        } catch (e) {
-          const err: AxiosError = e;
-          logger.error(
-            `bid error for ${playerStr} with bid ${lowest.buyNowPrice}. Reason: ${err}`
-          );
+        for (const bought of boughtItems) {
+          this.boughtAuctions.push(bought);
+          this.budget -= bought.buyNowPrice;
+          this.spent += bought.buyNowPrice;
         }
       }
     }
@@ -189,9 +138,6 @@ async function setupTargets(price: string, maxTargets: number) {
     const platform = await fut.getPlatform();
     const priceKey = `${platform.toLowerCase()}_price`;
     const prpKey = `${platform.toLowerCase()}_prp`;
-    const clubPlayers = await fut.getClubPlayers();
-    const isInClubPlayers = (resourceId: number) =>
-      clubPlayers.filter(p => p.resourceId === resourceId).length > 0;
 
     for (let i = 1; i <= pageLimit; i++) {
       logger.info(`Setting up targets ${targets.length}/${maxTargets}`);
@@ -205,7 +151,6 @@ async function setupTargets(price: string, maxTargets: number) {
     }
 
     targets = uniqBy(targets, t => t.resourceId);
-    targets = targets.filter(t => !isInClubPlayers(t.resourceId));
     logger.info(`${targets.length} targets set up`);
     setingUp = false;
   } catch (e) {
