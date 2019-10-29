@@ -12,13 +12,12 @@ import { investService } from '../invest-service';
 const logger = getLogger('LowPlayersJob');
 
 const BUY_REFERENCE_PERCT = (100 - envConfig().FUTBOT_PROFIT_MARGIN) / 100;
-const MAX_AUCTION_TRY = envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER;
 const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 4000;
 const MAX_TARGET_POOL = 30;
 
 let targets: investService.TargetInfo[] = [];
-let setingUp = false;
+let isSettingUp = false;
 
 export interface LowPlayerInvestorProps {
   budget: number;
@@ -61,17 +60,12 @@ export class LowPlayerInvestor extends Job {
       profitMargin: envConfig().FUTBOT_PROFIT_MARGIN,
       budget: this.budget,
       spent: this.spent,
+      targetCount: targets.length,
       boughtPlayers: this.boughtPlayers.map(p => ({
         price: p.price,
         sell: `${p.startingBid}/${p.buyNowPrice}`,
         name: playerService.readable({ assetId: p.assetId })
       }))
-    };
-  }
-
-  public targetCount() {
-    return {
-      count: targets.length
     };
   }
 
@@ -107,9 +101,10 @@ export class LowPlayerInvestor extends Job {
       sellPrice.startingBid * BUY_REFERENCE_PERCT
     );
 
+    let queryPrice = safeBuyValue;
     let batch = 0;
     while (true) {
-      if (batch >= MAX_AUCTION_TRY) {
+      if (batch >= envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER) {
         break;
       }
 
@@ -119,7 +114,7 @@ export class LowPlayerInvestor extends Job {
 
       batch++;
       let auctions = (await fut.getPlayerTransferData(target.resourceId, 0, {
-        maxb: safeBuyValue
+        maxb: queryPrice
       }))
         .filter(a => !a.watched)
         .filter(a => !a.tradeOwner)
@@ -127,6 +122,10 @@ export class LowPlayerInvestor extends Job {
         .filter(a => a.expires > 1800)
         .filter(a => -1 === triedAuctions.indexOf(a.tradeId));
 
+      // increase query-price to bypass caching
+      queryPrice = tradePrice(queryPrice + 1);
+
+      // sort an evaluate auctions
       auctions = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
       if (auctions.length === 0) {
         continue;
@@ -175,12 +174,12 @@ export class LowPlayerInvestor extends Job {
 }
 
 async function setupTargets(price: string, maxTargets: number) {
-  if (setingUp) {
+  if (isSettingUp) {
     return;
   }
 
   try {
-    setingUp = true;
+    isSettingUp = true;
     const pageLimit = Math.ceil(maxTargets / 30);
     const platform = await fut.getPlatform();
     const priceKey = `${platform.toLowerCase()}_price`;
@@ -203,7 +202,7 @@ async function setupTargets(price: string, maxTargets: number) {
     targets = uniqBy(targets, t => t.resourceId);
     targets = targets.filter(t => !isInClubPlayers(t.resourceId));
     logger.info(`${targets.length} targets set up`);
-    setingUp = false;
+    isSettingUp = false;
   } catch (e) {
     logger.error(`setup targets error: ${e}`);
   }

@@ -9,57 +9,6 @@ export namespace playerService {
     return prices[platform];
   }
 
-  export interface MarketPrice {
-    buyNow: number;
-    sampleCount: number;
-  }
-
-  export async function getMarketPrice(
-    resourceId: number
-  ): Promise<MarketPrice> {
-    const auctions = await getAuctions(resourceId);
-    let buyNowPrices: number[] = [];
-
-    for (const auction of auctions) {
-      if (auction.itemData.resourceId !== resourceId) {
-        continue;
-      }
-
-      // ignore the default buy-now price
-      if (auction.buyNowPrice === auction.itemData.marketDataMaxPrice) {
-        continue;
-      }
-
-      buyNowPrices.push(auction.buyNowPrice);
-    }
-
-    buyNowPrices = buyNowPrices.sort((a, b) => a - b);
-    const cheapestValues = buyNowPrices.slice(
-      0,
-      Math.min(3, buyNowPrices.length)
-    );
-
-    return {
-      buyNow: mode(cheapestValues),
-      sampleCount: buyNowPrices.length
-    };
-  }
-
-  export async function getAuctions(id): Promise<fut.AuctionInfo[]> {
-    let auctions = [];
-
-    // this should get 60 active auctions
-    for (let i = 0; i < 3; i++) {
-      try {
-        auctions = auctions.concat(await fut.getPlayerTransferData(id, i));
-      } catch (e) {
-        break;
-      }
-    }
-
-    return auctions;
-  }
-
   export function readable(player: {
     assetId?: number;
     resourceId?: number;

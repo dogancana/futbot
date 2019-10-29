@@ -5,7 +5,6 @@ import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { tradePrice } from '../trader/trade-utils';
 import { mode } from '../utils';
-import { SellPrice } from './index';
 
 const logger = getLogger('Pricing');
 const AUCTION_MAX_SAMPLES_FOR_PRICE = 5;
@@ -37,45 +36,50 @@ export async function getOptimalSellPrice(
     // noop
   }
 
-  const futbinPrices = await futbin.getPrice(resourceId);
-  const platform = await fut.getPlatform();
-  const futbinPrice = futbinPrices ? futbinPrices[platform].LCPrice : null;
+  const playerStr = await playerService.readable({
+    resourceId: resourceId
+  });
+  const futbinPrice = await playerService.getFutbinPrice(resourceId);
+
+  let maxb = null;
+  if (futbinPrice.LCPrice) {
+    maxb = tradePrice(futbinPrice.LCPrice * 1.3, 'ceil');
+  }
+
   let auctionSamples: fut.AuctionInfo[] = [];
   const lastSearches: number[] = [];
-  let maxb = tradePrice(futbinPrice * 1.3, 'ceil');
 
   for (let i = 0; i < envConfig().FUTBOT_MAX_PRICING_SEARCH_TRY; i++) {
-    const auctions = (await fut.getPlayerTransferData(resourceId, 0, {
+    const auctions = (await fut.getPlayerTransferData(resourceId, i, {
       maxb
     })).filter(a => a.buyNowPrice !== a.itemData.marketDataMaxPrice);
+
     let newMaxb: number;
     auctionSamples = [...auctionSamples, ...auctions];
 
-    if (futbinPrice) {
-      lastSearches.push(maxb);
-      if (auctions.length > 10) {
-        newMaxb = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice)[1]
-          .buyNowPrice;
-        if (maxb === newMaxb) {
-          newMaxb = tradePrice(maxb - maxb * PRICE_CHANGE_FACTOR, 'floor');
-        }
-      } else if (auctions.length <= 1) {
-        newMaxb = tradePrice(maxb + maxb * PRICE_CHANGE_FACTOR, 'ceil');
-      } else {
-        return determineResult(auctions);
-      }
+    lastSearches.push(maxb);
+    if (auctions.length > 10) {
+      newMaxb = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice)[1]
+        .buyNowPrice;
 
-      if (lastSearches.indexOf(newMaxb) > -1) {
-        return determineResult(auctionSamples);
+      if (maxb === newMaxb) {
+        newMaxb = tradePrice(maxb - maxb * PRICE_CHANGE_FACTOR, 'floor');
       }
-      maxb = newMaxb;
+    } else if (auctions.length <= 1) {
+      newMaxb = tradePrice(maxb + maxb * PRICE_CHANGE_FACTOR, 'ceil');
+    } else {
+      return determineResult(auctions);
     }
+
+    if (lastSearches.indexOf(newMaxb) > -1) {
+      return determineResult(auctionSamples);
+    }
+
+    maxb = newMaxb;
   }
 
   logger.warn(
-    `Price information for ${playerService.readable({
-      resourceId
-    })} couldn't be found in ${
+    `Price information for ${playerStr} couldn't be found in ${
       envConfig().FUTBOT_MAX_PRICING_SEARCH_TRY
     } market queries. Price might be wrong`
   );
@@ -93,9 +97,7 @@ export async function getOptimalSellPrice(
         .map(a => a.buyNowPrice)
     );
     if (!res) {
-      logger.error(
-        `Couldn't determine price for ${playerService.readable({ resourceId })}`
-      );
+      logger.error(`Couldn't determine price for ${playerStr}`);
       return null;
     }
 
@@ -103,9 +105,7 @@ export async function getOptimalSellPrice(
       auctionSamples.length < envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES
     ) {
       logger.error(
-        `Skipping price for ${playerService.readable({
-          resourceId
-        })}. Low sample count: ${auctionSamples.length}`
+        `Skipping price for ${playerStr}. Low sample count: ${auctionSamples.length}`
       );
       return null;
     }
