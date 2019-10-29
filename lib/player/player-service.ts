@@ -25,6 +25,11 @@ export namespace playerService {
         continue;
       }
 
+      // ignore the default buy-now price
+      if (auction.buyNowPrice === auction.itemData.marketDataMaxPrice) {
+        continue;
+      }
+
       buyNowPrices.push(auction.buyNowPrice);
     }
 
