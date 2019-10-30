@@ -5,9 +5,6 @@ The main purpose is to automate simple activities. There is no intention to crea
 To inject your session into node server, there is a chrome extension in the project. This extension is also drawing on fut web app, so that you can access features easily.
 It's tested with FIFA 20
 
-**IMPORTANT**
-I will change this repository to private in 2 days. For future releases or to get a collaborator role, join the Discord server.
-
 ## Table of contents
 
 **[Use Latest stable version](#use-latest-stable-version)**<br>
@@ -107,14 +104,21 @@ This will clear transfer list from sold/expired items. It will send everything t
 
 ### Investor
 
-http://localhost:9999/invest/start-low-players?budget=50000&min=1000&max=5000&maxTargetPool=150  
-This job targets most liked futbin players in your min-max range. It saves the list of players (max target pool is max limit for this), calculates their prices and searches market for auctions with lower buy now price than optimal price, e.g. buy at 59th min.  
-You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.
+Investor jobs lets you give a futbin page as your target pool for buy/sell actions.  
+Once you open like below, you'll see a button 'Add Target Page'.
 
-http://localhost:9999/invest/start-good-auctions?budget=50000&min=5000&max=10000  
-This is similar to low players investor job. Only difference is, this job is focused on expensive players with low current bid amounts, e.g. trades with 1min remaining.  
-You can set FUTBOT_PROFIT_MARGIN in .env file to effect this calculation.  
-`Known issue`: Currently this job takes a bit long time to put an offer and it rarely buy players. You can use low-player invest job till this is fixed in future releases.
+- https://www.futbin.com/players?page=1&pc_price=1000-50000&version=gold&league=16
+- https://www.futbin.com/20/squad/100347300/sbc
+- https://www.futbin.com/20/player/2/diego-maradona
+
+Just press the button to add targets for investor app.  
+Adding a target will automatically start auto buyer job.  
+If you wish to control it, please do so from following endpoints:  
+http://localhost:9999/invest/start-auto-buy  
+http://localhost:9999/invest/stop-auto-buy  
+http://localhost:9999/invest/restart-auto-buy  
+http://localhost:9999/invest/finish-auto-buy  
+**NOTE:** You can always save your jobs (with added targets).
 
 ### Auto Buyer
 
