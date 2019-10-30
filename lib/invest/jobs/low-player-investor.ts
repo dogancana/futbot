@@ -18,7 +18,7 @@ const TARGETS_TO_CHECK = 5;
 const MAX_TRY_PER_TARGET = 4;
 
 let targets: investService.TargetInfo[] = [];
-let setingUp = false;
+let isSettingUp = false;
 
 export interface LowPlayerInvestorProps {
   budget: number;
@@ -55,15 +55,10 @@ export class LowPlayerInvestor extends Job {
       profitMargin: envConfig().FUTBOT_PROFIT_MARGIN,
       budget: this.budget,
       spent: this.spent,
+      targetCount: targets.length,
       boughtAuctions: this.boughtAuctions.map(
         a => `${playerService.readable(a.itemData)} bought for ${a.buyNowPrice}`
       )
-    };
-  }
-
-  public targetCount() {
-    return {
-      count: targets.length
     };
   }
 
@@ -102,7 +97,11 @@ export class LowPlayerInvestor extends Job {
         `Trying to find ${playerStr} for cheaper than ${safeBuyValue} buy now price.`
       );
 
-      for (let j = 0; j < MAX_TRY_PER_TARGET; j++) {
+      for (
+        let j = 0;
+        j < envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER;
+        j++
+      ) {
         const auctions = await playerService.searchBuyableItem(
           target.resourceId,
           safeBuyValue
@@ -128,12 +127,12 @@ export class LowPlayerInvestor extends Job {
 }
 
 async function setupTargets(price: string, maxTargets: number) {
-  if (setingUp) {
+  if (isSettingUp) {
     return;
   }
 
   try {
-    setingUp = true;
+    isSettingUp = true;
     const pageLimit = Math.ceil(maxTargets / 30);
     const platform = await fut.getPlatform();
     const priceKey = `${platform.toLowerCase()}_price`;
@@ -145,14 +144,14 @@ async function setupTargets(price: string, maxTargets: number) {
         await investService.getTargets({
           page: i,
           [priceKey]: price,
-          [prpKey]: '20,100'
+          [prpKey]: '15,100'
         })
       );
     }
 
     targets = uniqBy(targets, t => t.resourceId);
     logger.info(`${targets.length} targets set up`);
-    setingUp = false;
+    isSettingUp = false;
   } catch (e) {
     logger.error(`setup targets error: ${e}`);
   }

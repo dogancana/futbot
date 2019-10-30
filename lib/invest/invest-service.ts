@@ -1,5 +1,5 @@
 import { fut, futbin } from '../api';
-import { getLogger } from './../logger';
+import { getLogger } from '../logger';
 
 const logger = getLogger('InvestService');
 
