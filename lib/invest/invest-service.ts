@@ -7,7 +7,7 @@ export namespace investService {
   export let originalTargets: futbin.FutbinIDs[] = [];
 
   export async function addTargetPage(page: string) {
-    let players = await futbin.getAssetIDsFromPage(page);
+    let players = uniqTargets(await futbin.getAssetIDsFromPage(page));
     players = await Promise.all(
       players.map(async p => {
         const { assetId, futbinId, resourceId } = p;
@@ -18,11 +18,7 @@ export namespace investService {
       })
     );
 
-    originalTargets = [...originalTargets, ...players];
-    originalTargets = uniqBy(
-      originalTargets,
-      t => `${t.resourceId}${t.assetId}`
-    );
+    originalTargets = uniqTargets([...originalTargets, ...players]);
 
     reloadTargets();
 
@@ -30,7 +26,10 @@ export namespace investService {
   }
 
   export function reloadTargets() {
-    targets = [...targets, ...originalTargets];
-    targets = uniqBy(originalTargets, t => `${t.resourceId}${t.assetId}`);
+    targets = uniqTargets([...targets, ...originalTargets]);
+  }
+
+  function uniqTargets(t: futbin.FutbinIDs[]): futbin.FutbinIDs[] {
+    return uniqBy(t, v => `${v.resourceId}${v.assetId}`);
   }
 }

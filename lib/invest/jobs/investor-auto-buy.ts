@@ -34,19 +34,25 @@ export class InvestorAutoBuy extends Job {
   }
 
   private async loopOverTargets() {
-    if (!investService.targets || investService.targets.length === 0) {
+    if (investService.originalTargets.length === 0) {
       // no need to await for setup targets
       logger.warn(`No targets yet. Sleeping for 30 seconds`);
       await new Promise(resolve => {
         setTimeout(() => resolve(true), 30000);
       });
-
-      investService.reloadTargets();
       return;
     }
 
     for (let i = 0; i < TARGETS_TO_CHECK; i++) {
       const target = investService.targets.shift();
+
+      // handle targets run out
+      if (!target) {
+        investService.reloadTargets();
+        i--;
+        continue;
+      }
+
       const playerStr = playerService.readable({ assetId: target.assetId });
       const value = await analyzeItemValue(target.resourceId);
       if (!value) {

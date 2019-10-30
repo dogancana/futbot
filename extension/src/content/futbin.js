@@ -36,6 +36,7 @@ function addStyling() {
     }
 
     .futbot.button-link.fab {
+      z-index: 999;
       position: fixed;
       bottom: 40px;
       right: 3%;

@@ -1,5 +1,9 @@
 import * as express from 'express';
-import { defineJobEndpoints } from '../jobs';
+import {
+  defineJobEndpoints,
+  registerSaveableQuery,
+  reqToSaveableQuery
+} from '../jobs';
 import { playerService } from '../player';
 import { investService } from './invest-service';
 import { InvestorAutoBuy } from './jobs';
@@ -28,6 +32,12 @@ investApp.get('/add-target-page', async (req, res) => {
       autoBuyDef.job.start();
     }
 
+    if (targets.length > 0) {
+      registerSaveableQuery({
+        name: 'invest-target-' + futbinPage,
+        query: reqToSaveableQuery(req)
+      });
+    }
     res.send({
       targets: targets.map(t => playerService.readable(t))
     });
