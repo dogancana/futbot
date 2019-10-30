@@ -10,7 +10,6 @@ import { ItemValue } from './index';
 
 const logger = getLogger('Pricing');
 const AUCTION_MAX_SAMPLES_FOR_PRICE = 5;
-const PRICE_CHANGE_FACTOR = 0.05;
 const cache = new NodeCache({
   stdTTL: 5 * 60,
   checkperiod: 60,
@@ -48,7 +47,7 @@ export async function analyzeItemValue(resourceId: number): Promise<ItemValue> {
 
   let maxb = null;
   if (futbinPrice) {
-    maxb = tradePrice(futbinPrice * 1.3, 'ceil');
+    maxb = tradePrice(futbinPrice * 1.15, 'ceil');
   }
 
   let auctionSamples: fut.AuctionInfo[] = [];
@@ -64,15 +63,17 @@ export async function analyzeItemValue(resourceId: number): Promise<ItemValue> {
     auctionSamples = uniqBy([...auctionSamples, ...auctions], a => a.tradeId);
 
     lastSearches.push(maxb);
-    if (auctions.length > 10) {
+    if (auctions.length > 13) {
       newMaxb = auctions.sort((a, b) => a.buyNowPrice - b.buyNowPrice)[1]
         .buyNowPrice;
 
       if (maxb === newMaxb) {
-        newMaxb = tradePrice(maxb - maxb * PRICE_CHANGE_FACTOR, 'floor');
+        newMaxb = tradePrice(newMaxb + 1, 'ceil');
       }
-    } else if (auctions.length <= 1) {
-      newMaxb = tradePrice(maxb + maxb * PRICE_CHANGE_FACTOR, 'ceil');
+    } else if (
+      auctions.length <= envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES
+    ) {
+      newMaxb = tradePrice(maxb * 1.3, 'ceil');
     } else {
       return determineResult(auctions);
     }
@@ -99,7 +100,7 @@ export async function analyzeItemValue(resourceId: number): Promise<ItemValue> {
     let res: number;
 
     const sorted = arr.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
-    if (sorted[0].expires < 45 * 60) {
+    if (sorted[0] && sorted[0].expires < 52 * 60) {
       res = sorted[0].buyNowPrice;
     } else {
       res = mode(sorted.slice(0, sampleCount).map(a => a.buyNowPrice));
@@ -133,6 +134,10 @@ export async function analyzeItemValue(resourceId: number): Promise<ItemValue> {
 }
 
 export function mapValueToSellPrice(value: ItemValue): SellPrice {
+  if (!value) {
+    return null;
+  }
+
   const lowerPrice = tradePrice(value.price - 1, 'floor');
   const upperPrice = tradePrice(value.price + 1, 'ceil');
 
