@@ -53,7 +53,7 @@ export class InvestorAutoBuy extends Job {
         continue;
       }
 
-      const playerStr = playerService.readable({ assetId: target.assetId });
+      const playerStr = playerService.readable(target);
       const value = await analyzeItemValue(target.resourceId);
       if (!value) {
         logger.info(`Skipping ${playerStr}: missing price information`);
