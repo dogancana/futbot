@@ -23,11 +23,12 @@ export interface EnvConfig {
   FUTBOT_JOB_IMP_SELL_TRADE_PILE: number;
   FUTBOT_JOB_IMP_SLOW_DOWN: number;
   FUTBOT_SLOW_DOWN_JOB_DURATION: number;
+  FUTBOT_SELL_PRICING_MODEL: 'slow' | 'normal' | 'fast';
 }
 
 const defaultConf: EnvConfig = {
   FUTBOT_FUT_API_ENDPOINT_OVERWRITE: null,
-  FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER: 1,
+  FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER: 4,
   FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES: 3,
   FUTBOT_FUT_REQUESTS_PER_SEC: 0.5,
   FUTBOT_FUTBIN_REQUESTS_PER_SEC: 1.5,
@@ -42,7 +43,8 @@ const defaultConf: EnvConfig = {
   FUTBOT_JOB_IMP_SELL_UNUSED: 10,
   FUTBOT_JOB_IMP_SELL_TRADE_PILE: 10,
   FUTBOT_JOB_IMP_SLOW_DOWN: 3,
-  FUTBOT_SLOW_DOWN_JOB_DURATION: 30
+  FUTBOT_SLOW_DOWN_JOB_DURATION: 30,
+  FUTBOT_SELL_PRICING_MODEL: 'slow'
 };
 
 let conf: EnvConfig;
@@ -58,7 +60,8 @@ const numberKeys = [
 ];
 const stringKeys = [
   'FUTBOT_FUT_API_ENDPOINT_OVERWRITE',
-  'FUTBOT_FUT_PLATFORM_OVERWRITE'
+  'FUTBOT_FUT_PLATFORM_OVERWRITE',
+  'FUTBOT_SELL_PRICING_MODEL'
 ];
 const impOrderKeys = [
   'FUTBOT_JOB_IMP_INVEST_LOW_PLAYERS',
@@ -144,6 +147,11 @@ function validateConfig(c: EnvConfig) {
         'FUTBOT_FUT_PLATFORM_OVERWRITE has to be one of pc, ps or xbox. Please fix in .env file.'
       );
     }
+  }
+  if (['slow', 'normal', 'fast'].indexOf(c.FUTBOT_SELL_PRICING_MODEL) === -1) {
+    throw new Error(
+      `FUTBOT_SELL_PRICING_MODEL should be one of slow, normal or fast`
+    );
   }
 
   impOrderKeys.forEach(key => {

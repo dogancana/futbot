@@ -1,3 +1,4 @@
+import { uniqBy } from 'lodash';
 import * as NodeCache from 'node-cache';
 import { fut, futbin } from '../api';
 import { envConfig } from '../config';
@@ -5,6 +6,7 @@ import { getLogger } from '../logger';
 import { playerService } from '../player';
 import { tradePrice } from '../trader/trade-utils';
 import { mode } from '../utils';
+import { ItemValue } from './index';
 
 const logger = getLogger('Pricing');
 const AUCTION_MAX_SAMPLES_FOR_PRICE = 5;
@@ -16,18 +18,22 @@ const cache = new NodeCache({
   deleteOnExpire: true
 });
 
+export interface ItemValue {
+  futbinPrice: number;
+  samples: fut.AuctionInfo[];
+  price: number;
+}
+
 export interface SellPrice {
   buyNowPrice: number;
   startingBid: number;
 }
 
-export async function getOptimalSellPrice(
-  resourceId: number
-): Promise<SellPrice> {
+export async function analyzeItemValue(resourceId: number): Promise<ItemValue> {
   const cacheKey = `price-${resourceId}`;
 
   try {
-    const cached = cache.get(cacheKey) as SellPrice;
+    const cached = cache.get(cacheKey) as ItemValue;
     if (cached) {
       return cached;
     }
@@ -55,7 +61,7 @@ export async function getOptimalSellPrice(
     });
 
     let newMaxb: number;
-    auctionSamples = [...auctionSamples, ...auctions];
+    auctionSamples = uniqBy([...auctionSamples, ...auctions], a => a.tradeId);
 
     lastSearches.push(maxb);
     if (auctions.length > 10) {
@@ -89,7 +95,7 @@ export async function getOptimalSellPrice(
   function determineResult(
     arr: fut.AuctionInfo[],
     sampleCount: number = AUCTION_MAX_SAMPLES_FOR_PRICE
-  ): SellPrice {
+  ): ItemValue {
     let res: number;
 
     const sorted = arr.sort((a, b) => a.buyNowPrice - b.buyNowPrice);
@@ -101,6 +107,7 @@ export async function getOptimalSellPrice(
 
     if (!res) {
       logger.error(`Couldn't determine price for ${playerStr}`);
+      cache.set(cacheKey, null);
       return null;
     }
 
@@ -110,12 +117,42 @@ export async function getOptimalSellPrice(
       logger.error(
         `Skipping price for ${playerStr}. Low sample count: ${auctionSamples.length}`
       );
+      cache.set(cacheKey, null);
       return null;
     }
 
-    return {
-      buyNowPrice: res,
-      startingBid: tradePrice(res - 1, 'floor')
+    const result = {
+      futbinPrice,
+      samples: auctionSamples,
+      price: res
     };
+
+    cache.set(cacheKey, result);
+    return result;
+  }
+}
+
+export function mapValueToSellPrice(value: ItemValue): SellPrice {
+  const lowerPrice = tradePrice(value.price - 1, 'floor');
+  const upperPrice = tradePrice(value.price + 1, 'ceil');
+
+  switch (envConfig().FUTBOT_SELL_PRICING_MODEL) {
+    case 'slow':
+      return {
+        startingBid: value.price,
+        buyNowPrice: Math.max(upperPrice, value.futbinPrice)
+      };
+    case 'normal':
+      return {
+        startingBid: lowerPrice,
+        buyNowPrice: value.price
+      };
+    case 'fast':
+      return {
+        startingBid: tradePrice(lowerPrice - 1, 'floor'),
+        buyNowPrice: lowerPrice
+      };
+    default:
+      return null;
   }
 }

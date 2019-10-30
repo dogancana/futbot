@@ -3,7 +3,6 @@ import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
-import { tradePrice } from '../../trader/trade-utils';
 import { AutoBuyerService } from '../auto-buyer.service';
 
 const logger = getLogger('AutoBuyNowJob');
@@ -63,7 +62,7 @@ export class AutoBuyBuyNow extends Job {
 
       const boughtitems = await playerService.buyNowAndHandleAuctions(
         auctions,
-        target.sellPrice
+        playerService.userDefinedPriceToSellConfig(target.sellPrice)
       );
       this.targetsBought = [...this.targetsBought, ...boughtitems];
     }

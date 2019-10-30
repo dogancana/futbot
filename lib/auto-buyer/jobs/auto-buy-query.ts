@@ -62,7 +62,7 @@ export class AutoBuyQuery extends Job {
     const auctions = await fut.queryMarket(querystring.parse(query));
     const boughtItems = await playerService.buyNowAndHandleAuctions(
       auctions,
-      target.sellPrice
+      playerService.userDefinedPriceToSellConfig(target.sellPrice)
     );
     this.targetsBought = [...this.targetsBought, ...boughtItems];
   }

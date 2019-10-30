@@ -2,12 +2,20 @@
   <div class="root">
     <v-collapsible :onToggle="onToggle">
       <div class="info-box">
-        <p v-if="priceLoading">Loading prices...</p>
-        <p v-if="priceError">{{ priceError }}</p>
-        <div class="price" v-if="price">
+        <p v-if="valueLoading">Loading values...</p>
+        <p v-if="valueError">{{ valueError }}</p>
+        <div class="value" v-if="value">
+          <p>
+            <span>Futbin:</span>
+            <span>{{ value.futbinPrice }}</span>
+          </p>
           <p>
             <span>Price:</span>
-            <span>{{ price.buyNowPrice }}</span>
+            <span>{{ value.price }}</span>
+          </p>
+          <p>
+            <span>Samples Used:</span>
+            <span>{{ value.samples.length }}</span>
           </p>
         </div>
         <div class="actions">
@@ -19,13 +27,13 @@
               v-model="sellPrice"
               type="tel"
               class="numericInput"
-              placeholder="Sell price"
+              placeholder="Sell value"
             />
             <input
               v-model="targetPrice"
               type="tel"
               class="numericInput"
-              placeholder="Buy price"
+              placeholder="Buy value"
             />
             <button
               v-on:click="addTarget"
@@ -50,9 +58,9 @@ import { addTargetToAutoBuy } from '../futbot/auto-buy';
 import { isNumber } from 'util';
 
 const initialProps = () => ({
-  price: null,
-  priceLoading: false,
-  priceError: null,
+  value: null,
+  valueLoading: false,
+  valueError: null,
   targetPrice: null,
   sellPrice: null,
   targetAdding: false,
@@ -71,23 +79,23 @@ export default {
       Object.assign(this, initialProps());
     },
     onToggle(toggled) {
-      this.priceError = null;
+      this.valueError = null;
       if (toggled) this.handlePriceLoad();
       else this.clear();
     },
     handlePriceLoad() {
-      if (!this.priceLoading) {
-        this.priceLoading = true;
+      if (!this.valueLoading) {
+        this.valueLoading = true;
         getPlayerPrice(this.item._metaData.id, this.item.resourceId)
           .then(d => {
-            this.price = d.price;
-            this.priceLoading = false;
-            this.priceError = null;
+            this.value = d.value;
+            this.valueLoading = false;
+            this.valueError = null;
           })
           .catch(e => {
-            this.price = null;
-            this.priceLoading = false;
-            this.priceError = e.message;
+            this.value = null;
+            this.valueLoading = false;
+            this.valueError = e.message;
           });
       }
     },
@@ -96,23 +104,23 @@ export default {
         return;
       }
       if (!this.targetPrice) {
-        alert('Enter a buy price first.');
+        alert('Enter a buy value first.');
         return;
       }
       try {
-        const price = parseInt(this.targetPrice, 10);
+        const targetPrice = parseInt(this.targetPrice, 10);
         const sellPrice = parseInt(this.sellPrice, 10);
 
-        this.targetPrice = price;
+        this.targetPrice = targetPrice;
         this.sellPrice = sellPrice;
 
-        if (price < 0 || sellPrice < 0) {
-          alert('Why you have negative prices?');
+        if (targetPrice < 0 || sellPrice < 0) {
+          alert('Why you have negative values?');
           return;
         }
-        if (sellPrice && price > sellPrice) {
+        if (sellPrice && targetPrice > sellPrice) {
           alert(
-            "Don't you want to make profit? Why buy price is bigger than sell price/"
+            "Don't you want to make profit? Why buy value is bigger than sell value/"
           );
           return;
         }
@@ -120,8 +128,8 @@ export default {
         addTargetToAutoBuy(
           this.item._metaData.id,
           this.item.resourceId,
-          this.targetPrice,
-          this.sellPrice,
+          targetPrice,
+          sellPrice,
           this.item
         ).then(resp => {
           this.targetAddingResult = resp;
