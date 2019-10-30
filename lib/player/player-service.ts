@@ -21,8 +21,12 @@ export namespace playerService {
       name: '?????',
       rating: 0
     };
+    const isSpecial =
+      player.assetId &&
+      player.resourceId &&
+      player.assetId !== player.resourceId;
 
-    return `${data.name}, (${data.rating})`;
+    return `${data.name}, ${isSpecial ? '*' : ''}(${data.rating})`;
   }
 
   export async function searchBuyableItem(

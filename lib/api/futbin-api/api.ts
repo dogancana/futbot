@@ -6,7 +6,7 @@ import { ApiError, logErrorResponse, logResponse } from './../api';
 
 const logger = getLogger('FutbinApi');
 
-export const FUTBIN_ENDPOINT = 'https://www.futbin.com/20';
+export const FUTBIN_ENDPOINT = 'https://www.futbin.com';
 export const futbinApi = Axios.create({
   baseURL: FUTBIN_ENDPOINT,
   timeout: 30000,

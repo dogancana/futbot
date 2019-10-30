@@ -32,7 +32,7 @@ module.exports = {
     {
       js: ['js/futbin.js'],
       run_at: 'document_end',
-      matches: ['https://www.futbin.com/20/*'],
+      matches: ['https://www.futbin.com/*'],
       all_frames: true
     }
   ],

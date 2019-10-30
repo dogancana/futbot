@@ -52,7 +52,7 @@ function main() {
   addStyling();
   const linkButton = new LinkButton({
     href: `http://localhost:9999/invest/add-target-page?futbinPage=${encodeURIComponent(
-      location.href
+      location.pathname + location.search
     )}`,
     textContent: `Add Target Page`,
     classes: 'fab',

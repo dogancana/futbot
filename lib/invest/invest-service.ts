@@ -1,48 +1,39 @@
 import { fut, futbin } from '../api';
 import { getLogger } from '../logger';
+import { uniqBy } from 'lodash';
 
 const logger = getLogger('InvestService');
 
 export namespace investService {
-  export interface TargetInfo {
-    resourceId: number;
-    futbinId: number;
-    assetId: number;
+  export let targets: futbin.FutbinIDs[] = [];
+  export const targetPages: string[] = [];
+  let originalTargets: futbin.FutbinIDs[] = [];
+
+  export async function addTargetPage(page: string) {
+    let players = await futbin.getAssetIDsFromPage(page);
+    players = await Promise.all(
+      players.map(async p => {
+        const { assetId, futbinId, resourceId } = p;
+        if (!assetId || !resourceId) {
+          return await futbin.getPlayer(futbinId);
+        }
+        return p;
+      })
+    );
+
+    originalTargets = [...originalTargets, ...players];
+    originalTargets = uniqBy(
+      originalTargets,
+      t => `${t.resourceId}${t.assetId}`
+    );
+
+    reloadTargets();
+
+    return players;
   }
 
-  export async function getTargets(
-    query: futbin.PlayersQuery
-  ): Promise<TargetInfo[]> {
-    const platform = await fut.getPlatform();
-    const priceKey = `${platform.toLowerCase()}_price`;
-    const prpKey = `${platform.toLowerCase()}_prp`;
-    const defaultQuery = {
-      page: 1,
-      [priceKey]: '1000-2500',
-      [prpKey]: '20,100',
-      sort: 'likes',
-      // version: 'gold',
-      order: 'desc'
-    };
-    const q = {
-      ...defaultQuery,
-      ...query
-    };
-
-    // futbin gives 404 with prp
-    if (platform === 'xbox') {
-      delete q[prpKey];
-    }
-
-    const playerIds = await futbin.getPlayerIDs(q as any);
-    logger.debug(`Target ids: ${playerIds}`);
-
-    const playerInfos: TargetInfo[] = [];
-    for (const playerId of playerIds) {
-      const info = await futbin.getPlayer(playerId);
-      playerInfos.push(info);
-    }
-
-    return playerInfos;
+  export function reloadTargets() {
+    targets = [...targets, ...originalTargets];
+    targets = uniqBy(originalTargets, t => `${t.resourceId}${t.assetId}`);
   }
 }

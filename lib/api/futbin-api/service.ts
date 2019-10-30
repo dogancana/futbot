@@ -10,6 +10,12 @@ export namespace futbin {
     ps: T;
   }
 
+  export interface FutbinIDs {
+    futbinId: number;
+    assetId?: number;
+    resourceId: number;
+  }
+
   export type Prices = FutbinPlayerResponse<Price>;
 
   export interface Price {
@@ -93,42 +99,57 @@ export namespace futbin {
     order?: 'desc' | 'asc';
   }
 
-  export async function getAssetIDsFromPage(path: string): Promise<number[]> {
-    const playersPageSelector = 'img.player_img';
-    const sbcPageSelector = 'img[id="player_pic"]';
-    const resp = await futbinApi.get(path.replace(FUTBIN_ENDPOINT, ''), {
-      adapter: simpleCacheAdapter
-    });
+  export async function getAssetIDsFromPage(
+    path: string
+  ): Promise<FutbinIDs[]> {
+    const playersPageSelector = '#repTb tbody tr';
+    const sbcPageSelector = 'div[data-player-id]';
+    const resp = await futbinApi.get(
+      path.replace('.com/20', '.com').replace(FUTBIN_ENDPOINT, ''),
+      {
+        adapter: simpleCacheAdapter
+      }
+    );
     const html = resp.data;
     const $ = cheerio.load(html);
-    const ids: number[] = [
+    const ids: FutbinIDs[] = [
       ...$(playersPageSelector)
-        .map(playerImgMapper)
+        .map((i, elm) => {
+          const tr = $(elm);
+          const img = $(tr.find('.player_img'));
+          const futbinId = /player\/([0-9]+)/.exec(tr.data('url'))[1];
+          const resourceId = /players\/.([0-9]+)\.png/.exec(
+            img.data('original')
+          )[1];
+          return {
+            futbinId,
+            resourceId,
+            assetId: null
+          };
+        })
         .get(),
       ...$(sbcPageSelector)
-        .map(playerImgMapper)
+        .map((i, elm) => {
+          const div = $(elm);
+          const futbinId = div.data('player-id');
+          const resourceId = div.data('resource-id');
+          const assetId = div.data('base-id');
+          return {
+            futbinId,
+            resourceId,
+            assetId
+          };
+        })
         .get()
-    ]
-      .map(id => parseInt(id, 10))
-      .filter((id: number) => !!id && !isNaN(id));
+    ].map((a: FutbinIDs) => {
+      for (const key of Object.keys(a)) {
+        const v = parseInt(a[key], 10);
+        a[key] = !isNaN(v) ? v : null;
+      }
+      return a;
+    });
 
     return ids;
-
-    function playerImgMapper(i, elm) {
-      const img = $(elm);
-      const regex = /img\/players\/([0-9]+).png/;
-      const dataResult = regex.exec(img.data('original'));
-      const srcResult = regex.exec(img.attr('src'));
-      const execResult = dataResult
-        ? dataResult[1]
-        : srcResult
-        ? srcResult[1]
-        : null;
-
-      let res: number = execResult ? parseInt(execResult, 10) : null;
-      res = !isNaN(res) ? res : null;
-      return res;
-    }
   }
 
   export async function getPlayerIDs(query: PlayersQuery): Promise<number[]> {
@@ -153,7 +174,7 @@ export namespace futbin {
     return players;
   }
 
-  export async function getPlayer(futbinId: number) {
+  export async function getPlayer(futbinId: number): Promise<FutbinIDs> {
     const resp = await futbinApi.get(`/player/${futbinId}`, {
       adapter: simpleCacheAdapter
     });
