@@ -2,8 +2,14 @@ import { fut } from '../api';
 import { getLogger } from '../logger';
 import { StaticItems } from '../static';
 import { tradePrice } from '../trader/trade-utils';
+import { ItemValue, mapValueToSellPrice, SellPrice } from './../pricing';
 
 const logger = getLogger('PlayerService');
+
+interface SellConfig {
+  sellPrice?: SellPrice;
+  value?: ItemValue;
+}
 
 export namespace playerService {
   export function readable(player: {
@@ -34,7 +40,7 @@ export namespace playerService {
 
   export async function buyNowAndHandleAuctions(
     auctions: fut.AuctionInfo[],
-    sellPrice?: number
+    sellConfig?: SellConfig
   ): Promise<fut.AuctionInfo[]> {
     if (!auctions || auctions.length === 0) {
       return [];
@@ -58,7 +64,7 @@ export namespace playerService {
     // Leave the job queue, don't await
     setTimeout(() => {
       bought.forEach(auction => {
-        handleBought(auction, sellPrice);
+        handleBought(auction, sellConfig);
       });
     }, 1000);
 
@@ -67,20 +73,23 @@ export namespace playerService {
 
   export async function handleBought(
     auction: fut.AuctionInfo,
-    sellPrice?: number
+    sellConfig: SellConfig = {}
   ) {
     const playerStr = readable(auction.itemData);
     const boughtItems = await fut.waitAndGetPurchasedItems(
       auction.itemData.resourceId
     );
+    const { sellPrice, value } = sellConfig;
     for (const bought of boughtItems) {
-      if (sellPrice) {
-        logger.info(`Trying to sell ${readable(bought)} for ${sellPrice}`);
-        const buyNowPrice = tradePrice(sellPrice);
-        const startingBid = tradePrice(buyNowPrice - 1, 'floor');
+      if (sellPrice || value) {
+        const price = sellPrice || mapValueToSellPrice(value);
+        logger.info(
+          `Trying to sell ${readable(bought)} for ${price.startingBid}/${
+            price.buyNowPrice
+          }`
+        );
         await fut.sellPlayer({
-          buyNowPrice,
-          startingBid,
+          ...price,
           itemData: bought,
           duration: 3600
         });
@@ -89,5 +98,17 @@ export namespace playerService {
         await fut.sendToTradePile(bought.id);
       }
     }
+  }
+
+  export function userDefinedPriceToSellConfig(price: number): SellConfig {
+    const buyNowPrice = price ? tradePrice(price, 'ceil') : null;
+    return buyNowPrice
+      ? {
+          sellPrice: {
+            buyNowPrice,
+            startingBid: tradePrice(buyNowPrice - 1, 'floor')
+          }
+        }
+      : null;
   }
 }

@@ -3,7 +3,7 @@ import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
-import { getOptimalSellPrice } from '../../pricing';
+import { analyzeItemValue } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
 
 const logger = getLogger('GoodAuctionsJob');
@@ -240,18 +240,18 @@ export class GoodAuctionInvestor extends Job {
       }
     }
     let profitMargin: number;
-    const sellPrice = (await getOptimalSellPrice(auction.itemData.resourceId))
-      .buyNowPrice;
+    const value = await analyzeItemValue(auction.itemData.resourceId);
+    const { price } = value;
     const askingPrice = auction.currentBid || auction.startingBid;
 
-    profitMargin = ((sellPrice - askingPrice) / sellPrice) * 100;
+    profitMargin = ((price - askingPrice) / price) * 100;
 
     return {
       goodBuy: profitMargin >= PROFIT_MARGIN_PERCT,
       askingPrice,
       profitMargin,
-      sellPrice,
-      maxBuyPrice: sellPrice * ((100 - PROFIT_MARGIN_PERCT) / 100)
+      sellPrice: price,
+      maxBuyPrice: price * ((100 - PROFIT_MARGIN_PERCT) / 100)
     };
   }
 }

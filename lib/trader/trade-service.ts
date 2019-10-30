@@ -2,7 +2,8 @@ import { fut } from '../api';
 import { envConfig } from '../config';
 import { getLogger } from '../logger';
 import { playerService } from '../player';
-import { getOptimalSellPrice, SellPrice } from '../pricing';
+import { getItemValue, mapValueToSellPrice } from '../pricing';
+import { SellPrice } from './../pricing/index';
 
 const logger = getLogger('TradeService');
 
@@ -12,7 +13,8 @@ export namespace tradeService {
   export async function sellPlayerOptimal(
     player: fut.ItemData
   ): Promise<PlayerSellConf> {
-    const price: SellPrice = await getOptimalSellPrice(player.resourceId);
+    const value = await getItemValue(player.resourceId);
+    const price = mapValueToSellPrice(value);
     const quickSellPrice = player.discardValue;
     if (!price) {
       logger.error(
