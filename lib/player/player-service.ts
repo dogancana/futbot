@@ -29,7 +29,6 @@ export namespace playerService {
     }))
       .filter(a => !a.watched)
       .filter(a => !a.tradeOwner)
-      .filter(a => a.expires > 1800)
       .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
   }
 
