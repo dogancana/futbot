@@ -1,13 +1,10 @@
-import { fut, futbin } from '../api';
-import { getLogger } from '../logger';
 import { uniqBy } from 'lodash';
-
-const logger = getLogger('InvestService');
+import { futbin } from '../api';
 
 export namespace investService {
   export let targets: futbin.FutbinIDs[] = [];
   export const targetPages: string[] = [];
-  let originalTargets: futbin.FutbinIDs[] = [];
+  export let originalTargets: futbin.FutbinIDs[] = [];
 
   export async function addTargetPage(page: string) {
     let players = await futbin.getAssetIDsFromPage(page);

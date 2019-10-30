@@ -1,8 +1,8 @@
 import * as express from 'express';
 import { defineJobEndpoints } from '../jobs';
-import { InvestorAutoBuy } from './jobs';
-import { investService } from './invest-service';
 import { playerService } from '../player';
+import { investService } from './invest-service';
+import { InvestorAutoBuy } from './jobs';
 
 export const investApp = express();
 

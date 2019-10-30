@@ -1,3 +1,4 @@
+import { uniqBy } from 'lodash';
 import { fut } from '../../api';
 import { envConfig } from '../../config';
 import { Job } from '../../jobs';
@@ -5,7 +6,6 @@ import { getLogger } from '../../logger';
 import { playerService } from '../../player';
 import { analyzeItemValue } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
-import { uniqBy } from 'lodash';
 import { investService } from '../invest-service';
 
 const logger = getLogger('LowPlayersJob');
@@ -24,6 +24,7 @@ export class InvestorAutoBuy extends Job {
 
   public report() {
     return {
+      targets: investService.targets.map(playerService.readable),
       profitMargin: envConfig().FUTBOT_PROFIT_MARGIN,
       spent: this.spent,
       boughtAuctions: this.boughtAuctions.map(
