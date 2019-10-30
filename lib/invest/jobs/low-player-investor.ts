@@ -97,7 +97,11 @@ export class LowPlayerInvestor extends Job {
         `Trying to find ${playerStr} for cheaper than ${safeBuyValue} buy now price.`
       );
 
-      for (let j = 0; j < MAX_TRY_PER_TARGET; j++) {
+      for (
+        let j = 0;
+        j < envConfig().FUTBOT_FUT_MAX_AUCTION_TRY_PER_PLAYER;
+        j++
+      ) {
         const auctions = await playerService.searchBuyableItem(
           target.resourceId,
           safeBuyValue
@@ -140,7 +144,7 @@ async function setupTargets(price: string, maxTargets: number) {
         await investService.getTargets({
           page: i,
           [priceKey]: price,
-          [prpKey]: '20,100'
+          [prpKey]: '15,100'
         })
       );
     }
