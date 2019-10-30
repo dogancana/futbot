@@ -5,7 +5,8 @@ const jobs: Job[] = [];
 
 const MAX_JOB_FREQUENCY = 20;
 const MIN_JOB_FREQUENCY = 1;
-const sleep = () => new Promise(resolve => setTimeout(resolve, 1500));
+const sleep = () =>
+  new Promise(resolve => setTimeout(() => resolve(true), 1500));
 
 export class Job {
   public static stopAllJobs(userStopped?: boolean) {
@@ -94,11 +95,12 @@ export class Job {
     } catch (e) {
       logger.error(`${job.name} had and execution error: ${e}`);
     }
-    const t = new Date().getTime() - start;
-    logger.debug(`${job.name} execution finished in ${t}`);
+    let t = new Date().getTime() - start;
     if (t < 500) {
       await sleep();
     }
+    t = new Date().getTime() - start;
+    logger.debug(`${job.name} execution finished in ${t} ms`);
     job.effectiveImportanceOrder = job.importanceOrder;
     job.avgExecTimeS =
       ((job.execTime - 1) * job.avgExecTimeS + t) / job.execTime;

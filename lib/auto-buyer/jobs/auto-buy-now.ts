@@ -12,9 +12,7 @@ const BUY_QUERY_TRIES = 4;
 
 export class AutoBuyBuyNow extends Job {
   private lastTargetId = 0;
-  private targetsBought: Array<
-    AutoBuyerService.Target & { price: number }
-  > = [];
+  private targetsBought: fut.AuctionInfo[] = [];
   private spent: number = 0;
   private listedFor: number = 0;
 
@@ -28,7 +26,7 @@ export class AutoBuyBuyNow extends Job {
       spent: this.spent,
       listedItemsValue: this.listedFor,
       targetsBought: this.targetsBought.map(
-        t => `${playerService.readable(t)} bought for ${t.price}`
+        t => `${playerService.readable(t.itemData)} bought for ${t.buyNowPrice}`
       )
     };
   }
@@ -49,94 +47,25 @@ export class AutoBuyBuyNow extends Job {
       i < TARGET_BATCH_TO_CHECK;
       i++, this.lastTargetId = (this.lastTargetId + 1) % targets.length
     ) {
-      await this.tryToBuy(targets[this.lastTargetId]);
+      await this.searchTarget(targets[this.lastTargetId]);
     }
   }
 
-  private async tryToBuy(target: AutoBuyerService.Target): Promise<void> {
+  private async searchTarget(target: AutoBuyerService.Target): Promise<void> {
     const playerStr = playerService.readable(target);
-    logger.info(`Checking for ${playerStr} with max price ${target.maxPrice}`);
-    for (
-      let i = 0, micr = tradePrice(target.discardValue);
-      i < BUY_QUERY_TRIES;
-      i++, micr = tradePrice(micr + 1, 'ceil')
-    ) {
-      let auctions: fut.AuctionInfo[];
-      try {
-        auctions = (await fut.queryMarket({
-          maskedDefId: target.resourceId,
-          maxb: target.maxPrice
-        }))
-          .filter(a => !a.tradeOwner)
-          .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
-      } catch (e) {
-        logger.error(`Error while searching. Reason: ${e}`);
-        continue;
-      }
+    logger.info(`Searching for ${playerStr} with max price ${target.maxPrice}`);
 
-      // Found some, go parallel
-      auctions.forEach(async auction => {
-        if (auction.buyNowPrice <= target.maxPrice) {
-          logger.info(`Found ${playerStr} for ${auction.buyNowPrice}, buying.`);
-          try {
-            await fut.bidToTrade(auction.tradeId, auction.buyNowPrice);
-          } catch (e) {
-            logger.error(`Error buying ${playerStr}, Reason: ${e.message}`);
-          }
-
-          // Leave the job queue, don't await
-          setTimeout(() => {
-            this.handleBought(target, auction);
-          }, 1000);
-        }
-      });
-    }
-  }
-
-  private async handleBought(
-    target: AutoBuyerService.Target,
-    auction: fut.AuctionInfo
-  ) {
-    const playerStr = playerService.readable(target);
-    try {
-      this.spent += auction.buyNowPrice;
-      this.targetsBought.push({ ...target, price: auction.buyNowPrice });
-      const bought = await fut.waitAndGetPurchasedItem(target.resourceId);
-      if (target.sellPrice) {
-        await this.sell(target, bought);
-      } else {
-        logger.info(`Sending ${playerStr} to club`);
-        try {
-          await fut.sendToClub(bought.id);
-        } catch (e) {
-          logger.error(`Error sending ${playerStr} to club. Reason: ${e}`);
-        }
-      }
-    } catch (e) {
-      logger.error(`Error handling ${playerStr}, Reason: ${e.message}`);
-    }
-  }
-
-  private async sell(target: AutoBuyerService.Target, bought: fut.ItemData) {
-    try {
-      logger.info(
-        `Trying to sell ${playerService.readable(target)} for ${
-          target.sellPrice
-        }`
+    for (let i = 0; i < BUY_QUERY_TRIES; i++) {
+      const auctions = await playerService.searchBuyableItem(
+        target.resourceId,
+        target.maxPrice
       );
-      const buyNowPrice = tradePrice(target.sellPrice);
-      const startingBid = tradePrice(buyNowPrice - 1, 'floor');
-      await fut.sellPlayer({
-        buyNowPrice,
-        startingBid,
-        itemData: bought,
-        duration: 3600
-      });
-      this.listedFor += buyNowPrice;
-    } catch (e) {
-      logger.error(
-        `Couldn't sell ${playerService.readable(target)}. Reason: ${e}`
+
+      const boughtitems = await playerService.buyNowAndHandleAuctions(
+        auctions,
+        target.sellPrice
       );
+      this.targetsBought = [...this.targetsBought, ...boughtitems];
     }
   }
 }
