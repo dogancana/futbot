@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import * as querystring from 'querystring';
 import { simpleCacheAdapter } from '../cache-adapter';
-import { futbinApi } from './api';
+import { FUTBIN_ENDPOINT, futbinApi } from './api';
 
 export namespace futbin {
   export interface FutbinPlayerResponse<T> {
@@ -91,6 +91,44 @@ export namespace futbin {
     version?: 'gold' | string;
     sort?: 'likes';
     order?: 'desc' | 'asc';
+  }
+
+  export async function getAssetIDsFromPage(path: string): Promise<number[]> {
+    const playersPageSelector = 'img.player_img';
+    const sbcPageSelector = 'img[id="player_pic"]';
+    const resp = await futbinApi.get(path.replace(FUTBIN_ENDPOINT, ''), {
+      adapter: simpleCacheAdapter
+    });
+    const html = resp.data;
+    const $ = cheerio.load(html);
+    const ids: number[] = [
+      ...$(playersPageSelector)
+        .map(playerImgMapper)
+        .get(),
+      ...$(sbcPageSelector)
+        .map(playerImgMapper)
+        .get()
+    ]
+      .map(id => parseInt(id, 10))
+      .filter((id: number) => !!id && !isNaN(id));
+
+    return ids;
+
+    function playerImgMapper(i, elm) {
+      const img = $(elm);
+      const regex = /img\/players\/([0-9]+).png/;
+      const dataResult = regex.exec(img.data('original'));
+      const srcResult = regex.exec(img.attr('src'));
+      const execResult = dataResult
+        ? dataResult[1]
+        : srcResult
+        ? srcResult[1]
+        : null;
+
+      let res: number = execResult ? parseInt(execResult, 10) : null;
+      res = !isNaN(res) ? res : null;
+      return res;
+    }
   }
 
   export async function getPlayerIDs(query: PlayersQuery): Promise<number[]> {

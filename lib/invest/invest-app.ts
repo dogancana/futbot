@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { futbin } from '../api';
 import { defineJobEndpoints } from '../jobs';
 import { GoodAuctionInvestor, LowPlayerInvestor } from './jobs';
 
@@ -15,6 +16,16 @@ defineJobEndpoints<LowPlayerInvestor>(investApp, 'low-players', q => {
   const { budget, min, max } = getBudgetMinMax(q);
   budgetMinMaxQueryCheck(budget, min, max);
   return new LowPlayerInvestor({ budget, min, max, maxTargetPool });
+});
+
+investApp.get('/add-target-page', async (req, res) => {
+  const { futbinPage } = req.query;
+  try {
+    const result = await futbin.getAssetIDsFromPage(futbinPage);
+    res.send(result);
+  } catch (e) {
+    res.send(e.message);
+  }
 });
 
 function getBudgetMinMax(query: any) {

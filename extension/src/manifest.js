@@ -28,6 +28,12 @@ module.exports = {
       run_at: 'document_end',
       matches: ['https://www.easports.com/fifa/ultimate-team/web-app*'],
       all_frames: true
+    },
+    {
+      js: ['js/futbin.js'],
+      run_at: 'document_end',
+      matches: ['https://www.futbin.com/20/*'],
+      all_frames: true
     }
   ],
   browser_action: {

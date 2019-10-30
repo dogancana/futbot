@@ -10,7 +10,8 @@ module.exports = {
     options: resolve('./options'),
     popup: resolve('./popup'),
     devtools: resolve('./devtools'),
-    inject: resolve('./content/inject')
+    inject: resolve('./content/inject'),
+    futbin: resolve('./content/futbin')
   },
   output: {
     path: path.join(__dirname, '..', 'build'),

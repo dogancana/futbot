@@ -71,7 +71,7 @@ export async function analyzeItemValue(resourceId: number): Promise<ItemValue> {
         newMaxb = tradePrice(newMaxb + 1, 'ceil');
       }
     } else if (
-      auctions.length <= envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES
+      auctions.length < envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES
     ) {
       newMaxb = tradePrice(maxb * 1.3, 'ceil');
     } else {

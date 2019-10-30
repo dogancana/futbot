@@ -3,9 +3,7 @@
     <h3>Futbot</h3>
     <p class="info">Your fut endpoint: {{ endpoint }}</p>
     <p class="info">
-      <a href="http://localhost:9999/auto-buyer/jobs" target="_blank"
-        >Your auto buy report</a
-      >
+      <a href="http://localhost:9999/feedback" target="_blank">Your feedback</a>
     </p>
   </div>
 </template>
