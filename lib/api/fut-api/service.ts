@@ -114,7 +114,7 @@ export namespace fut {
   interface AuctionRequest {
     buyNowPrice: number;
     duration: number;
-    itemData: { id: number; assetId?: number };
+    itemData: fut.ItemData;
     startingBid: number;
   }
 
@@ -124,8 +124,13 @@ export namespace fut {
       `${playerStr} will be sold for ${req.startingBid}/${req.buyNowPrice}`
     );
     try {
+      const { marketDataMaxPrice, marketDataMinPrice } = req.itemData;
       await sendToTradePile(req.itemData.id);
-      await futApi.post(`/auctionhouse`, req);
+      await futApi.post(`/auctionhouse`, {
+        ...req,
+        startingBid: Math.max(req.startingBid, marketDataMinPrice),
+        buyNowPrice: Math.min(req.buyNowPrice, marketDataMaxPrice)
+      });
     } catch (e) {
       logger.error(`Couldn't sell player ${playerStr}. Reason: ${e}`);
     }

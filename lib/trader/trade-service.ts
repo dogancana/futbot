@@ -2,7 +2,8 @@ import { fut } from '../api';
 import { envConfig } from '../config';
 import { getLogger } from '../logger';
 import { playerService } from '../player';
-import { getOptimalSellPrice, SellPrice } from '../pricing';
+import { analyzeItemValue, mapValueToSellPrice } from '../pricing';
+import { SellPrice } from './../pricing/index';
 
 const logger = getLogger('TradeService');
 
@@ -12,9 +13,10 @@ export namespace tradeService {
   export async function sellPlayerOptimal(
     player: fut.ItemData
   ): Promise<PlayerSellConf> {
-    const price: SellPrice = await getOptimalSellPrice(player.resourceId);
+    const value = await analyzeItemValue(player.resourceId);
+    const price = mapValueToSellPrice(value);
     const quickSellPrice = player.discardValue;
-    if (!price) {
+    if (!value || !price) {
       logger.error(
         `No price information for ${playerService.readable(
           player
@@ -64,10 +66,7 @@ export namespace tradeService {
       await fut.sellPlayer({
         ...price,
         duration: 3600,
-        itemData: {
-          id: player.id,
-          assetId: player.assetId
-        }
+        itemData: player
       });
       return {
         ...player,

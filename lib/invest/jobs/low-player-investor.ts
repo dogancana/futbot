@@ -4,7 +4,7 @@ import { envConfig } from '../../config';
 import { Job } from '../../jobs';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
-import { getOptimalSellPrice } from '../../pricing';
+import { analyzeItemValue } from '../../pricing';
 import { tradePrice } from '../../trader/trade-utils';
 import { investService } from '../invest-service';
 
@@ -15,7 +15,6 @@ const MIN_TARGET_PRICE = 1000;
 const MAX_TARGET_PRICE = 5000;
 const MAX_TARGET_POOL = 150;
 const TARGETS_TO_CHECK = 5;
-const MAX_TRY_PER_TARGET = 4;
 
 let targets: investService.TargetInfo[] = [];
 let isSettingUp = false;
@@ -82,14 +81,14 @@ export class LowPlayerInvestor extends Job {
     for (let i = 0; i < TARGETS_TO_CHECK; i++) {
       const target = targets.shift();
       const playerStr = playerService.readable({ assetId: target.assetId });
-      const sellPrice = await getOptimalSellPrice(target.resourceId);
-      if (!sellPrice) {
+      const value = await analyzeItemValue(target.resourceId);
+      if (!value) {
         logger.info(`Skipping ${playerStr}: missing price information`);
         return;
       }
 
       const safeBuyValue = tradePrice(
-        sellPrice.startingBid * BUY_REFERENCE_PERCT,
+        value.price * BUY_REFERENCE_PERCT,
         'floor'
       );
 
@@ -113,7 +112,7 @@ export class LowPlayerInvestor extends Job {
 
         const boughtItems = await playerService.buyNowAndHandleAuctions(
           auctions,
-          sellPrice.buyNowPrice
+          { value }
         );
 
         for (const bought of boughtItems) {

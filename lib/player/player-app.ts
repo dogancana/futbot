@@ -1,8 +1,8 @@
 import * as express from 'express';
-import { fut, futbin } from '../api';
+import { fut } from '../api';
 import { tradePrice } from '../trader/trade-utils';
 import { getLogger } from './../logger';
-import { getOptimalSellPrice, SellPrice } from './../pricing/index';
+import { analyzeItemValue, ItemValue } from './../pricing/index';
 import { playerService } from './player-service';
 
 const logger = getLogger('PlayerApp');
@@ -18,9 +18,11 @@ playerApp.get('', async (req, res) => {
     return;
   }
 
-  let price: SellPrice;
   try {
-    price = await getOptimalSellPrice(resourceId);
+    res.send({
+      value: await analyzeItemValue(resourceId),
+      name: playerService.readable({ assetId })
+    });
   } catch (e) {
     logger.error(
       `error while retrieving market price for ${playerService.readable({
@@ -28,10 +30,6 @@ playerApp.get('', async (req, res) => {
       })}. Reason: ${e}`
     );
   }
-  res.send({
-    price,
-    name: playerService.readable({ assetId })
-  });
 });
 
 playerApp.get('/bid', async (req, res) => {
