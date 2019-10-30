@@ -46,12 +46,12 @@ export namespace playerService {
       return [];
     }
 
-    const playerStr = readable({ resourceId: auctions[0].itemData.resourceId });
     const bought: fut.AuctionInfo[] = [];
     // Go parallel to not miss anyone
     await Promise.all(
       auctions.map(async auction => {
-        logger.info(`Buying ${playerStr} for ${auction.buyNowPrice}, buying.`);
+        const playerStr = readable({ resourceId: auction.itemData.resourceId });
+        logger.info(`Buying ${playerStr} for ${auction.buyNowPrice}.`);
         try {
           await fut.bidToTrade(auction.tradeId, auction.buyNowPrice);
           bought.push(auction);

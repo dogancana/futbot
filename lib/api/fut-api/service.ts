@@ -182,6 +182,7 @@ export namespace fut {
     if (platform) {
       return platform;
     }
+
     try {
       const resp = await futApi.get(
         `/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
@@ -206,10 +207,17 @@ export namespace fut {
     return platform;
   }
 
+  const bidHistory: number[] = [];
+
   export async function bidToTrade(
     tradeId: number,
     bid: number
   ): Promise<void> {
+    if (-1 !== bidHistory.indexOf(tradeId)) {
+      throw new Error(`Skipped bid ${tradeId} (dupe).`);
+    }
+
+    bidHistory.push(tradeId);
     await futApi.put(`/trade/${tradeId}/bid`, {
       bid
     });
