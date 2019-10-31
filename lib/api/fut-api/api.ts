@@ -27,13 +27,13 @@ function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
   config.headers.Origin = 'https://www.easports.com';
   config.headers.Referer =
     'https://www.easports.com/fifa/ultimate-team/web-app/';
-  config.headers['X-UT-SID'] = SessionInjector.auth.sid;
+  config.headers['X-UT-SID'] = SessionInjector.sid;
 
   return config;
 }
 
 futApi.interceptors.request.use(async config => {
-  if (!SessionInjector.auth) {
+  if (!SessionInjector.sid) {
     throw new ApiError(
       401,
       config,

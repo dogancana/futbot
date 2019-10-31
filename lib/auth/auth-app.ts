@@ -2,46 +2,42 @@ import * as express from 'express';
 import { envConfig } from '../config';
 import { Job } from '../jobs';
 import { getLogger } from './../logger';
+import { PinEvent, PinEventsService } from './pin-events';
 import { SessionInjector } from './session-injector';
 
 const logger = getLogger('AuthApp');
 export const authApp = express();
+PinEventsService.setupPinEventHandler();
 
-async function setAuthSession(
-  req: express.Request,
-  res: express.Response
-): Promise<void> {
+authApp.post('/register-event', (req, res) => {
+  const pinEvent: PinEvent = req.body.pinEvent;
+  if (pinEvent) {
+    res.send(
+      JSON.stringify({
+        s: PinEventsService.registerPinEvent(pinEvent)
+      })
+    );
+  }
+});
+
+authApp.post('', (req, res) => {
   const { auth } = req.body;
 
-  validateEndpoint(auth.ipPort);
-
   if (auth) {
-    SessionInjector.auth = auth;
-    if (auth.sid) {
+    validateEndpoint(auth.ipPort);
+
+    if (auth.sid && SessionInjector.sid !== auth.sid) {
+      PinEventsService.handleNewSID();
+      SessionInjector.sid = auth.sid;
       logger.info(`Received auth token fron extension!`);
       logger.info(
         `New auth token received. Will resume all stopped jobs if any`
       );
       Job.resumeAllJobs();
       res.send('OK');
-    } else {
-      logger.error('Couldnt receive auth token from extension.');
     }
-  } else {
-    logger.error('Couldnt receive auth token from extension.');
   }
-}
-
-async function getAuthSession(
-  req: express.Request,
-  res: express.Response
-): Promise<void> {
-  res.send(
-    JSON.stringify({
-      auth: SessionInjector.auth
-    })
-  );
-}
+});
 
 function validateEndpoint(ipPort: string) {
   const res = /utas\.external\.(s.)\.fut\.ea\.com/g.exec(ipPort);
@@ -58,6 +54,3 @@ function validateEndpoint(ipPort: string) {
     process.exit(-1);
   }
 }
-
-authApp.post('', setAuthSession);
-authApp.get('', getAuthSession);

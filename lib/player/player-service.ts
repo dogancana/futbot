@@ -77,8 +77,10 @@ export namespace playerService {
 
   export async function handleBought(
     auction: fut.AuctionInfo,
-    sellConfig: SellConfig = {}
+    sellConfig: SellConfig
   ) {
+    sellConfig = sellConfig || {};
+
     const playerStr = readable(auction.itemData);
     const boughtItems = await fut.waitAndGetPurchasedItems(
       auction.itemData.resourceId

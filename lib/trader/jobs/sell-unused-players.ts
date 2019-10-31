@@ -35,7 +35,7 @@ export class SellUnusedPlayers extends Job {
         p =>
           `${playerService.readable(p)} listed for ${p.sellPrice.startingBid}/${
             p.sellPrice.buyNowPrice
-          }.` + `${p.lastSalePrice ? 'Bought for ' + p.lastSalePrice : ''}`
+          }. ` + `${p.lastSalePrice ? 'Bought for ' + p.lastSalePrice : ''}`
       )
     };
   }

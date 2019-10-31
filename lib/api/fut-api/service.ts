@@ -1,4 +1,5 @@
 import * as querystring from 'querystring';
+import { PinEventsService } from '../../auth/pin-events';
 import { envConfig } from '../../config';
 import { getLogger } from '../../logger';
 import { playerService } from '../../player';
@@ -79,6 +80,13 @@ export namespace fut {
         delete q[key];
       }
     }
+    PinEventsService.pushEvent('searchView');
+    setTimeout(() => {
+      PinEventsService.pushEvent('transferMarketResults');
+    }, 800);
+    setTimeout(() => {
+      PinEventsService.pushEvent('itemView');
+    }, 1000);
     return (await futApi.get(
       `/transfermarket?${querystring.stringify(mapMarketQueryToBypassCache(q))}`
     )).data.auctionInfo;
@@ -234,7 +242,7 @@ export namespace fut {
     return new Promise<ItemData[]>((resolve, reject) => {
       setTimeout(async () => {
         try {
-          const purchased = await getPurchasedItems();
+          const purchased = (await getPurchasedItems()) || [];
           const newPlayers = purchased.filter(p => p.resourceId === resourceId);
           resolve(newPlayers);
         } catch (e) {

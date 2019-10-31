@@ -23,11 +23,11 @@
 </template>
 
 <script>
-import { interceptXHR } from '../utils';
+import { interceptXHRResponse } from '../utils';
 import { addTargetQueryToAutoBuy } from '../futbot/auto-buy.js';
 let lastSearch = null;
 
-interceptXHR('fifa20/transfermarket', req => {
+interceptXHRResponse('fifa20/transfermarket', req => {
   lastSearch = req.responseURL;
 });
 

@@ -1,23 +1,40 @@
-import { interceptXHR } from '../utils';
+import { interceptXHRResponse, interceptXHRRequest } from '../utils';
 // import { mobileAppAuthConfig } from './mobile-app-auth-config';
 
 const SERVER_HREF = 'http://localhost:9999';
 const repositories = window.repositories;
 const authData = {};
+let serverEventS = 0;
 
 export function watchSessionData() {
-  interceptXHR('fut.ea.com/ut/auth', scrapAuthData);
+  interceptXHRResponse('fut.ea.com/ut/auth', scrapAuthData);
   // interceptXHR('web-app/config/config.json', overwriteAsMobileAuth);
+  interceptXHRRequest('ea.com/pinEvents', readPinEvent);
 }
+
+setTimeout(() => {
+  const fn = window.PINEventDTO;
+  window.PINEventDTO = function() {
+    const s = arguments[1];
+    if (serverEventS >= s) {
+      arguments[1] = serverEventS + 1;
+    }
+    return fn.apply(this, arguments);
+  };
+}, 5000);
 
 // function overwriteAsMobileAuth(event) {
 //   alert('Before: ' + event.responseText);
 //   event.responseText = JSON.stringify(mobileAppAuthConfig);
 //   alert('After: ' + event.responseText);
 // }
+function readPinEvent(xhr, body) {
+  const pinEvent = JSON.parse(body);
+  registerEvent(pinEvent);
+}
 
-function scrapAuthData(req) {
-  const data = JSON.parse(req.responseText);
+function scrapAuthData(res) {
+  const data = JSON.parse(res.responseText);
   storeEndpoint(data.ipPort);
   authData.auth = data;
   setTimeout(() => {
@@ -36,6 +53,16 @@ function storeEndpoint(ipPort) {
   if (instance) {
     localStorage.setItem('futbot_endpoint', endpoint);
   }
+}
+
+async function registerEvent(e) {
+  const resp = await fetch(`${SERVER_HREF}/auth/register-event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pinEvent: e })
+  });
+  const data = await resp.json();
+  serverEventS = data.s;
 }
 
 function feedServer() {
