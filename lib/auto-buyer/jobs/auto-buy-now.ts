@@ -56,7 +56,10 @@ export class AutoBuyBuyNow extends Job {
 
     for (let i = 0; i < BUY_QUERY_TRIES; i++) {
       const auctions = await playerService.searchBuyableItem(
-        target.resourceId,
+        {
+          assetId: target.assetId,
+          resourceId: target.resourceId
+        },
         target.maxPrice
       );
 

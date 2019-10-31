@@ -75,7 +75,10 @@ export class InvestorAutoBuy extends Job {
         j++
       ) {
         const auctions = await playerService.searchBuyableItem(
-          target.resourceId,
+          {
+            assetId: target.assetId,
+            resourceId: target.resourceId
+          },
           safeBuyValue
         );
 

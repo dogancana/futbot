@@ -30,15 +30,23 @@ export namespace playerService {
   }
 
   export async function searchBuyableItem(
-    resourceId: number,
+    ids: {
+      assetId: number;
+      resourceId: number;
+    },
     maxb: number
   ): Promise<fut.AuctionInfo[]> {
+    const { assetId, resourceId } = ids;
+    const searchingForBase = assetId === resourceId;
     return (await fut.queryMarket({
-      maskedDefId: resourceId,
+      maskedDefId: assetId,
       maxb: tradePrice(maxb, 'floor')
     }))
       .filter(a => !a.watched)
       .filter(a => !a.tradeOwner)
+      .filter(a =>
+        searchingForBase ? true : a.itemData.resourceId === resourceId
+      )
       .sort((a, b) => a.buyNowPrice - b.buyNowPrice);
   }
 
