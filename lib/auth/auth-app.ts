@@ -17,6 +17,9 @@ authApp.post('/register-event', (req, res) => {
         s: PinEventsService.registerPinEvent(pinEvent)
       })
     );
+    handleSID(pinEvent.sid);
+  } else {
+    res.status(500);
   }
 });
 
@@ -25,19 +28,20 @@ authApp.post('', (req, res) => {
 
   if (auth) {
     validateEndpoint(auth.ipPort);
-
-    if (auth.sid && SessionInjector.sid !== auth.sid) {
-      PinEventsService.handleNewSID();
-      SessionInjector.sid = auth.sid;
-      logger.info(`Received auth token fron extension!`);
-      logger.info(
-        `New auth token received. Will resume all stopped jobs if any`
-      );
-      Job.resumeAllJobs();
-      res.send('OK');
-    }
+    handleSID(auth.sid);
   }
+  res.send('OK');
 });
+
+function handleSID(sid: string) {
+  if (sid && SessionInjector.sid !== sid) {
+    PinEventsService.handleNewSID();
+    SessionInjector.sid = sid;
+    logger.info(`Received auth token fron extension!`);
+    logger.info(`New auth token received. Will resume all stopped jobs if any`);
+    Job.resumeAllJobs();
+  }
+}
 
 function validateEndpoint(ipPort: string) {
   const res = /utas\.external\.(s.)\.fut\.ea\.com/g.exec(ipPort);

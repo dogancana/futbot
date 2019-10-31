@@ -80,16 +80,19 @@ export namespace fut {
         delete q[key];
       }
     }
+
     PinEventsService.pushEvent('searchView');
-    setTimeout(() => {
-      PinEventsService.pushEvent('transferMarketResults');
-    }, 800);
-    setTimeout(() => {
-      PinEventsService.pushEvent('itemView');
-    }, 1000);
-    return (await futApi.get(
+    const results = (await futApi.get(
       `/transfermarket?${querystring.stringify(mapMarketQueryToBypassCache(q))}`
     )).data.auctionInfo;
+
+    setTimeout(() => {
+      PinEventsService.pushEvent('transferMarketResults');
+      if (results.length > 0) {
+        PinEventsService.pushEvent('itemView');
+      }
+    }, Math.random() * (300 - 50) + 50);
+    return results;
   }
 
   export async function checkAuctionStatus(
