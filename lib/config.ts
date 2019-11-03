@@ -125,8 +125,8 @@ function validateConfig(c: EnvConfig) {
       `FUTBOT_FUT_REQUESTS_PER_SEC=${c.FUTBOT_FUT_REQUESTS_PER_SEC} is too high, you'll require verification really soon`
     );
   }
-  if (c.FUTBOT_FUT_REQUESTS_PER_SEC < 0.1) {
-    throw new Error('FUTBOT_FUT_REQUESTS_PER_SEC cannot be smaller than 0.1');
+  if (c.FUTBOT_FUT_REQUESTS_PER_SEC < 0.01) {
+    throw new Error('FUTBOT_FUT_REQUESTS_PER_SEC cannot be smaller than 0.01');
   }
   if (c.FUTBOT_FUTBIN_REQUESTS_PER_SEC > 3) {
     logger.warn(
