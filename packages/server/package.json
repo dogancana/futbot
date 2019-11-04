@@ -5,7 +5,9 @@
   "scripts": {
     "start": "ts-node --inspect=5858 lib/index.ts",
     "dev": "nodemon",
-    "build": "webpack"
+    "build": "webpack",
+    "postbuild": "yarn package",
+    "package": "pkg --out-path=dist --targets=node8-macos,node8-win --options max_old_space_size=4096 build/server.js"
   },
   "devDependencies": {
     "nodemon": "1.18.9",
