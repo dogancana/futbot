@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "build",
+    "rootDir": "lib"
+  },
+  "include": ["lib"],
+  "exclude": ["node_modules"],
+  "references": [
+    { "path": "../api-utils" },
+    { "path": "../fut" },
+    { "path": "../futbin" },
+    { "path": "../logger" },
+    { "path": "../utils" }
+  ]
+}

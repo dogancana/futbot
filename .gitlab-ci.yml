@@ -1,111 +1,112 @@
-image: node:latest
+# TODO monorepo
+# image: node:latest
 
-stages:
-  - trigger
-  - setup
-  - build
-  - package
-  - release
+# stages:
+#   - trigger
+#   - setup
+#   - build
+#   - package
+#   - release
 
-.yarn_job_template:
-  tags:
-    - gitlab-org
-  before_script:
-    - curl -o- -L https://yarnpkg.com/install.sh | bash
+# .yarn_job_template:
+#   tags:
+#     - gitlab-org
+#   before_script:
+#     - curl -o- -L https://yarnpkg.com/install.sh | bash
 
-trigger:
-  stage: trigger
-  tags:
-    - gitlab-org
-  only:
-    refs:
-      - master
-  allow_failure: false
-  script:
-    - echo Starting pipeline
+# trigger:
+#   stage: trigger
+#   tags:
+#     - gitlab-org
+#   only:
+#     refs:
+#       - master
+#   allow_failure: false
+#   script:
+#     - echo Starting pipeline
 
-install-server-dependencies:
-  extends: .yarn_job_template
-  stage: setup
-  script:
-    - yarn install --cache-folder .yarn
-  cache:
-    key: 'yarn-server-cache_$CI_PROJECT_ID'
-    paths:
-      - .yarn
-    policy: pull-push
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - 'node_modules/'
+# install-server-dependencies:
+#   extends: .yarn_job_template
+#   stage: setup
+#   script:
+#     - yarn install --cache-folder .yarn
+#   cache:
+#     key: 'yarn-server-cache_$CI_PROJECT_ID'
+#     paths:
+#       - .yarn
+#     policy: pull-push
+#   artifacts:
+#     expire_in: 1 week
+#     paths:
+#       - 'node_modules/'
 
-install-extension-dependencies:
-  extends: .yarn_job_template
-  stage: setup
-  script:
-    - cd extension
-    - yarn install --cache-folder .yarn
-  cache:
-    key: 'yarn-extension-cache_$CI_PROJECT_ID'
-    paths:
-      - extension/.yarn
-    policy: pull-push
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - 'extension/node_modules/'
+# install-extension-dependencies:
+#   extends: .yarn_job_template
+#   stage: setup
+#   script:
+#     - cd extension
+#     - yarn install --cache-folder .yarn
+#   cache:
+#     key: 'yarn-extension-cache_$CI_PROJECT_ID'
+#     paths:
+#       - extension/.yarn
+#     policy: pull-push
+#   artifacts:
+#     expire_in: 1 week
+#     paths:
+#       - 'extension/node_modules/'
 
-build-server:
-  extends: .yarn_job_template
-  dependencies:
-    - install-server-dependencies
-  stage: build
-  script:
-    - yarn build
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - 'build/'
+# build-server:
+#   extends: .yarn_job_template
+#   dependencies:
+#     - install-server-dependencies
+#   stage: build
+#   script:
+#     - yarn build
+#   artifacts:
+#     expire_in: 1 week
+#     paths:
+#       - 'build/'
 
-build-extension:
-  extends: .yarn_job_template
-  dependencies:
-    - install-extension-dependencies
-  stage: build
-  script:
-    - cd extension
-    - yarn build
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - 'extension/build/'
+# build-extension:
+#   extends: .yarn_job_template
+#   dependencies:
+#     - install-extension-dependencies
+#   stage: build
+#   script:
+#     - cd extension
+#     - yarn build
+#   artifacts:
+#     expire_in: 1 week
+#     paths:
+#       - 'extension/build/'
 
-package:
-  extends: .yarn_job_template
-  dependencies:
-    - install-server-dependencies
-    - build-server
-    - build-extension
-  stage: package
-  script:
-    - ./node_modules/.bin/pkg --out-path=futbot --targets=node8-macos,node8-win --options max_old_space_size=4096 build/server.js
-    - cp .env.local futbot/.env
-    - cp -R extension/build futbot/extension
-    - chmod +x futbot/server-macos
-    - chmod +x futbot/server-win.exe
-    - apt-get update
-    - apt-get install zip
-    - zip -r futbot.zip futbot
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - 'futbot.zip'
-release:
-  stage: release
-  tags:
-    - gitlab-org
-  dependencies:
-    - install-server-dependencies
-    - package
-  script:
-    - yarn semantic-release
+# package:
+#   extends: .yarn_job_template
+#   dependencies:
+#     - install-server-dependencies
+#     - build-server
+#     - build-extension
+#   stage: package
+#   script:
+#     - ./node_modules/.bin/pkg --out-path=futbot --targets=node8-macos,node8-win --options max_old_space_size=4096 build/server.js
+#     - cp .env.local futbot/.env
+#     - cp -R extension/build futbot/extension
+#     - chmod +x futbot/server-macos
+#     - chmod +x futbot/server-win.exe
+#     - apt-get update
+#     - apt-get install zip
+#     - zip -r futbot.zip futbot
+#   artifacts:
+#     expire_in: 1 week
+#     paths:
+#       - 'futbot.zip'
+# release:
+#   stage: release
+#   tags:
+#     - gitlab-org
+#   dependencies:
+#     - install-server-dependencies
+#     - package
+#   script:
+#     - yarn semantic-release
