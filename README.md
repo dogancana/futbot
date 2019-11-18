@@ -41,26 +41,20 @@ If you have an issue starting the server from last stable version, you can execu
 Install [node](https://nodejs.org/en/) and [yarn](https://yarnpkg.com/lang/en/docs/install/). Installing yarn via installation scripts are generally easier.
 
 `Config`  
-The project needs a configuration file (.env) in order to get some user preferences and region based api endpoint. You can copy .env.local file as .env file.  
-**Don't forget to read what's inside .env file.** Especially if you are outside of Europe or if you have/had more than one origin account (it goes years back) or if you switched platforms before.
+The server needs a configuration file (.env) in order to get some user preferences and region based api endpoint. You can copy .env.local file as .env file in packages/server folder.  
+**Don't forget to read what's inside .env file.**
 
 ### Start (Dev Mode)
 
-Start the server
+Start the server and extension watch mode
 
 ```sh
 $ yarn
 $ yarn dev
 ```
 
-Go to ui folder and build extension first (use node version 8-9)
-
-```sh
-$ yarn
-$ yarn build
-```
-
-Load the extension in developer mode to chrome. Build output should be under /ui/build  
+Load the extension in developer mode to chrome. Build output should be under packages/extension/build.  
+Once you load it and if you are always using dev mode, you don't need to load it again. It'll be automatically updated.  
 Login to fut web app so that the extension can steal your session and inject it into node server.
 Since this server is not intented to be deployed somewhere, there is no session in node server. Instead, your Fut web app session will be shared for any task in the server.
 
