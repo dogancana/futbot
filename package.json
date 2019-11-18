@@ -9,8 +9,8 @@
     "clear": "lerna run clear",
     "prebuild": "yarn clear",
     "build": "npm-run-all build:libs build:apps",
-    "build:libs": "lerna run --scope=@futbot/** build",
-    "build:apps": "lerna run --scope=futbot-** build",
+    "build:libs": "lerna run --parallel --scope=@futbot/** build",
+    "build:apps": "lerna run --parallel --scope=futbot** build",
     "semantic-release": "semantic-release"
   },
   "workspaces": {

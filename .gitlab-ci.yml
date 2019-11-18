@@ -38,7 +38,7 @@ install-dependencies:
     expire_in: 1 week
     paths:
       - 'node_modules/'
-      - 'packages/*/node_modules/'
+      - '*/*/node_modules'
 
 build-apps:
   extends: .yarn_job_template
@@ -51,8 +51,8 @@ build-apps:
     expire_in: 1 week
     paths:
       - 'build/'
-      - 'packages/*/build/'
-      - 'packages/*/dist/'
+      - '*/*/build'
+      - '*/*/dist'
 
 package:
   extends: .yarn_job_template
