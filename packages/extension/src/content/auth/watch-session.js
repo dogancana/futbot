@@ -23,6 +23,9 @@ setTimeout(() => {
   };
 }, 5000);
 
+pushDataToServer();
+setInterval(pushDataToServer, 30 * 60 * 1000);
+
 // function overwriteAsMobileAuth(event) {
 //   alert('Before: ' + event.responseText);
 //   event.responseText = JSON.stringify(mobileAppAuthConfig);
@@ -37,9 +40,7 @@ function scrapAuthData(res) {
   const data = JSON.parse(res.responseText);
   storeEndpoint(data.ipPort);
   authData.auth = data;
-  setTimeout(() => {
-    feedServer();
-  }, 5000); // wait for webapp to get data
+  feedServer();
 }
 
 // ipPort: 'utas\.external\.s.\.fut\.ea\.com'
@@ -71,20 +72,42 @@ function feedServer() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(authData)
   });
-  pushDataToServer();
 }
 
 function pushDataToServer() {
   fetch(`${SERVER_HREF}/static/need-data`).then(resp => {
     if (resp.status !== 200) return;
 
-    const data = repositories.Item.getStaticData();
+    const data = repositories.Item.getStaticData().map(i => {
+      const {
+        id,
+        name = 'undefined',
+        rating,
+        firstName,
+        lastName,
+        commonName
+      } = i;
+      const actualName = [firstName, lastName].filter(v => !!v).join(' ');
+      return {
+        id,
+        rating,
+        name:
+          name.indexOf('undefined') > -1
+            ? `${commonName ? commonName + ', ' : ''}${actualName}`
+            : i.name
+      };
+    });
+    if (data.length < 16000) {
+      setTimeout(pushDataToServer, 2000);
+      return;
+    }
     const batch = 150;
     for (let i = 0; i < data.length; i += batch) {
       const obj = {};
-      data.slice(i, i + batch).forEach(p => {
-        obj[p.id] = p;
-      });
+      const items = data.slice(i, i + batch);
+      for (const item of items) {
+        obj[item.id] = item;
+      }
       setTimeout(() => {
         fetch(`${SERVER_HREF}/static/push-data`, {
           method: 'POST',
