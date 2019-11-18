@@ -73,7 +73,7 @@ export async function analyzeItemValue(resourceId: number): Promise<ItemValue> {
     } else if (
       auctions.length < envConfig().FUTBOT_FUT_MINIMUM_AUCTION_SAMPLES
     ) {
-      newMaxb = tradePrice(maxb * 1.3, 'ceil');
+      newMaxb = tradePrice(maxb * 1.8, 'ceil');
     } else {
       return determineResult(auctions);
     }

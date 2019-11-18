@@ -61,7 +61,8 @@ export namespace playerService {
     const bought: fut.AuctionInfo[] = [];
     // Go parallel to not miss anyone
     await Promise.all(
-      auctions.map(async auction => {
+      auctions.map(async (auction, i) => {
+        await new Promise(resolve => setTimeout(resolve, i * 300));
         const playerStr = readable({ resourceId: auction.itemData.resourceId });
         logger.info(`Buying ${playerStr} for ${auction.buyNowPrice}.`);
         try {

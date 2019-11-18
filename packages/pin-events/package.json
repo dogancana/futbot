@@ -1,0 +1,11 @@
+{
+  "name": "@futbot/pin-events",
+  "version": "1.0.0",
+  "main": "build/index.js",
+  "typings": "build/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc --watch"
+  }
+}
