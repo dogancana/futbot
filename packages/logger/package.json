@@ -5,6 +5,7 @@
   "typings": "build/index.d.ts",
   "private": true,
   "scripts": {
+    "clear": "rimraf build *.tsbuildinfo",
     "build": "tsc -b",
     "dev": "tsc --watch"
   }

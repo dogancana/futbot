@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "ts-node --inspect=5858 lib/index.ts",
+    "clear": "rimraf build *.tsbuildinfo",
     "dev": "nodemon",
     "build": "webpack",
     "postbuild": "yarn package",

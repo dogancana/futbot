@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "lerna run --parallel dev",
     "lint": "tslint 'packages/**/lib/**/*.ts'",
-    "clear": "lerna exec 'rimraf build *.tsbuildinfo'",
+    "clear": "lerna run clear",
     "prebuild": "yarn clear",
     "build": "npm-run-all build:libs build:apps",
     "build:libs": "lerna run --scope=@futbot/** build",
@@ -29,6 +29,7 @@
     "lodash": "4.17.11",
     "node-cache": "4.2.1",
     "object-hash": "1.3.0",
+    "rimraf": "3.0.0",
     "rxjs": "6.3.3",
     "winston": "3.1.0"
   },
