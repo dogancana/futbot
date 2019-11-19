@@ -47,6 +47,8 @@ export class SellTradePilePlayers extends Job {
       return;
     }
 
+    logger.info(`Testing: ${players[0].itemData.playStyle}`);
+
     logger.info(`${players.length} will be sold.`);
     for (const player of players) {
       const result = await tradeService.sellPlayerOptimal(player.itemData);

@@ -27,6 +27,7 @@ export namespace fut {
     resourceId: number;
     timestamp: number;
     untradeable: boolean;
+    playStyle: number;
   }
 
   export type Platform = 'pc' | 'ps' | 'xbox';

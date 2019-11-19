@@ -24,6 +24,20 @@ export namespace tradeService {
       );
       return null;
     }
+
+    //checks if its shadow or hunter
+    if (
+      (envConfig().FUTBOT_SKIP_CHEM && player.playStyle == 268) ||
+      (envConfig().FUTBOT_SKIP_CHEM && player.playStyle == 266)
+    ) {
+      logger.info(
+        `${playerService.readable(
+          player
+        )} is shadow/hunter chem style, skipping`
+      );
+      return null;
+    }
+
     // TODO this can be configurable
     // if (sellPrice.startingBid <= player.itemData.lastSalePrice) {
     //   logger.info(

@@ -24,6 +24,7 @@ export interface EnvConfig {
   FUTBOT_JOB_IMP_SLOW_DOWN: number;
   FUTBOT_SLOW_DOWN_JOB_DURATION: number;
   FUTBOT_SELL_PRICING_MODEL: 'slow' | 'normal' | 'fast';
+  FUTBOT_SKIP_CHEM: boolean;
 }
 
 const defaultConf: EnvConfig = {
@@ -44,7 +45,8 @@ const defaultConf: EnvConfig = {
   FUTBOT_JOB_IMP_SELL_TRADE_PILE: 10,
   FUTBOT_JOB_IMP_SLOW_DOWN: 3,
   FUTBOT_SLOW_DOWN_JOB_DURATION: 30,
-  FUTBOT_SELL_PRICING_MODEL: 'slow'
+  FUTBOT_SELL_PRICING_MODEL: 'slow',
+  FUTBOT_SKIP_CHEM: true
 };
 
 let conf: EnvConfig;
@@ -73,6 +75,7 @@ const impOrderKeys = [
   'FUTBOT_JOB_IMP_AUTO_BUY_QUERY',
   'FUTBOT_JOB_IMP_SLOW_DOWN'
 ];
+const boolKeys = ['FUTBOT_SKIP_CHEM'];
 setup();
 
 export function envConfig(): EnvConfig {
@@ -85,7 +88,7 @@ function setup() {
   conf = {} as any;
   const env = process.env || {};
 
-  [...numberKeys, ...impOrderKeys].forEach(key => {
+  [...numberKeys, ...impOrderKeys, ...boolKeys].forEach(key => {
     conf[key] = parseFloat(env[key]) || defaultConf[key];
   });
 
