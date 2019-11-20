@@ -1,4 +1,5 @@
 rm -rf futbot.zip
+rm -rf futbot
 mkdir futbot
 
 cp packages/server/.env.local futbot/.env
@@ -10,5 +11,3 @@ chmod +x futbot/server/server-win.exe
 apt-get update
 apt-get install zip
 zip -r futbot.zip futbot
-
-rm -rf futbot
