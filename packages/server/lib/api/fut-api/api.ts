@@ -72,16 +72,16 @@ futApi.interceptors.response.use(
       queue.clear();
     }
 
-    if ([426, 249].indexOf(status) > -1 && !slowedDownAfterTooManyRequests) {
-      slowedDownAfterTooManyRequests = true;
-      logger.warn('will slow down all jobs by 1/3 for next 30 mins');
-      queue.changeRequestsPerSec(requestsPerSec / 3);
-      queue.clear();
-      setTimeout(() => {
-        queue.changeRequestsPerSec(requestsPerSec);
-        slowedDownAfterTooManyRequests = false;
-      }, 1000 * 60 * 30);
-    }
+    // if ([426, 249].indexOf(status) > -1 && !slowedDownAfterTooManyRequests) {
+    //   slowedDownAfterTooManyRequests = true;
+    //   logger.warn('will slow down all jobs by 1/3 for next 30 mins');
+    //   queue.changeRequestsPerSec(requestsPerSec / 3);
+    //   queue.clear();
+    //   setTimeout(() => {
+    //     queue.changeRequestsPerSec(requestsPerSec);
+    //     slowedDownAfterTooManyRequests = false;
+    //   }, 1000 * 60 * 30);
+    // }
 
     return Promise.reject(new ApiError(status, config, message));
   }
