@@ -21,7 +21,7 @@ const requestsPerSec = envConfig().FUTBOT_FUT_REQUESTS_PER_SEC;
 logger.info(`There will be maximum ${requestsPerSec} requests per sec`);
 
 const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
-let slowedDownAfterTooManyRequests = false;
+// let slowedDownAfterTooManyRequests = false;
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
   config.headers.Origin = 'https://www.easports.com';
@@ -72,16 +72,16 @@ futApi.interceptors.response.use(
       queue.clear();
     }
 
-    if ([426, 249].indexOf(status) > -1 && !slowedDownAfterTooManyRequests) {
-      slowedDownAfterTooManyRequests = true;
-      logger.warn('will slow down all jobs by 1/3 for next 30 mins');
-      queue.changeRequestsPerSec(requestsPerSec / 3);
-      queue.clear();
-      setTimeout(() => {
-        queue.changeRequestsPerSec(requestsPerSec);
-        slowedDownAfterTooManyRequests = false;
-      }, 1000 * 60 * 30);
-    }
+    // if ([426, 249].indexOf(status) > -1 && !slowedDownAfterTooManyRequests) {
+    //   slowedDownAfterTooManyRequests = true;
+    //   logger.warn('will slow down all jobs by 1/3 for next 30 mins');
+    //   queue.changeRequestsPerSec(requestsPerSec / 3);
+    //   queue.clear();
+    //   setTimeout(() => {
+    //     queue.changeRequestsPerSec(requestsPerSec);
+    //     slowedDownAfterTooManyRequests = false;
+    //   }, 1000 * 60 * 30);
+    // }
 
     return Promise.reject(new ApiError(status, config, message));
   }
