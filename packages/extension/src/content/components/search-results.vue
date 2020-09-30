@@ -27,7 +27,7 @@ import { interceptXHRResponse } from '../utils';
 import { addTargetQueryToAutoBuy } from '../futbot/auto-buy.js';
 let lastSearch = null;
 
-interceptXHRResponse('fifa20/transfermarket', req => {
+interceptXHRResponse('fifa21/transfermarket', req => {
   lastSearch = req.responseURL;
 });
 

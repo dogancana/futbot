@@ -3,7 +3,7 @@ import { request } from './request';
 export async function searchPlayer(name, rating, specialTypeStr) {
   try {
     const players = await request(
-      `futbin.com/search?year=20&extra=1&term=${name}`,
+      `futbin.com/search?year=21&extra=1&term=${name}`,
       {
         method: 'GET'
       }

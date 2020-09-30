@@ -72,7 +72,7 @@ export namespace futbin {
     id: number
   ): Promise<FutbinPlayerResponse<number[]>> {
     const values: FutbinPlayerResponse<number[][]> = (await futbinApi.get(
-      `/playerGraph?type=daily_graph&year=20&player=${id}&set_id`,
+      `/playerGraph?type=daily_graph&year=21&player=${id}&set_id`,
       { adapter: simpleCacheAdapter }
     )).data;
 
@@ -105,7 +105,7 @@ export namespace futbin {
     const playersPageSelector = '#repTb tbody tr';
     const sbcPageSelector = 'div[data-player-id]';
     const resp = await futbinApi.get(
-      path.replace('.com/20', '.com').replace(FUTBIN_ENDPOINT, ''),
+      path.replace('.com/21', '.com').replace(FUTBIN_ENDPOINT, ''),
       {
         adapter: simpleCacheAdapter
       }

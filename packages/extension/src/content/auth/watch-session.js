@@ -48,7 +48,7 @@ function scrapAuthData(res) {
 function storeEndpoint(ipPort) {
   const res = /utas\.external\.(s.)\.fut\.ea\.com/g.exec(ipPort);
   const instance = res ? res[1] : null;
-  const endpoint = 'https://utas.external.<instance>.fut.ea.com/ut/game/fifa20'.replace(
+  const endpoint = 'https://utas.external.<instance>.fut.ea.com/ut/game/fifa21'.replace(
     '<instance>',
     instance
   );

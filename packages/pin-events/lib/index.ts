@@ -124,9 +124,9 @@ export namespace PinEventsService {
           );
           Axios.post('https://pin-river.data.ea.com/pinEvents', pinEvent, {
             headers: {
-              Origin: 'https://www.easports.con',
-              Referer: 'https://www.easports.com/fifa/ultimate-team/web-app/',
-              'x-ea-game-id': 'FUT20WEB',
+              Origin: 'https://www.ea.con',
+              Referer: 'https://www.ea.com/',
+              'x-ea-game-id': 'FUT21WEB',
               'x-ea-game-id-type': 'easku',
               'x-ea-taxv': pinEvent.taxv
             }

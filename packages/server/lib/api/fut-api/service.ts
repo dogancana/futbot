@@ -195,10 +195,9 @@ export namespace fut {
     }
 
     try {
-      const resp = await futApi.get(
-        `/user/accountinfo?filterConsoleLogin=true&sku=FUT20WEB`,
-        { adapter: simpleCacheAdapter }
-      );
+      const resp = await futApi.get(`/v2/user/accountinfo?&sku=FUT21WEB`, {
+        adapter: simpleCacheAdapter
+      });
 
       if (resp.data.userAccountInfo.personas.length > 1) {
         logger.warn(
@@ -208,7 +207,7 @@ export namespace fut {
       }
 
       platform = resp.data.userAccountInfo.personas[0].userClubList
-        .filter(c => c.year === '2020')[0]
+        .filter(c => c.year === '2021')[0]
         .platform.replace(/\d/gi, '');
     } catch (e) {
       logger.error(`Error while getting platform: ${e}`);
