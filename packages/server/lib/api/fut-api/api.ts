@@ -21,7 +21,7 @@ const requestsPerSec = envConfig().FUTBOT_FUT_REQUESTS_PER_SEC;
 logger.info(`There will be maximum ${requestsPerSec} requests per sec`);
 
 const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
-let slowedDownAfterTooManyRequests = false;
+// let slowedDownAfterTooManyRequests = false;
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
   config.headers.Origin = 'https://www.easports.com';
