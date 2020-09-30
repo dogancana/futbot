@@ -29,6 +29,8 @@ playerApp.get('', async (req, res) => {
         resourceId
       })}. Reason: ${e}`
     );
+    res.status(500);
+    res.send({ message: 'Error getting price.' });
   }
 });
 

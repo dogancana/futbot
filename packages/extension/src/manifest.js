@@ -26,7 +26,7 @@ module.exports = {
     {
       js: ['js/inject.js'],
       run_at: 'document_end',
-      matches: ['https://www.easports.com/fifa/ultimate-team/web-app*'],
+      matches: ['https://www.ea.com/fifa/ultimate-team/web-app*'],
       all_frames: true
     },
     {

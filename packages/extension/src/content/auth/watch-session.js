@@ -2,6 +2,7 @@ import { interceptXHRResponse, interceptXHRRequest } from '../utils';
 // import { mobileAppAuthConfig } from './mobile-app-auth-config';
 
 const SERVER_HREF = 'http://localhost:9999';
+const PLAYERS_IN_DB_COUNT = 15908;
 const repositories = window.repositories;
 const authData = {};
 let serverEventS = 0;
@@ -97,7 +98,7 @@ function pushDataToServer() {
             : i.name
       };
     });
-    if (data.length < 16000) {
+    if (data.length < PLAYERS_IN_DB_COUNT) {
       setTimeout(pushDataToServer, 2000);
       return;
     }
@@ -106,6 +107,7 @@ function pushDataToServer() {
       const obj = {};
       const items = data.slice(i, i + batch);
       for (const item of items) {
+        if (!item) continue;
         obj[item.id] = item;
       }
       setTimeout(() => {

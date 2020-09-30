@@ -1,8 +1,10 @@
 import { getLogger } from '@futbot/logger';
 import Axios from 'axios';
-import { FUTEvent, PinEvent } from './pin-events';
 
 const logger = getLogger('PinEvents');
+
+const USER_AGENT =
+  'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Mobile Safari/537.36';
 
 export interface FUTEvent {
   status?: string;
@@ -125,10 +127,11 @@ export namespace PinEventsService {
           );
           Axios.post('https://pin-river.data.ea.com/pinEvents', pinEvent, {
             headers: {
-              Origin: 'https://www.easports.con',
-              Referer: 'https://www.easports.com/fifa/ultimate-team/web-app/',
-              'x-ea-game-id': 'FUT20WEB',
-              'x-ea-game-id-type': 'easku',
+              'User-Agent': USER_AGENT,
+              Origin: 'https://www.ea.con',
+              Referer: 'https://www.ea.com/',
+              'x-ea-game-id': pinEvent.tid,
+              'x-ea-game-id-type': pinEvent.tidt,
               'x-ea-taxv': pinEvent.taxv
             }
           }).catch(e => logger.error(`Error while pinning event: ${e}`));
