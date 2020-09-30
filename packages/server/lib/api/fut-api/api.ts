@@ -24,9 +24,8 @@ const queue = new ApiQueue(requestsPerSec, 'fut', eaConfigResolver);
 // let slowedDownAfterTooManyRequests = false;
 
 function eaConfigResolver(config: AxiosRequestConfig): AxiosRequestConfig {
-  config.headers.Origin = 'https://www.easports.com';
-  config.headers.Referer =
-    'https://www.easports.com/fifa/ultimate-team/web-app/';
+  config.headers.Origin = 'https://www.ea.com';
+  config.headers.Referer = 'https://www.ea.com/';
   config.headers['X-UT-SID'] = SessionInjector.sid;
 
   return config;
