@@ -12,7 +12,7 @@ export interface EnvConfig {
   FUTBOT_FUTBIN_REQUESTS_PER_SEC: number;
   FUTBOT_PROFIT_MARGIN: number;
   FUTBOT_MAX_PRICING_SEARCH_TRY: number;
-  FUTBOT_FUT_PLATFORM_OVERWRITE?: 'xbox' | 'pc' | 'ps';
+  FUTBOT_FUT_PLATFORM_OVERWRITE?: 'xbox' | 'pc' | 'ps' | 'ps3';
   FUTBOT_QUICK_SELL_MARGIN: number;
   FUTBOT_JOB_IMP_INVEST_LOW_PLAYERS: number;
   FUTBOT_JOB_IMP_INVEST_GOOD_AUCTIONS: number;
@@ -142,9 +142,12 @@ function validateConfig(c: EnvConfig) {
     throw new Error('FUTBOT_PROFIT_MARGIN has to be between 5 and 20');
   }
   if (c.FUTBOT_FUT_PLATFORM_OVERWRITE) {
-    if (['xbox', 'pc', 'ps'].indexOf(c.FUTBOT_FUT_PLATFORM_OVERWRITE) === -1) {
+    if (
+      ['xbox', 'pc', 'ps', 'ps3'].indexOf(c.FUTBOT_FUT_PLATFORM_OVERWRITE) ===
+      -1
+    ) {
       throw new Error(
-        'FUTBOT_FUT_PLATFORM_OVERWRITE has to be one of pc, ps or xbox. Please fix in .env file.'
+        'FUTBOT_FUT_PLATFORM_OVERWRITE has to be one of pc, ps, ps3 or xbox. Please fix in .env file.'
       );
     }
   }
