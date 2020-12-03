@@ -29,7 +29,7 @@ export namespace fut {
     untradeable: boolean;
   }
 
-  export type Platform = 'pc' | 'ps' | 'xbox';
+  export type Platform = 'pc' | 'ps' | 'xbox' | 'ps3';
   export type Quality = 'bronze' | 'silver' | 'gold' | 'special';
 
   export async function getClubPlayers(
