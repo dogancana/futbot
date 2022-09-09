@@ -1,3 +1,13 @@
+# DISCLAIMER
+
+This project is not actively maintained anymore. I recently made it public. It was designed and heavily tested with FIFA21 only (Although EA wouldn't to drastic changes to their APIs).  
+If you want to fork the project and align with newer versions of the game, feel free to do so.  
+Project architecture in short:  
+There are 2 integral parts:
+- Node server with actual automation and querying
+- Chrome extension to change fut web app (buttons and info on player icons etc) and steal your own auth token. Chrome extension can talk to node server to automate some parts.
+
+
 # FutBot
 
 This is a data source/trade bot for FIFA 21 fut api written in Typescript/Javascript for node.js.  
